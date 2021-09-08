@@ -1,0 +1,16 @@
+L-Tyrosine
+L-Leucine
+Glycine
+L-Isoleucine
+L-Valine
+L-Tryptophan
+L-Threonine
+L-Serine
+L-Phenylalanine
+L-Methionine
+L-Glutamine
+D-(+)-Glucose
+L-Histidine
+Choline
+L-Lysine
+L-Arginine
