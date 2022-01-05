@@ -23,7 +23,6 @@ end
 
 function getGISSMOentriesall()::Vector{GISSMOEntryType}
 
-    #
     entries = Vector{GISSMOEntryType}(undef, 0)
 
     tmp = GISSMOEntryType("bmse000795",
@@ -795,4 +794,117 @@ function addentrydefaultconfigtobuffer!(out_string::Vector{String},
     push!(out_string, "")
 
     return nothing
+end
+
+
+
+function getGISSMOexperimentpaths(record_names, record_entries, dir_list)
+
+    exp_paths = Vector{String}(undef, length(record_names))
+    for k = 1:length(record_names)
+
+        inds = findall(xx->occursin("$(record_names[k])_$(record_entries[k])", xx), dir_list)
+        @assert length(inds) > 0
+
+        current_folder_path = dir_list[inds[1]]
+        next_folder = filter(isdir, readdir(current_folder_path; join = true))[1]
+
+        while !isempty(next_folder) && !occursin("pdata", next_folder)
+
+            current_folder_path = next_folder
+            next_folder = filter(isdir, readdir(current_folder_path; join = true))[1]
+        end
+
+        exp_paths[k] = current_folder_path
+    end
+
+    return exp_paths
+end
+
+
+function loadGISSMOmolecule(base_path, file_name)
+
+    load_path = joinpath(base_path, "$(file_name).jld")
+ 
+    dic = JLD.load(load_path)
+ 
+    css_sys = dic["css_sys"]
+    J_IDs_sys = dic["J_IDs_sys"]
+    J_vals_sys = dic["J_vals_sys"]
+    cs_singlets = dic["cs_singlets"]
+ 
+    J_lb_sys = dic["J_lb_sys"]
+    J_ub_sys = dic["J_ub_sys"]
+    cs_lb_sys = dic["cs_lb_sys"]
+    cs_ub_sys = dic["cs_ub_sys"]
+    cs_LUT = dic["cs_LUT"]
+ 
+    ref_mM = dic["ref_mM"]
+    solute_mM = dic["solute_mM"]
+    solubility_gL_solute = dic["solubility_gL_solute"]
+    solubility_gL_ref = dic["solubility_gL_ref"]
+    molar_mass_ref = dic["molar_mass_ref"]
+    molar_mass_solute = dic["molar_mass_solute"]
+    pH = dic["pH"]
+    temperature = dic["temperature"]
+    ref_molecule_name = dic["ref_molecule_name"]
+ 
+    return css_sys, J_IDs_sys, J_vals_sys, cs_singlets,
+             J_lb_sys, J_ub_sys, cs_lb_sys, cs_ub_sys, cs_LUT,
+             ref_mM, solute_mM, solubility_gL_solute,
+             solubility_gL_ref, molar_mass_ref,
+             molar_mass_solute, pH, temperature, ref_molecule_name
+ end
+
+ # single entry.
+function searchmoleculelist(list_names::Vector{String},
+                target_string::String)
+
+    N = length(list_names)
+
+    inds = collect(1:N)
+
+    target_exist_flag = false
+
+    search_string = Unicode.normalize(target_string, casefold=true)
+
+    keep_flags = falses(N)
+    for i = 1:N
+
+        db_string = Unicode.normalize(list_names[i], casefold=true)
+
+        if search_string == db_string
+            keep_flags[i] = true
+            target_exist_flag = true
+        end
+
+    end
+
+    return inds[keep_flags], target_exist_flag
+end
+
+# single entry.
+function searchmoleculelist(list_names::Vector{String},
+    target_string::String)
+
+    N = length(list_names)
+
+    inds = collect(1:N)
+
+    target_exist_flag = false
+
+    search_string = Unicode.normalize(target_string, casefold=true)
+
+    keep_flags = falses(N)
+    for i = 1:N
+
+        db_string = Unicode.normalize(list_names[i], casefold=true)
+
+        if search_string == db_string
+            keep_flags[i] = true
+            target_exist_flag = true
+        end
+    end
+
+    return inds[keep_flags], target_exist_flag
 end

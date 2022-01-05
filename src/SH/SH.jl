@@ -38,6 +38,70 @@ function prepcouplingalgorithm(N_protons_group::Vector{Int})
     return out
 end
 
+function setupcompoundspectrum!( css_sys::Vector{Vector{T}},
+    p_cs_sys::Vector{Vector{T}},
+    J_vals_sys,
+    J_IDs_sys,
+    intermediates_sys,
+    cs_LUT,
+    ppm2hzfunc,
+    cs_singlets_compact,
+    N_spins_singlet::Vector{Int},
+    fs::T,
+    SW::T;
+    tol_coherence = 1e-2) where T <: Real
+
+    #
+    N_sys = length(p_cs_sys)
+    N_singlets = length(cs_singlets_compact)
+
+    N_groups = N_sys + N_singlets
+
+    # non-singlet objects.
+    states_sys = Vector{Vector{Int}}(undef, N_sys)
+    coherence_state_pairs_sys = Vector{Vector{Tuple{Int,Int}}}(undef, N_sys)
+    eig_vals_sys = Vector{Vector{T}}(undef, N_sys)
+    Q_sys = Vector{Vector{Vector{T}}}(undef, N_sys)
+    H_sys = Vector{Matrix{T}}(undef, N_sys)
+    coherence_mat_sys = Vector{Matrix{T}}(undef, N_sys)
+    ms_sys = Vector{Vector{Vector{T}}}(undef, N_sys)
+    M_sys = Vector{Vector{T}}(undef, N_sys)
+
+    # output buffers.
+    αs = Vector{Vector{T}}(undef, N_groups)
+    Ωs = Vector{Vector{T}}(undef, N_groups)
+
+    # Spin systems.
+    for i = 1:N_sys
+
+        αs[i], Ωs[i], coherence_mat_sys[i], eig_vals_sys[i], Q_sys[i], coherence_state_pairs_sys[i],
+        H_sys[i], H1, H2, M_sys[i] = evalSCalgorithm!(p_cs_sys[i], css_sys[i],
+        J_vals_sys[i], J_IDs_sys[i],
+        intermediates_sys[i],
+        cs_LUT[i], ppm2hzfunc;
+        tol_coherence = tol_coherence)
+
+        # normalize intensity according to number of spins.
+        N_spins = length(css_sys[i])
+        normalizetoNspins!(αs[i], N_spins)
+
+        Id = getsingleId()
+        ms_sys[i] = computequantumnumbers(Q_sys[i], Id)
+
+        tmp1 = collect( coherence_state_pairs_sys[i][j][1] for j = 1:length(coherence_state_pairs_sys[i]))
+        tmp2 = collect( coherence_state_pairs_sys[i][j][2] for j = 1:length(coherence_state_pairs_sys[i]))
+        states_sys[i] = unique([tmp1; tmp2])
+    end
+
+    # singlets. evalRayleighproxy!() updates singlets for ΩS.
+    for i = 1:N_singlets
+        αs[i+N_sys] = [ N_spins_singlet[i] ]
+        Ωs[i+N_sys] = [ ppm2hzfunc.(cs_singlets_compact[i]) .* (2*π) ]
+    end
+
+    return αs, Ωs, coherence_mat_sys, eig_vals_sys, Q_sys,
+    coherence_state_pairs_sys, H_sys, states_sys, ms_sys, M_sys
+end
 
 function setupapproximateΩmolecule!( css_sys::Vector{Vector{T}},
                                     p_cs_sys::Vector{Vector{T}},
@@ -166,10 +230,10 @@ function getreducedcomponentsforspinsystem(p_cs::Vector{T},
 
     #
     a0, F0, coherence_mat, eig_vals, Q, state_labels0,
-       H, H1, H2 = evalSCalgorithm!(p_cs, css,
-            J_vals, J_IDs, intermediates,
-            cs_LUT, ppm2hzfunc;
-            tol_coherence = tol_coherence)
+    H, H1, H2, M_array = evalSCalgorithm!(p_cs, css,
+    J_vals, J_IDs, intermediates,
+    cs_LUT, ppm2hzfunc;
+    tol_coherence = tol_coherence)
 
     # default: no pruning nor merging.
     F3 = F0
@@ -208,7 +272,7 @@ function getreducedcomponentsforspinsystem(p_cs::Vector{T},
 
     #TODO old possibly irrelevant note: normalize by # of hydrogens css_sys. hunt down the code for cs_singlet (probably at runtime), and do the same.
 
-    return F3, a2, state_labels, H, H1, H2, eig_vals, Q, state_labels0
+    return F3, a2, state_labels, H, H1, H2, eig_vals, Q, state_labels0, a0, F0, coherence_mat, F2
 end
 
 # #### proxy to the strong coupling.
@@ -234,18 +298,18 @@ function evalSCalgorithm!(   p_cs::Vector{T},
     #println()
 
     Id, Ix, Iy_no_im, Iz, Ip, Im, Iy, Im_full, Iz_full, Ix_full,
-         Iys_no_im_full = intermediates # see prepcouplingalgorithm(Int) for details.
+    Iys_no_im_full = intermediates # see prepcouplingalgorithm(Int) for details.
 
     # strong coupling algorithm.
     ω0 = ppm2hzfunc.(cs) .* 2*π
-    H = getgenericHamiltonian(Id, Ix, Iy_no_im, Iz, ω0, J_vals, J_inds)
+    #H = getgenericHamiltonian(Id, Ix, Iy_no_im, Iz, ω0, J_vals, J_inds)
     H, H1, H2 = getgenericHamiltoniantest(Id, Ix, Iy_no_im, Iz, ω0, J_vals, J_inds)
 
-    a, F, p, s, Q, state_labels = getaΩ(Iz_full, H,
+    a, F, p, s, Q, coherence_labels, M_array = getaΩ(Iz_full, H,
         Iys_no_im_full, Ix_full; tol = tol_coherence)
     #println("hi")
 
-    return a, F, p, s, Q, state_labels, H, H1, H2
+    return a, F, p, s, Q, coherence_labels, H, H1, H2, M_array
 end
 
 
@@ -322,4 +386,19 @@ end
 
 function convertΔcstoΔω0(x::T, fs::T, SW::T)::T where T
     return x*2*π*fs/SW
+end
+
+### from eigen vectors to Zeeman states. See the lower case m_j^{(r)}
+#   in sec. 18.2 (pag 468), Spin Dynamics.
+function computequantumnumbers(basis::Vector{Vector{T}}, Id) where T
+
+    N_spins = round(Int, log(2,length(basis)))
+    I_jz_set = collect( getmultiIz(Id, j, N_spins) for j = 1:N_spins )
+
+    m_basis = Vector{Vector{T}}(undef, length(basis))
+    for r = 1:length(basis)
+        m_basis[r] = collect( getzangularmomentum(basis[r], I_jz_set[j]) for j = 1:N_spins )
+    end
+
+    return m_basis
 end

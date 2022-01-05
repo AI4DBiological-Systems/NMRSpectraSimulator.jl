@@ -1,12 +1,12 @@
 
 function getgenericHamiltoniantest( Id,
-                                Ix,
-                                Iy_no_im,
-                                Iz,
-                                ω0::Vector{T},
-                                J_vals::Vector{T},
-                                J_inds::Vector{Tuple{Int,Int}}) where T <: Real
-    #
+    Ix,
+    Iy_no_im,
+    Iz,
+    ω0::Vector{T},
+    J_vals::Vector{T},
+    J_inds::Vector{Tuple{Int,Int}}) where T <: Real
+#
     N = length(ω0)
     N_couplings = length(J_vals)
     @assert N_couplings == length(J_inds)
@@ -26,17 +26,16 @@ function getgenericHamiltoniantest( Id,
     ωIzs = collect( ω0[j] .* Iz for j = 1:N )
     H2 = Kronecker.kroneckersum(ωIzs...)
 
-
     return H1+H2, H1, H2
 end
 
 function getgenericHamiltoniantest( Id,
-                                Ix,
-                                Iy_no_im,
-                                Iz,
-                                ω0::Vector{T},
-                                J::Matrix{T}) where T <: Real
-    #
+    Ix,
+    Iy_no_im,
+    Iz,
+    ω0::Vector{T},
+    J::Matrix{T}) where T <: Real
+
     N = length(ω0)
     @assert size(J,1) == size(J,2) == N
 
@@ -55,19 +54,18 @@ function getgenericHamiltoniantest( Id,
     ωIzs = collect( ω0[j] .* Iz for j = 1:N )
     H2 = Kronecker.kroneckersum(ωIzs...)
 
-
     return H1+H2, H1, H2
 end
 
 # Only the upper-right off-diagonals of J is used.
 # No secular dipole-dipole.
 function getgenericHamiltonian( Id,
-                                Ix,
-                                Iy_no_im,
-                                Iz,
-                                ω0::Vector{T},
-                                J::Matrix{T}) where T <: Real
-    #
+    Ix,
+    Iy_no_im,
+    Iz,
+    ω0::Vector{T},
+    J::Matrix{T}) where T <: Real
+
     N = length(ω0)
     @assert size(J,1) == size(J,2) == N
 
@@ -86,18 +84,17 @@ function getgenericHamiltonian( Id,
     ωIzs = collect( ω0[j] .* Iz for j = 1:N )
     H += Kronecker.kroneckersum(ωIzs...)
 
-
     return H
 end
 
 # No secular dipole-dipole.
 function getgenericHamiltonian0( Id,
-                                Ix,
-                                Iy_no_im,
-                                Iz,
-                                ω0::Vector{T},
-                                J::Matrix{T}) where T <: Real
-    #
+    Ix,
+    Iy_no_im,
+    Iz,
+    ω0::Vector{T},
+    J::Matrix{T}) where T <: Real
+
     N = length(ω0)
     @assert size(J,1) == size(J,2) == N
 
@@ -116,13 +113,13 @@ end
 
 # No secular dipole-dipole.
 function getgenericHamiltonian( Id,
-                                Ix,
-                                Iy_no_im,
-                                Iz,
-                                ω0::Vector{T},
-                                J_vals::Vector{T},
-                                J_inds::Vector{Tuple{Int,Int}}) where T <: Real
-    #
+    Ix,
+    Iy_no_im,
+    Iz,
+    ω0::Vector{T},
+    J_vals::Vector{T},
+    J_inds::Vector{Tuple{Int,Int}}) where T <: Real
+
     N = length(ω0)
     N_couplings = length(J_vals)
     @assert N_couplings == length(J_inds)
@@ -142,21 +139,20 @@ function getgenericHamiltonian( Id,
     ωIzs = collect( ω0[j] .* Iz for j = 1:N )
     H += Kronecker.kroneckersum(ωIzs...)
 
-
     return H
 end
 
 # has secular dipole-dipole. J here is not really J-coupling, but J - d.
 function getgenericHamiltonian( Id,
-                                Ix,
-                                Iy_no_im,
-                                Iz,
-                                ω0::Vector{T},
-                                J_vals::Vector{T},
-                                J_inds::Vector{Tuple{Int,Int}},
-                                Di_vals::Vector{T},
-                                Di_inds::Vector{Tuple{Int,Int}}) where T <: Real
-    #
+    Ix,
+    Iy_no_im,
+    Iz,
+    ω0::Vector{T},
+    J_vals::Vector{T},
+    J_inds::Vector{Tuple{Int,Int}},
+    Di_vals::Vector{T},
+    Di_inds::Vector{Tuple{Int,Int}}) where T <: Real
+
     N = length(ω0)
     N_couplings = length(Di_vals)
     @assert N_couplings == length(Di_inds)
@@ -188,6 +184,7 @@ end
 
 # v must be an eigen vector of Iz. This routine does not verify this condition.
 function getzangularmomentum(v::Vector{T}, Iz; tol = 1e-7)::T where T
+    
     b = Iz*v
     m = dot(b,v)/dot(v,v)
 
@@ -203,6 +200,7 @@ function getzangularmomentum(v::Vector{T}, Iz; tol = 1e-7)::T where T
 end
 
 function getorderofcoherence(Iz, Q::Vector{Vector{T}}) where T
+    
     M = length(Q)
     @assert size(Iz, 1) == M == size(Iz, 2)
 
@@ -223,7 +221,7 @@ function getorderofcoherence(Iz, Q::Vector{Vector{T}}) where T
         end
     end
 
-    return p
+    return p, M_array
 end
 
 function normalizetoNspins!(A::Vector{T}, N_spins::Int) where T
@@ -237,10 +235,10 @@ function normalizetoNspins!(A::Vector{T}, N_spins::Int) where T
 end
 
 function getaΩ( Iz_full,
-                H::Matrix{T},
-                Iys_no_im_full,
-                Ix_full;
-                tol = 1e-7) where T <: Real
+    H::Matrix{T},
+    Iys_no_im_full,
+    Ix_full;
+    tol = 1e-7) where T <: Real
 
     M = size(H,1)
     @assert size(H,2) == M == size(Iz_full,1) == size(Iz_full,2)
@@ -257,10 +255,10 @@ function getaΩ( Iz_full,
 
 
     ### get order of coherence.
-    #@time p = getorderofcoherence(Iz_full, Q) # TODO speed this up.
+    #@time p, M_array = getorderofcoherence(Iz_full, Q) # TODO speed this up.
     #println("timing coherence")
-    #@time p = getorderofcoherence(Iz_full, Q)
-    p = getorderofcoherence(Iz_full, Q)
+    #@time p, M_array = getorderofcoherence(Iz_full, Q)
+    p, M_array = getorderofcoherence(Iz_full, Q)
 
     a = Vector{T}(undef, M*M)
     F = Vector{T}(undef, M*M)
@@ -268,36 +266,37 @@ function getaΩ( Iz_full,
 
     i_out = 0
 
-    for r = 1:M
-        for s = 1:M
+    # for r = 1:M
+    #     for s = 1:M
+    for (r,s) in Base.Iterators.product(1:M,1:M)
 
-            #if Utilities.isnumericallyclose(p[r,s], -one(T), tol)
-            if isnumericallyclose(round(p[r,s]), -one(T), tol)
-                #println("i_out = ", i_out)
-                i_out += 1
+    #if Utilities.isnumericallyclose(p[r,s], -one(T), tol)
+    if isnumericallyclose(round(p[r,s]), -one(T), tol)
+    #println("i_out = ", i_out)
+    i_out += 1
 
-                inds[i_out] = (r,s)
+    inds[i_out] = (r,s)
 
-                ## signal amplitude.
-                t1 = -dot(conj(Q[r]), IyQs[s])
-                t2 = dot(conj(Q[s]), IxQs[r])
+    ## signal amplitude. Section A.8.2 Spin Dynamics, Eq 2.1.131 Ernst.
+    t1 = -dot(conj(Q[r]), IyQs[s])
+    t2 = dot(conj(Q[s]), IxQs[r])
 
-                # factor 2 instead of 2*im since Iys_no_im_full
-                #   is divided by 2 instead of 2*im.
-                a[i_out] = 2*(t1 * t2)
+    # factor 2 instead of 2*im since Iys_no_im_full
+    #   is divided by 2 instead of 2*im.
+    a[i_out] = 2*(t1 * t2)
 
-                ## signal frequency.
-                F[i_out] = λ[s] - λ[r]
-            end
+    ## signal frequency.
+    F[i_out] = λ[s] - λ[r]
+    end
 
-        end
+
     end
 
     resize!(inds, i_out)
     resize!(a, i_out)
     resize!(F, i_out)
 
-    return a, F, p, λ, Q, inds
+    return a, F, p, λ, Q, inds, M_array
 end
 
 
@@ -315,22 +314,20 @@ function getcfreq(z::Vector{T}) where T
 end
 
 # Q is operator. Evalates <r| Q |s>.
-function evaltrace( Q::Kronecker.KroneckerSum{T},
-                    r,
-                    s)::T where T
+function evaltrace( Q::Kronecker.KroneckerSum{T}, r, s)::T where T
     return dot(conj(r),Q*s)
 end
 
 function evaltrace( Q::Kronecker.KroneckerSum{T},
-                    V)::Matrix{T} where T
-    #
+    V)::Matrix{T} where T
+
     M = length(V)
 
     out = Matrix{T}(undef, M, M)
     for r = 1:M
-        for s = 1:M
-            out[r,s] = evaltrace(Q, V[r], V[s])
-        end
+    for s = 1:M
+    out[r,s] = evaltrace(Q, V[r], V[s])
+    end
     end
 
     return out
@@ -344,9 +341,9 @@ function gettensorproductbasis(Iz::Matrix{T}, Id, N_spins::Int) where T
 
     for n = 1:N_spins
 
-        Is = collect( Id for j = 1:N_spins )
-        Is[n] = Iz
-        I_full = Kronecker.kronecker(Is...)
+    Is = collect( Id for j = 1:N_spins )
+    Is[n] = Iz
+    I_full = Kronecker.kronecker(Is...)
 
         for i = 1:size(I_full,1)
             m = I_full[i,i]
@@ -365,22 +362,22 @@ end
 
 # for single (π/2)_x pulse. # equation A.32.
 function evalamplitudeA32( Iys_no_im_full,
-                            Ix_full,
-                    V::Vector{Vector{T}})::Matrix{T} where T
-    #
+    Ix_full,
+    V::Vector{Vector{T}})::Matrix{T} where T
+
     M = length(V)
 
     out = Matrix{T}(undef, M, M)
     for r = 1:M
-        for s = 1:M
+    for s = 1:M
 
-            t1 = -dot(conj(V[r]), Iys_no_im_full*V[s])
-            t2 = dot(conj(V[s]), Ix_full*V[r])
+    t1 = -dot(conj(V[r]), Iys_no_im_full*V[s])
+    t2 = dot(conj(V[s]), Ix_full*V[r])
 
-            # factor 2 instead of 2*im since Iys_no_im_full
-            #   is divided by 2 instead of 2*im.
-            out[r,s] = 2*(t1 * t2)
-        end
+    # factor 2 instead of 2*im since Iys_no_im_full
+    #   is divided by 2 instead of 2*im.
+    out[r,s] = 2*(t1 * t2)
+    end
     end
 
     return out
@@ -393,31 +390,32 @@ function evalabsorptionspectrum(x::T, λ::T, a::Array{T,D}, Ω::Array{T,D}) wher
 
     out = zero(T)
     for l = 1:L
-        denominator = λ^2 + (x-Ω[l])^2
-        out += a[l]*λ/denominator
+    denominator = λ^2 + (x-Ω[l])^2
+    out += a[l]*λ/denominator
     end
 
     return out
 end
 
 function evalabsorptionspectrumarea(lower_limit::T,
-                                    upper_limit::T,
-                                    λ::T,
-                                    a::Array{T,D},
-                                    Ω::Array{T,D}) where {T,D}
+    upper_limit::T,
+    λ::T,
+    a::Array{T,D},
+    Ω::Array{T,D}) where {T,D}
+
     L = length(a)
     @assert length(Ω) == L
 
     out = zero(T)
     for l = 1:L
 
-        numerator = Ω[l] - lower_limit
-        Ia = -atan(numerator,λ)
+    numerator = Ω[l] - lower_limit
+    Ia = -atan(numerator,λ)
 
-        numerator = Ω[l] - upper_limit
-        Ib = -atan(numerator,λ)
+    numerator = Ω[l] - upper_limit
+    Ib = -atan(numerator,λ)
 
-        out += a[l]*(Ib-Ia)
+    out += a[l]*(Ib-Ia)
     end
 
     return out
