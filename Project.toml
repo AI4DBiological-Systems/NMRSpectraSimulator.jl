@@ -1,7 +1,7 @@
 name = "NMRSpectraSimulator"
 uuid = "2e4b1986-80aa-49f9-97f8-0783739fb47a"
 authors = ["Roy <rwang013@uottawa.ca> and contributors"]
-version = "0.1.0"
+version = "0.2.0"
 
 [compat]
 julia = "1"

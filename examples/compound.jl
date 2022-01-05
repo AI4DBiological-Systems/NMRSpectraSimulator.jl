@@ -17,12 +17,6 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 
 ### user inputs.
 
-#molecule_names = ["L-Histidine"; "L-Alanine"; "DSS"]
-#molecule_names = ["L-Histidine"; "L-Alanine"]
-molecule_names = ["L-Serine";
-"L-Phenylalanine";
-"DSS";]
-
 tol_coherence = 1e-2
 α_relative_threshold = 0.05
 λ0 = 3.4
@@ -30,17 +24,20 @@ tol_coherence = 1e-2
 κ_λ_lb = 0.5
 κ_λ_ub = 2.5
 
+
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
+
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
-# fs = 14005.602240896402
-# SW = 20.0041938620844
-# ν_0ppm = 10656.011933076665
+fs = 14005.602240896402
+SW = 20.0041938620844
+ν_0ppm = 10656.011933076665
 
-ν_0ppm = 6752.490995937095
-SW = 16.0196917451925
-fs = 9615.38461538462
+# # machine values for the BMRB 500 MHz glucose experiment.
+# ν_0ppm = 6752.490995937095
+# SW = 16.0196917451925
+# fs = 9615.38461538462
 
-
-# remove later.
+# path to the GISSMO Julia storage folder.
 base_path_JLD = "/home/roy/Documents/data/NMR/NMRData/src/input/molecules"
 
 ### end inputs.
