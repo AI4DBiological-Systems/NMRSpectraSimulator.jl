@@ -1,12 +1,12 @@
 
-include("../src/NMRSpectraSimulator.jl")
-import .NMRSpectraSimulator
+#include("../src/NMRSpectraSimulator.jl")
+import NMRSpectraSimulator
 
 using LinearAlgebra
 using FFTW
 import PyPlot
-import BSON
-import JLD
+# import BSON
+# import JLD
 
 #import Clustering
 import Statistics
