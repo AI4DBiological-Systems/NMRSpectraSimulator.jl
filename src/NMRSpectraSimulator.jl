@@ -4,6 +4,7 @@ using Distributed, LinearAlgebra, FFTW, SharedArrays, OffsetArrays
 
 import DelimitedFiles, Unicode, FileIO, Random, Printf, PyCall, FiniteDiff, Optim, NLopt, Interpolations, BSON, JLD, Kronecker, BenchmarkTools, NearestNeighbors, HTTP, JSON3, Dates
 
+Pkg.add("https://github.com/AI4DBiological-Systems/GISSMOReader")
 import GISSMOReader # https://github.com/AI4DBiological-Systems/GISSMOReader
 
 include("../src/types.jl")
