@@ -35,7 +35,7 @@ base_path_JLD = "/home/roy/Documents/data/NMR/NMRData/src/input/molecules"
 hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
-records = NMRSpectraSimulator.getGISSMOentriesall()
+records = NMRSpectraSimulator.GISSMOReader.getGISSMOentriesall()
 record_names = collect( records[i].molecule_name for i = 1:length(records) )
 record_entries = collect( records[i].entry for i = 1:length(records) )
 

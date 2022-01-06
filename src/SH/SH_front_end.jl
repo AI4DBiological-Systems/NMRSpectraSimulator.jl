@@ -11,7 +11,7 @@ function fetchSHparameters(molecule_name::String, record_name::String,
     css_sys, J_IDs_sys, J_vals_sys, cs_singlets,
     J_lb_sys, J_ub_sys, cs_lb_sys, cs_ub_sys,
     cs_LUT, reference_concentration, solute_concentration,
-    _ = loadGISSMOmolecule(base_path, file_name)
+    _ = GISSMOReader.loadGISSMOmolecule(base_path, file_name)
 
     #N_groups = length(cs_group)
     p_cs_sys = cstopcs(css_sys, cs_LUT)

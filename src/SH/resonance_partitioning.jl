@@ -182,13 +182,13 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     α_relative_threshold = 0.05) where T <: Real
 
     # fetch GISSMO entry.
-    records = getGISSMOentriesall()
+    records = GISSMOReader.getGISSMOentriesall()
     record_names = collect( records[i].molecule_name for i = 1:length(records) )
 
     k = findfirst(xx->xx==name, record_names)
 
     N_targets = length(record_names)
-    tmp = collect( getGISSMOentry(record_names[i]) for i = 1:N_targets )
+    tmp = collect( GISSMOReader.getGISSMOentry(record_names[i]) for i = 1:N_targets )
     entries = [ records[k].entry ]
     molecule_names = [records[k].molecule_name;]
 
