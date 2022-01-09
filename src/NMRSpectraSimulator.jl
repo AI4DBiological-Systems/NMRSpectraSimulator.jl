@@ -29,4 +29,13 @@ include("../src/model_evals/lorentzian.jl")
 #include("../src/model/parse.jl")
 #include("../src/misc/utilities.jl")
 #include("../src/misc/front_end.jl")
+
+export combinevectors,
+    CompoundFIDType,
+
+    fitproxies!,
+    setupmixtureproxies,
+    evalmixture,
+    evalitpproxymixture
+
 end
