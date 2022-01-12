@@ -1,7 +1,8 @@
+
 mutable struct CompoundFIDType{T}
 
     # resonance components in spin systems.
-    qs::Vector{Vector{Function}}
+    qs::Vector{Vector{Function}} # spin group, partition element index.
     αs::Vector{Vector{T}}
     Ωs::Vector{Vector{T}}
     part_inds_compound::Vector{Vector{Vector{Int}}}
@@ -27,7 +28,26 @@ mutable struct CompoundFIDType{T}
     ν_0ppm::T
 end
 
+mutable struct κCompoundFIDType{T}
+    κ::Vector{Vector{T}} # spin group, partition element index.
+    κ_singlets::Vector{T}
+    core::CompoundFIDType{T}
+end
 
+#const AllCompoundFIDType{T} = Union{CompoundFIDType{T}, κCompoundFIDType{T}}
+
+function κCompoundFIDType(core::CompoundFIDType{T}) where T
+
+    N_spins = length(core.part_inds_compound)
+    C = Vector{Vector{T}}(undef, N_spins)
+    for i = 1:N_spins
+        C[i] = ones(T, length(core.part_inds_compound[i]))
+    end
+
+    D = ones(T, length(core.d_singlets))
+
+    return κCompoundFIDType(C, D, core)
+end
 
 # creates a reference from As.
 function fetchΩS(As::Vector{CompoundFIDType{T}}) where T
