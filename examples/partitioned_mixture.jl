@@ -1,5 +1,5 @@
-include("../src/NMRSpectraSimulator.jl")
-import .NMRSpectraSimulator
+#include("../src/NMRSpectraSimulator.jl")
+import NMRSpectraSimulator
 
 using LinearAlgebra
 using FFTW
