@@ -93,6 +93,9 @@ Ag = As2[end]
 #Ag.κ = collect( rand(length(Ag.κ[i])) for i = 1:length(Ag.κ) )
 #Ag.κ_singlets = rand(length(Ag.κ_singlets))
 Ag.κ[1][1] = 0.3
+Ag.κ[1][2] = 0.7
+Ag.κ[1][3] = 0.1
+Ag.κ_singlets[1] = 0.4
 
 #@assert 1==4
 
