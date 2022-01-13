@@ -119,6 +119,9 @@ println("max discrepancy: ", max_val)
 println()
 
 ## visualize.
+PyPlot.figure(fig_num)
+fig_num += 1
+
 PyPlot.plot(P, real.(f_U), label = "f")
 PyPlot.plot(P, real.(q_U), label = "q")
 
