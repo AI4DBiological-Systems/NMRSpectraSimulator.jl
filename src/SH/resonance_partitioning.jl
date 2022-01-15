@@ -234,7 +234,7 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     N_spins_compound = collect( length(css_sys[i]) for i = 1:length(css_sys))
     #κs_λ = collect( convertcompactdomain(rand(), 0.0, 1.0, κ_λ_lb, κ_λ_ub) for i = 1:length(Ωs_inp))
     #κs_β = collect( randn(N_spins_compound[i]) for i = 1:length(N_spins_compound))
-    κs_λ = ones(T, length(Ωs_inp))
+    κs_λ = ones(T, length(Ωs))
     κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
     #d = rand(length(αs))
     d = zeros(T, length(αs))
