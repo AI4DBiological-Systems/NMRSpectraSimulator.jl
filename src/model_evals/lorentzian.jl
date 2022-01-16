@@ -272,7 +272,7 @@ function evalitpproxycompound(u, A::κCompoundFIDType{T})::Complex{T} where T <:
     out_singlets = evalκsinglets(u, A.core.d_singlets,
     A.core.αs_singlets, A.core.Ωs_singlets,
     A.core.β_singlets, A.core.λ0, A.core.κs_λ_singlets;
-    κ_singlets = A.κ_singlets)
+    κ_α_singlets = A.κ_singlets)
 
     return out_sys + out_singlets
 end
