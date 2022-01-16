@@ -163,7 +163,7 @@ end
 function evalκsinglets(u::T, d::Vector{T},
     αs_singlets::Vector{T}, Ωs_singlets,
     βs_singlets, λ0::T, λ_multipliers::Vector{T};
-    κ_α_singlets::Vector{T} = ones(T, αs_singlets)) where T <: Real
+    κ_α_singlets::Vector{T} = ones(T, length(αs_singlets))) where T <: Real
 
     u_rad = 2*π*u
 
