@@ -160,9 +160,10 @@ function evalsinglets(u::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
     return out
 end
 
-function evalκsinglets(u::T, κ_α_singlets::Vector{T}, d::Vector{T},
+function evalκsinglets(u::T, d::Vector{T},
     αs_singlets::Vector{T}, Ωs_singlets,
-    βs_singlets, λ0::T, λ_multipliers::Vector{T}) where T <: Real
+    βs_singlets, λ0::T, λ_multipliers::Vector{T};
+    κ_α_singlets::Vector{T} = ones(T, αs_singlets)) where T <: Real
 
     u_rad = 2*π*u
 
@@ -268,9 +269,10 @@ function evalitpproxycompound(u, A::κCompoundFIDType{T})::Complex{T} where T <:
 
     out_sys = evalκitpproxysys(A.κ, A.core.qs, u, A.core.d, A.core.κs_λ, A.core.κs_β)
 
-    out_singlets = evalκsinglets(u, A.κ_singlets, A.core.d_singlets,
+    out_singlets = evalκsinglets(u, A.core.d_singlets,
     A.core.αs_singlets, A.core.Ωs_singlets,
-    A.core.β_singlets, A.core.λ0, A.core.κs_λ_singlets)
+    A.core.β_singlets, A.core.λ0, A.core.κs_λ_singlets;
+    κ_singlets = A.κ_singlets)
 
     return out_sys + out_singlets
 end
