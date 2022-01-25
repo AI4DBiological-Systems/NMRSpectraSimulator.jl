@@ -122,6 +122,45 @@ function fitproxies!(As::Vector{CompoundFIDType{T}};
     return nothing
 end
 
+function fitproxysimple!(A::CompoundFIDType{T};
+    κ_λ_lb = 0.5,
+    κ_λ_ub = 2.5,
+    u_min = Inf,
+    u_max = Inf,
+    Δr = 1.0,
+    Δκ_λ = 0.05) where T
+
+    hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
+    ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
+
+    # threshold and partition the resonance components.
+    if !isfinite(u_min) || !isfinite(u_max)
+        Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ (2*π) )
+        min_ppm = minimum(Ωs_ppm) - 0.5
+        max_ppm = maximum(Ωs_ppm) + 0.5
+        u_min = ppm2hzfunc(min_ppm)
+        u_max = ppm2hzfunc(max_ppm)
+    end
+
+    # make into single element for the simple phase eval.
+    for i = 1:length(A.κs_β)
+        resize!(A.κs_β[i], 1)
+    end
+    
+    d_max = ppm2hzfunc(A.Δcs_max)-ppm2hzfunc(0.0)
+    A.qs = setupcompoundpartitionitpsimple(d_max,
+        A.Δc_m_compound,
+        A.part_inds_compound,
+        A.αs, A.Ωs,
+        A.λ0, u_min, u_max;
+        κ_λ_lb = κ_λ_lb,
+        κ_λ_ub = κ_λ_ub,
+        Δr = Δr,
+        Δκ_λ = Δκ_λ)
+
+    return nothing
+end
+
 function fitproxy!(A::CompoundFIDType{T};
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5,

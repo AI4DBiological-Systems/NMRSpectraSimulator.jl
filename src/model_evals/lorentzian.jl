@@ -144,6 +144,39 @@ function setupcompoundpartitionitp(d_max::T,
     return qs
 end
 
+function setupcompoundpartitionitpsimple(d_max::T,
+    Δc_m_compound::Vector{Vector{Vector{T}}},
+    part_inds_compound::Vector{Vector{Vector{Int}}},
+    αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
+    λ0::T, u_min::T, u_max::T;
+    κ_λ_lb = 0.5,
+    κ_λ_ub = 2.5,
+    Δr = 1.0,
+    Δκ_λ = 0.05) where T <: Real
+
+    qs = Vector{Vector{Function}}(undef, length(αs))
+    for i = 1:length(αs) # over elements in a spin group.
+
+        N_partition_elements = length(part_inds_compound[i])
+        qs[i] = Vector{Function}(undef, N_partition_elements)
+
+        for k = 1:N_partition_elements
+            #println("i,k", (i,k))
+            α = αs[i][part_inds_compound[i][k]]
+            Ω = Ωs[i][part_inds_compound[i][k]]
+            real_sitp, imag_sitp = setuppartitionitp(α, Ω,
+            d_max, λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
+            Δr = Δr, Δκ_λ = 0.05)
+
+            #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
+            qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*bb[1])
+
+        end
+    end
+
+    return qs
+end
+
 function evalsinglets(u::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
     βs_singlets, λ0::T, λ_multipliers::Vector{T}) where T <: Real
 
