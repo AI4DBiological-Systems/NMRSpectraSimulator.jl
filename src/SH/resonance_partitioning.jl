@@ -101,7 +101,7 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
     return as, Fs, part_inds_set, Δc_m_set
 end
 
-function fitproxies!(As::Vector{CompoundFIDType{T}};
+function fitproxiessimple!(As::Vector{CompoundFIDType{T}};
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5,
     u_min = Inf,
@@ -110,7 +110,7 @@ function fitproxies!(As::Vector{CompoundFIDType{T}};
     Δκ_λ = 0.05) where T
 
     for n = 1:length(As)
-        fitproxy!(As[n];
+        fitproxysimple!(As[n];
         κ_λ_lb = κ_λ_lb,
         κ_λ_ub = κ_λ_ub,
         u_min = u_min,
@@ -146,7 +146,7 @@ function fitproxysimple!(A::CompoundFIDType{T};
     for i = 1:length(A.κs_β)
         resize!(A.κs_β[i], 1)
     end
-    
+
     d_max = ppm2hzfunc(A.Δcs_max)-ppm2hzfunc(0.0)
     A.qs = setupcompoundpartitionitpsimple(d_max,
         A.Δc_m_compound,
@@ -157,6 +157,27 @@ function fitproxysimple!(A::CompoundFIDType{T};
         κ_λ_ub = κ_λ_ub,
         Δr = Δr,
         Δκ_λ = Δκ_λ)
+
+    return nothing
+end
+
+function fitproxies!(As::Vector{CompoundFIDType{T}};
+    κ_λ_lb = 0.5,
+    κ_λ_ub = 2.5,
+    u_min = Inf,
+    u_max = Inf,
+    Δr = 1.0,
+    Δκ_λ = 0.05) where T
+
+    for n = 1:length(As)
+        fitproxy!(As[n];
+        κ_λ_lb = κ_λ_lb,
+        κ_λ_ub = κ_λ_ub,
+        u_min = u_min,
+        u_max =u_max,
+        Δr = Δr,
+        Δκ_λ = Δκ_λ)
+    end
 
     return nothing
 end
