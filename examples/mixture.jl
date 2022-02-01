@@ -26,7 +26,15 @@ tol_coherence = 1e-2
 
 
 #molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
-molecule_names = ["D-(+)-Glucose"; "DSS"]
+#molecule_names = ["D-(+)-Glucose"; "DSS"]
+
+### TODO I am here. new script, loop through all, simulate one at a time, simulate, save as html proxy. save discrepancy of shift, lambda, kappa tests.
+# get the all GISSMO entries.
+import GISSMOReader
+tmp = GISSMOReader.getGISSMOentriesall()
+GISSMO_entries = GISSMOReader.extractfields(tmp, "entry")
+molecule_names = GISSMOReader.extractfields(tmp, "molecule_name")
+
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
@@ -39,7 +47,7 @@ SW = 20.0041938620844
 # fs = 9615.38461538462
 
 # path to the GISSMO Julia storage folder.
-base_path_JLD = "/home/roy/Documents/data/NMR/NMRData/src/input/molecules"
+base_path_JLD = "/home/roy/Documents/repo/NMRData/src/input/molecules"
 
 ### end inputs.
 
@@ -49,14 +57,16 @@ ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names))
 
-mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
+println("Timing: setupmixtureproxies()")
+@time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
     base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
     ν_0ppm;
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold)
 As = mixture_params
 
-
+# I am here. PackageCompile this.
+@assert 1==43
 
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)

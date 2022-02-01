@@ -28,7 +28,7 @@ SW = 20.0041938620844
 
 
 # remove later.
-base_path_JLD = "/home/roy/Documents/data/NMR/NMRData/src/input/molecules"
+base_path_JLD = "/home/roy/Documents/repo/NMRData/src/input/molecules"
 
 ### end inputs.
 
