@@ -2,8 +2,10 @@
 
 
 #####
-
-function partitionresonances(x_in::Vector{Vector{T}},
+"""
+Uses the NearestNeighbors.jl search library to determine which resonances should be grouped together.
+"""
+function partitionresonancesbyneighbors(x_in::Vector{Vector{T}},
     amplitudes_in::Vector{T},
     threshold_amplitude::T;
     radius = 1e-1,
@@ -54,7 +56,8 @@ end
 """
 function partitionresonances(coherence_state_pairs_sys, ms_sys,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}};
-    α_relative_threshold = 0.05) where T
+    α_relative_threshold = 0.05,
+    Δc_partition_radius = 1e-1) where T
 
     N_groups = length(αs)
 
@@ -80,8 +83,8 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
         c_m_s = collect( ms_sys[i][s] for (r,s) in c_states_prune )
         Δc_m = collect( c_m_r[j] - c_m_s[j] for j = 1:length(c_m_r))
 
-        part_inds = partitionresonances(Δc_m,
-            αs_i_prune, α_tol; radius = 1e-1)
+        part_inds = partitionresonancesbyneighbors(Δc_m,
+            αs_i_prune, α_tol; radius = Δc_partition_radius)
 
         # partition_size = length(part_inds)
         # as[i] = Vector{Vector{T}}(undef, partition_size)
@@ -221,7 +224,8 @@ function setupmixtureproxies(target_names::Vector{String},
     hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
     ν_0ppm::T;
     tol_coherence = 1e-2,
-    α_relative_threshold = 0.05) where T <: Real
+    α_relative_threshold = 0.05,
+    Δc_partition_radius = 1e-1) where T <: Real
 
     N_compounds = length(target_names)
     As = Vector{CompoundFIDType{T}}(undef, N_compounds)
@@ -230,7 +234,8 @@ function setupmixtureproxies(target_names::Vector{String},
         As[n] = setupcompoundproxy(target_names[n],
         base_path_JLD, Δcs_max_mixture[n], hz2ppmfunc, ppm2hzfunc, fs, SW, λ0, ν_0ppm;
         tol_coherence = tol_coherence,
-        α_relative_threshold = α_relative_threshold)
+        α_relative_threshold = α_relative_threshold,
+        Δc_partition_radius = Δc_partition_radius)
     end
 
     return As
@@ -239,7 +244,8 @@ end
 function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc,
     fs::T, SW::T, λ0::T, ν_0ppm::T;
     tol_coherence = 1e-2,
-    α_relative_threshold = 0.05) where T <: Real
+    α_relative_threshold = 0.05,
+    Δc_partition_radius = 1e-1) where T <: Real
 
     # fetch GISSMO entry.
     records = GISSMOReader.getGISSMOentriesall()
@@ -285,7 +291,8 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     αs, Ωs, part_inds_compound,
     Δc_m_compound = partitionresonances(coherence_state_pairs_sys,
     ms_sys, αs_spin_sys, Ωs_spin_sys;
-    α_relative_threshold = α_relative_threshold)
+    α_relative_threshold = α_relative_threshold,
+    Δc_partition_radius = Δc_partition_radius)
 
     # proxy placeholder.
     qs = Vector{Vector{Function}}(undef, 0)
