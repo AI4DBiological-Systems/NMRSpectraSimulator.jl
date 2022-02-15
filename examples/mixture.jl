@@ -25,15 +25,15 @@ tol_coherence = 1e-2
 κ_λ_ub = 2.5
 
 
-#molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
 
-### TODO I am here. new script, loop through all, simulate one at a time, simulate, save as html proxy. save discrepancy of shift, lambda, kappa tests.
-# get the all GISSMO entries.
-import GISSMOReader
-tmp = GISSMOReader.getGISSMOentriesall()
-GISSMO_entries = GISSMOReader.extractfields(tmp, "entry")
-molecule_names = GISSMOReader.extractfields(tmp, "molecule_name")
+# # ### TODO I am here. new script, loop through all, simulate one at a time, simulate, save as html proxy. save discrepancy of shift, lambda, kappa tests.
+# # # get the all GISSMO entries.
+# import GISSMOReader
+# tmp = GISSMOReader.getGISSMOentriesall()
+# GISSMO_entries = GISSMOReader.extractfields(tmp, "entry")
+# molecule_names = GISSMOReader.extractfields(tmp, "molecule_name")
 
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
