@@ -1,3 +1,5 @@
+# make this into test script, spline proxy vs lorentzian.
+
 #include("../src/NMRSpectraSimulator.jl")
 import NMRSpectraSimulator
 
@@ -65,8 +67,8 @@ println("Timing: setupmixtureproxies()")
     α_relative_threshold = α_relative_threshold)
 As = mixture_params
 
-# I am here. PackageCompile this.
-@assert 1==43
+
+#@assert 1==43
 
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
