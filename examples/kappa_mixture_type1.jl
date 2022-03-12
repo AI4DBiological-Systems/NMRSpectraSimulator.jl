@@ -1,7 +1,5 @@
-# make this into test script, spline proxy vs lorentzian.
-
-#include("../src/NMRSpectraSimulator.jl")
-import NMRSpectraSimulator
+include("../src/NMRSpectraSimulator.jl")
+import .NMRSpectraSimulator
 
 using LinearAlgebra
 using FFTW
@@ -27,16 +25,8 @@ tol_coherence = 1e-2
 κ_λ_ub = 2.5
 
 
-molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
-#molecule_names = ["D-(+)-Glucose"; "DSS"]
-
-# # ### TODO I am here. new script, loop through all, simulate one at a time, simulate, save as html proxy. save discrepancy of shift, lambda, kappa tests.
-# # # get the all GISSMO entries.
-# import GISSMOReader
-# tmp = GISSMOReader.getGISSMOentriesall()
-# GISSMO_entries = GISSMOReader.extractfields(tmp, "entry")
-# molecule_names = GISSMOReader.extractfields(tmp, "molecule_name")
-
+#molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
+molecule_names = ["D-(+)-Glucose"; "DSS"]
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
@@ -59,16 +49,15 @@ ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names))
 
-println("Timing: setupmixtureproxies()")
-@time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
+dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0)
+mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
     base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
-    ν_0ppm;
+    ν_0ppm, dummy_SSFID;
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold)
 As = mixture_params
 
 
-#@assert 1==43
 
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
@@ -85,10 +74,10 @@ NMRSpectraSimulator.fitproxies!(As;
 ### plot.
 
 # purposely distort the spectra by setting non-autophased FID values.
-Ag = As[1]
-Ag.d = rand(length(Ag.d))
-Ag.κs_λ = rand(length(Ag.κs_λ)) .+ 1
-Ag.κs_β = collect( rand(length(Ag.κs_β[i])) .* (2*π) for i = 1:length(Ag.κs_β) )
+Ag = As[2]
+Ag.ss_params.d = rand(length(Ag.ss_params.d))
+Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
+Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
 
 
 f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
@@ -98,7 +87,18 @@ f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
 #ΩS_ppm_flat = NMRSpectraSimulator.combinevectors(ΩS_ppm)
 
 
+As2 = collect( NMRSpectraSimulator.κCompoundFIDType(As[i]) for i = 1:length(As) )
 
+# purposely modify As2, DSS element.
+Ag = As2[end]
+#Ag.ss_params.κ = collect( rand(length(Ag.κ[i])) for i = 1:length(Ag.κ) )
+#Ag.κ_singlets = rand(length(Ag.κ_singlets))
+Ag.κ[1][1] = 0.3
+Ag.κ[1][2] = 0.7
+Ag.κ[1][3] = 0.1
+Ag.κ_singlets[1] = 0.4
+
+#@assert 1==4
 
 P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
 U = ppm2hzfunc.(P)
@@ -106,7 +106,9 @@ U = ppm2hzfunc.(P)
 ## parameters that affect qs.
 # A.d, A.κs_λ, A.κs_β
 # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
-q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params)
+
+#q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params)
+q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, As2)
 
 f_U = f.(U)
 q_U = q.(U)
@@ -118,6 +120,9 @@ println("max discrepancy: ", max_val)
 println()
 
 ## visualize.
+PyPlot.figure(fig_num)
+fig_num += 1
+
 PyPlot.plot(P, real.(f_U), label = "f")
 PyPlot.plot(P, real.(q_U), label = "q")
 

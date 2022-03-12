@@ -1,5 +1,37 @@
 
-mutable struct CompoundFIDType{T}
+# different parameterizations of the spin system FID parameters.
+mutable struct SpinSysFIDType1{T}
+    κs_λ::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
+    κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
+    d::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
+end
+
+function SpinSysFIDType1(x::T) where T
+    return SpinSysFIDType1{T}(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{T}(undef, 0))
+end
+
+
+mutable struct SpinSysFIDType2{T}
+    κs_λ::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
+    κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
+    d::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
+end
+
+function SpinSysFIDType2(x::T) where T
+    return SpinSysFIDType2(Vector{Vector{T}}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
+end
+
+function constructorSSFID(x::SpinSysFIDType1{T}, y...)::SpinSysFIDType1{T} where T
+    return SpinSysFIDType1(y...)
+end
+
+function constructorSSFID(x::SpinSysFIDType2{T}, y...)::SpinSysFIDType2{T} where T
+    return SpinSysFIDType2(y...)
+end
+
+###### system-level container.
+
+mutable struct CompoundFIDType{T,SST}
 
     # resonance components in spin systems.
     qs::Vector{Vector{Function}} # spin group, partition element index.
@@ -8,9 +40,10 @@ mutable struct CompoundFIDType{T}
     part_inds_compound::Vector{Vector{Vector{Int}}}
     Δc_m_compound::Vector{Vector{Vector{T}}}
 
-    κs_λ::Vector{T} # multipliers for each spin group.
-    κs_β::Vector{Vector{T}} # coefficients for each (spin group, partition element).
-    d::Vector{T}
+    # κs_λ::Vector{T} # multipliers for each spin group.
+    # κs_β::Vector{Vector{T}} # coefficients for each (spin group, partition element).
+    # d::Vector{T}
+    ss_params::SST
 
     # resonance components in singlets spin systems.
     αs_singlets::Vector{T}
@@ -28,15 +61,13 @@ mutable struct CompoundFIDType{T}
     ν_0ppm::T
 end
 
-mutable struct κCompoundFIDType{T}
+mutable struct κCompoundFIDType{T,SST}
     κ::Vector{Vector{T}} # spin group, partition element index.
     κ_singlets::Vector{T}
-    core::CompoundFIDType{T}
+    core::CompoundFIDType{T,SST}
 end
 
-#const AllCompoundFIDType{T} = Union{CompoundFIDType{T}, κCompoundFIDType{T}}
-
-function κCompoundFIDType(core::CompoundFIDType{T}) where T
+function κCompoundFIDType(core::CompoundFIDType{T,SST}) where {T,SST}
 
     N_spins = length(core.part_inds_compound)
     C = Vector{Vector{T}}(undef, N_spins)
@@ -50,7 +81,7 @@ function κCompoundFIDType(core::CompoundFIDType{T}) where T
 end
 
 # creates a reference from As.
-function fetchΩS(As::Vector{CompoundFIDType{T}}) where T
+function fetchΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
 
     ΩS = Vector{Vector{Vector{T}}}(undef, 0)
     j = 0

@@ -104,73 +104,14 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
     return as, Fs, part_inds_set, Δc_m_set
 end
 
-function fitproxiessimple!(As::Vector{CompoundFIDType{T}};
+
+function fitproxies!(As::Vector{CompoundFIDType{T,SST}};
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5,
     u_min = Inf,
     u_max = Inf,
     Δr = 1.0,
-    Δκ_λ = 0.05) where T
-
-    for n = 1:length(As)
-        fitproxysimple!(As[n];
-        κ_λ_lb = κ_λ_lb,
-        κ_λ_ub = κ_λ_ub,
-        u_min = u_min,
-        u_max =u_max,
-        Δr = Δr,
-        Δκ_λ = Δκ_λ)
-    end
-
-    return nothing
-end
-
-function fitproxysimple!(A::CompoundFIDType{T};
-    κ_λ_lb = 0.5,
-    κ_λ_ub = 2.5,
-    u_min = Inf,
-    u_max = Inf,
-    Δr = 1.0,
-    Δκ_λ = 0.05) where T
-
-    hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
-    ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
-
-    # threshold and partition the resonance components.
-    if !isfinite(u_min) || !isfinite(u_max)
-        Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ (2*π) )
-        min_ppm = minimum(Ωs_ppm) - 0.5
-        max_ppm = maximum(Ωs_ppm) + 0.5
-        u_min = ppm2hzfunc(min_ppm)
-        u_max = ppm2hzfunc(max_ppm)
-    end
-
-    # make into single element for the simple phase eval.
-    for i = 1:length(A.κs_β)
-        resize!(A.κs_β[i], 1)
-    end
-
-    d_max = ppm2hzfunc(A.Δcs_max)-ppm2hzfunc(0.0)
-    A.qs = setupcompoundpartitionitpsimple(d_max,
-        A.Δc_m_compound,
-        A.part_inds_compound,
-        A.αs, A.Ωs,
-        A.λ0, u_min, u_max;
-        κ_λ_lb = κ_λ_lb,
-        κ_λ_ub = κ_λ_ub,
-        Δr = Δr,
-        Δκ_λ = Δκ_λ)
-
-    return nothing
-end
-
-function fitproxies!(As::Vector{CompoundFIDType{T}};
-    κ_λ_lb = 0.5,
-    κ_λ_ub = 2.5,
-    u_min = Inf,
-    u_max = Inf,
-    Δr = 1.0,
-    Δκ_λ = 0.05) where T
+    Δκ_λ = 0.05) where {T,SST}
 
     for n = 1:length(As)
         fitproxy!(As[n];
@@ -185,13 +126,13 @@ function fitproxies!(As::Vector{CompoundFIDType{T}};
     return nothing
 end
 
-function fitproxy!(A::CompoundFIDType{T};
+function fitproxy!(A::CompoundFIDType{T,SST};
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5,
     u_min = Inf,
     u_max = Inf,
     Δr = 1.0,
-    Δκ_λ = 0.05) where T
+    Δκ_λ = 0.05) where {T,SST}
 
     hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
     ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
@@ -222,20 +163,31 @@ end
 function setupmixtureproxies(target_names::Vector{String},
     base_path_JLD, Δcs_max_mixture::Vector{T},
     hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
-    ν_0ppm::T;
+    ν_0ppm::T,
+    dummy_SSFID::SST;
     tol_coherence = 1e-2,
     α_relative_threshold = 0.05,
-    Δc_partition_radius = 1e-1) where T <: Real
+    Δc_partition_radius = 1e-1) where {T <: Real, SST}
 
     N_compounds = length(target_names)
-    As = Vector{CompoundFIDType{T}}(undef, N_compounds)
+    As = Vector{CompoundFIDType{T,SST}}(undef, N_compounds)
 
     for n = 1:N_compounds
-        As[n] = setupcompoundproxy(target_names[n],
-        base_path_JLD, Δcs_max_mixture[n], hz2ppmfunc, ppm2hzfunc, fs, SW, λ0, ν_0ppm;
-        tol_coherence = tol_coherence,
-        α_relative_threshold = α_relative_threshold,
-        Δc_partition_radius = Δc_partition_radius)
+
+        qs, αs, Ωs, part_inds_compound, Δc_m_compound, N_spins_compound,
+            αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
+            λ0, fs, SW, Δcs_max, ν_0ppm = setupcompoundproxy(target_names[n],
+            base_path_JLD, Δcs_max_mixture[n], hz2ppmfunc, ppm2hzfunc, fs, SW, λ0, ν_0ppm;
+            tol_coherence = tol_coherence,
+            α_relative_threshold = α_relative_threshold,
+            Δc_partition_radius = Δc_partition_radius)
+
+        SSFID_obj = setupSSFIDparams(dummy_SSFID, length(Ωs), length(αs), N_spins_compound)
+
+        As[n] = CompoundFIDType(qs, αs, Ωs, part_inds_compound, Δc_m_compound,
+        SSFID_obj,
+        αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
+        λ0, fs, SW, Δcs_max, ν_0ppm)
     end
 
     return As
@@ -301,10 +253,12 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     N_spins_compound = collect( length(css_sys[i]) for i = 1:length(css_sys))
     #κs_λ = collect( convertcompactdomain(rand(), 0.0, 1.0, κ_λ_lb, κ_λ_ub) for i = 1:length(Ωs_inp))
     #κs_β = collect( randn(N_spins_compound[i]) for i = 1:length(N_spins_compound))
-    κs_λ = ones(T, length(Ωs))
-    κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
-    #d = rand(length(αs))
-    d = zeros(T, length(αs))
+
+    ## move to setupSSFIDparams()
+    # κs_λ = ones(T, length(Ωs))
+    # κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
+    # d = zeros(T, length(αs))
+    ## end move.
 
     N_singlets = length(αs_singlets)
     κs_λ_singlets = ones(T, N_singlets)
@@ -314,51 +268,57 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     # f = uu->evalcLcompoundviapartitions(uu, d,
     # αs, Ωs, κs_λ, κs_β, λ0, Δc_m_compound, part_inds_compound)
 
-    out = CompoundFIDType(qs, αs, Ωs, part_inds_compound, Δc_m_compound,
-    κs_λ, κs_β, d,
+    return qs, αs, Ωs, part_inds_compound, Δc_m_compound, N_spins_compound,
     αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
-    λ0, fs, SW, Δcs_max, ν_0ppm)
-
-    return out
+    λ0, fs, SW, Δcs_max, ν_0ppm
 end
 
+function setupSSFIDparams(dummy_SSFID::SpinSysFIDType1{T}, len_Ωs::Int, len_αs::Int, N_spins_compound)::SpinSysFIDType1{T} where T
 
-function fetchsubset(As::Vector{CompoundFIDType{T}}, indices::Vector{Tuple{Int,Int}}) where T <: Real
+    κs_λ = ones(T, len_Ωs)
+    κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
+    #d = rand(length(αs))
+    d = zeros(T, len_αs)
 
-    # get
-    inds = collect( findall(xx->xx[1]==n, indices) for n = 1:length(As) )
-    filter!(xx->!isempty(xx), inds)
-
-    Bs = Vector{CompoundFIDType{T}}(undef, length(inds))
-
-    for j = 1:length(inds)
-        ks = inds[j]
-        n, _ = indices[ks[1]]
-        A = As[n]
-
-        is = collect( indices[ks[l]][2] for l = 1:length(ks) )
-        is_sys = filter(xx->xx<=length(A.qs), is)
-
-        N_sys = length(A.qs)
-        is_singlets = filter(xx->xx>length(A.qs), is) .- N_sys
-
-
-        Bs[j] = CompoundFIDType(A.qs[is_sys], A.αs[is_sys], A.Ωs[is_sys],
-        A.part_inds_compound[is_sys], A.Δc_m_compound[is_sys],
-        A.κs_λ[is_sys], A.κs_β[is_sys], A.d[is_sys],
-        A.αs_singlets[is_singlets],
-        A.Ωs_singlets[is_singlets],
-        A.κs_λ_singlets[is_singlets],
-        A.β_singlets[is_singlets],
-        A.d_singlets[is_singlets],
-        A.λ0, A.fs, A.SW, A.Δcs_max, A.ν_0ppm)
-    end
-
-    return Bs
+    return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
 end
 
-# I am here.
-function getNβ(A::CompoundFIDType{T}) where T
+# function fetchsubset(As::Vector{CompoundFIDType{T,SpinSysFIDType1{T}}}, indices::Vector{Tuple{Int,Int}}) where {T <: Real,SST}
+#
+#     # get
+#     inds = collect( findall(xx->xx[1]==n, indices) for n = 1:length(As) )
+#     filter!(xx->!isempty(xx), inds)
+#
+#     Bs = Vector{CompoundFIDType{T,SST}}(undef, length(inds))
+#
+#     for j = 1:length(inds)
+#         ks = inds[j]
+#         n, _ = indices[ks[1]]
+#         A = As[n]
+#
+#         is = collect( indices[ks[l]][2] for l = 1:length(ks) )
+#         is_sys = filter(xx->xx<=length(A.qs), is)
+#
+#         N_sys = length(A.qs)
+#         is_singlets = filter(xx->xx>length(A.qs), is) .- N_sys
+#
+#
+#         Bs[j] = CompoundFIDType(A.qs[is_sys], A.αs[is_sys], A.Ωs[is_sys],
+#         A.part_inds_compound[is_sys], A.Δc_m_compound[is_sys],
+#         SpinSysFIDType1{T}(A.κs_λ[is_sys], A.κs_β[is_sys], A.d[is_sys]),
+#         A.αs_singlets[is_singlets],
+#         A.Ωs_singlets[is_singlets],
+#         A.κs_λ_singlets[is_singlets],
+#         A.β_singlets[is_singlets],
+#         A.d_singlets[is_singlets],
+#         A.λ0, A.fs, A.SW, A.Δcs_max, A.ν_0ppm)
+#     end
+#
+#     return Bs
+# end
+
+
+function getNβ(A::CompoundFIDType{T,SST}) where {T,SST}
 
     counter_sys = 0
     for i = 1:length(A.κs_β)

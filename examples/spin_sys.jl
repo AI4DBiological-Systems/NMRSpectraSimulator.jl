@@ -1,3 +1,4 @@
+## TODO untested with new scheme.
 
 #include("../src/NMRSpectraSimulator.jl")
 import NMRSpectraSimulator
