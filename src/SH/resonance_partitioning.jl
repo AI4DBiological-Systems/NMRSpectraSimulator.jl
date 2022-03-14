@@ -182,7 +182,7 @@ function setupmixtureproxies(target_names::Vector{String},
             α_relative_threshold = α_relative_threshold,
             Δc_partition_radius = Δc_partition_radius)
 
-        SSFID_obj = setupSSFIDparams(dummy_SSFID, length(Ωs), length(αs), N_spins_compound)
+        SSFID_obj = setupSSFIDparams(dummy_SSFID, part_inds_compound, N_spins_compound)
 
         As[n] = CompoundFIDType(qs, αs, Ωs, part_inds_compound, Δc_m_compound,
         SSFID_obj,
@@ -273,15 +273,35 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     λ0, fs, SW, Δcs_max, ν_0ppm
 end
 
-function setupSSFIDparams(dummy_SSFID::SpinSysFIDType1{T}, len_Ωs::Int, len_αs::Int, N_spins_compound)::SpinSysFIDType1{T} where T
+function setupSSFIDparams(dummy_SSFID::SpinSysFIDType1{T}, part_inds_compound, N_spins_compound)::SpinSysFIDType1{T} where T
+    L = length(part_inds_compound)
 
-    κs_λ = ones(T, len_Ωs)
+    κs_λ = ones(T, L)
     κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
     #d = rand(length(αs))
-    d = zeros(T, len_αs)
+    d = zeros(T, L)
 
     return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
 end
+
+function setupSSFIDparams(dummy_SSFID::SpinSysFIDType2{T}, part_inds_compound::Vector{Vector{Vector{Int}}}, N_spins_compound)::SpinSysFIDType2{T} where T
+
+    N_sys = length(part_inds_compound)
+    κs_λ = Vector{Vector{T}}(undef, N_sys)
+    d = Vector{Vector{T}}(undef, N_sys)
+
+    for i = 1:length(d)
+        N_partition_elements = length(part_inds_compound[i])
+
+        κs_λ[i] = ones(T, N_partition_elements)
+        d[i] = zeros(T, N_partition_elements)
+    end
+
+    κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
+
+    return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
+end
+
 
 # function fetchsubset(As::Vector{CompoundFIDType{T,SpinSysFIDType1{T}}}, indices::Vector{Tuple{Int,Int}}) where {T <: Real,SST}
 #

@@ -26,11 +26,10 @@ tol_coherence = 1e-2
 κ_λ_lb = 0.5
 κ_λ_ub = 2.5
 
-
-molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
+molecule_names = ["DSS";]
+#molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
 
-# # ### TODO I am here. new script, loop through all, simulate one at a time, simulate, save as html proxy. save discrepancy of shift, lambda, kappa tests.
 # # # get the all GISSMO entries.
 # import GISSMOReader
 # tmp = GISSMOReader.getGISSMOentriesall()
@@ -68,8 +67,8 @@ dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType2(0.0)
     α_relative_threshold = α_relative_threshold)
 As = mixture_params
 
-# TODO I am here.
-@assert 1==43
+
+#@assert 1==43
 
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
@@ -86,9 +85,11 @@ NMRSpectraSimulator.fitproxies!(As;
 ### plot.
 
 # purposely distort the spectra by setting non-autophased FID values.
-Ag = As[1]
-Ag.ss_params.d = rand(length(Ag.ss_params.d))
-Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
+compound_select = 1
+spin_sys_select = 1
+Ag = As[compound_select]
+Ag.ss_params.d[spin_sys_select] = rand(length(Ag.part_inds_compound[spin_sys_select]))
+Ag.ss_params.κs_λ[spin_sys_select] = rand(length(Ag.part_inds_compound[spin_sys_select])) .+ 1
 Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
 
 
