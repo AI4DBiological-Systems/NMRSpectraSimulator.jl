@@ -73,14 +73,22 @@ NMRSpectraSimulator.fitproxies!(As;
 
 ### plot.
 
+function convertΔcstoΔω0(x::T, fs::T, SW::T)::T where T
+    return x*2*π*fs/SW
+end
+
+P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
+U = ppm2hzfunc.(P)
+
 # purposely distort the spectra by setting non-autophased FID values.
-Ag = As[2]
-Ag.ss_params.d = rand(length(Ag.ss_params.d))
+Ag = As[end]
+Ag.ss_params.d[1] = convertΔcstoΔω0(1.0*0.05, fs, SW) # increase by 0.05 ppm
 Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
 Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
 
 
 f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
+f_U = f.(U)
 
 # test params.
 ΩS_ppm = collect( hz2ppmfunc.( NMRSpectraSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in mixture_params )
@@ -90,18 +98,19 @@ f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
 As2 = collect( NMRSpectraSimulator.κCompoundFIDType(As[i]) for i = 1:length(As) )
 
 # purposely modify As2, DSS element.
-Ag = As2[end]
-#Ag.ss_params.κ = collect( rand(length(Ag.κ[i])) for i = 1:length(Ag.κ) )
-#Ag.κ_singlets = rand(length(Ag.κ_singlets))
-Ag.κ[1][1] = 0.3
-Ag.κ[1][2] = 0.7
-Ag.κ[1][3] = 0.1
-Ag.κ_singlets[1] = 0.4
+Eg = As2[end]
+#Eg.ss_params.κ = collect( rand(length(Eg.κ[i])) for i = 1:length(Eg.κ) )
+#Eg.κ_singlets = rand(length(Eg.κ_singlets))
+Eg.κ[1][1] = 0.3
+Eg.κ[1][2] = 0.7
+Eg.κ[1][3] = 0.1
+Eg.κ_singlets[1] = 0.4
+
+fill!(Ag.ss_params.d, 0.0) # shift back.
 
 #@assert 1==4
 
-P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
-U = ppm2hzfunc.(P)
+
 
 ## parameters that affect qs.
 # A.d, A.κs_λ, A.κs_β
@@ -110,7 +119,7 @@ U = ppm2hzfunc.(P)
 #q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params)
 q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, As2)
 
-f_U = f.(U)
+
 q_U = q.(U)
 
 discrepancy = abs.(f_U-q_U)
