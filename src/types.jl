@@ -35,6 +35,8 @@ mutable struct CompoundFIDType{T,SST}
 
     # resonance components in spin systems.
     qs::Vector{Vector{Function}} # spin group, partition element index.
+    qs0::Vector{Vector{Function}} # qs but no phase evaluation. For calibration's least squares.
+
     αs::Vector{Vector{T}}
     Ωs::Vector{Vector{T}}
     part_inds_compound::Vector{Vector{Vector{Int}}}

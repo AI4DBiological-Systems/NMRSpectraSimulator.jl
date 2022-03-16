@@ -104,7 +104,7 @@ f = uu->NMRSpectraSimulator.evalcLcompoundviapartitions(uu, d,
 # proxy.
 Δcs_max = 0.2
 d_max = ppm2hzfunc(Δcs_max)-ppm2hzfunc(0.0)
-@time qs = NMRSpectraSimulator.setupcompoundpartitionitp(d_max,
+@time qs, qs0 = NMRSpectraSimulator.setupcompoundpartitionitp(d_max,
     Δc_m_compound,
     part_inds_compound,
     αs, Ωs,

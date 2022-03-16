@@ -147,7 +147,7 @@ function fitproxy!(A::CompoundFIDType{T,SST};
     end
 
     d_max = ppm2hzfunc(A.Δcs_max)-ppm2hzfunc(0.0)
-    A.qs = setupcompoundpartitionitp(d_max,
+    A.qs, A.qs0 = setupcompoundpartitionitp(d_max,
         A.Δc_m_compound,
         A.part_inds_compound,
         A.αs, A.Ωs,
@@ -174,7 +174,7 @@ function setupmixtureproxies(target_names::Vector{String},
 
     for n = 1:N_compounds
 
-        qs, αs, Ωs, part_inds_compound, Δc_m_compound, N_spins_compound,
+        qs, qs0, αs, Ωs, part_inds_compound, Δc_m_compound, N_spins_compound,
             αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
             λ0, fs, SW, Δcs_max, ν_0ppm = setupcompoundproxy(target_names[n],
             base_path_JLD, Δcs_max_mixture[n], hz2ppmfunc, ppm2hzfunc, fs, SW, λ0, ν_0ppm;
@@ -184,7 +184,7 @@ function setupmixtureproxies(target_names::Vector{String},
 
         SSFID_obj = setupSSFIDparams(dummy_SSFID, part_inds_compound, N_spins_compound)
 
-        As[n] = CompoundFIDType(qs, αs, Ωs, part_inds_compound, Δc_m_compound,
+        As[n] = CompoundFIDType(qs, qs0, αs, Ωs, part_inds_compound, Δc_m_compound,
         SSFID_obj,
         αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
         λ0, fs, SW, Δcs_max, ν_0ppm)
@@ -248,6 +248,7 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
 
     # proxy placeholder.
     qs = Vector{Vector{Function}}(undef, 0)
+    qs0 = Vector{Vector{Function}}(undef, 0)
 
     # spectra eval func for spin systems.
     N_spins_compound = collect( length(css_sys[i]) for i = 1:length(css_sys))
@@ -268,7 +269,7 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     # f = uu->evalcLcompoundviapartitions(uu, d,
     # αs, Ωs, κs_λ, κs_β, λ0, Δc_m_compound, part_inds_compound)
 
-    return qs, αs, Ωs, part_inds_compound, Δc_m_compound, N_spins_compound,
+    return qs, qs0, αs, Ωs, part_inds_compound, Δc_m_compound, N_spins_compound,
     αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
     λ0, fs, SW, Δcs_max, ν_0ppm
 end
