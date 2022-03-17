@@ -28,7 +28,7 @@ function evalitpproxycompound(u, A::zCompoundFIDType{T,SST})::Complex{T} where {
 end
 
 function evalzsinglets(u::T, d::Vector{T},
-    αs_singlets::Vector{T}, Ωs_singlets, λ0::T, λ_multipliers::Vector{T};
+    αs_singlets::Vector{T}, Ωs_singlets, λ0::T, λ_multipliers::Vector{T},
     zs_singlets::Vector{Complex{T}}) where T <: Real
 
     u_rad = 2*π*u
