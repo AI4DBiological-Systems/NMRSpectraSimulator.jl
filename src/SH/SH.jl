@@ -146,7 +146,7 @@ function setupapproximateΩmolecule!( css_sys::Vector{Vector{T}},
         @assert N_spins_sys[i] == length(css_sys[i])
 
         a0, F0, statess[i], state_labelss[i], H, H1, H2, eig_vals0,
-            Qs0 = setupanchorspectrum(p_cs_sys[i], css_sys[i],
+            gs = setupanchorspectrum(p_cs_sys[i], css_sys[i],
                                 J_vals_sys[i], J_IDs_sys[i],
                                 intermediates_sys[i],
                                 cs_LUT[i], ppm2hzfunc;
@@ -162,7 +162,7 @@ function setupapproximateΩmolecule!( css_sys::Vector{Vector{T}},
         # fullsolve.
         updateΩFSfuncs[i] = setupapproximateΩfullsolve!(eig_vals[i],
             αs[i], Ωs[i], statess[i], state_labelss[i],
-            H, Qs0, fs, SW; update_α_flag = update_α_flag)
+            H, gs, fs, SW; update_α_flag = update_α_flag)
 
     end
 
@@ -197,7 +197,7 @@ function setupanchorspectrum( p_cs::Vector{T},
     #
     N_spins = length(css)
 
-    F0, a0, state_labels, H, H1, H2, eig_vals, Qs0,
+    F0, a0, state_labels, H, H1, H2, eig_vals, gs,
        _ = getreducedcomponentsforspinsystem(p_cs, css,
                      J_vals, J_IDs, intermediates,
                      cs_LUT, ppm2hzfunc;
@@ -211,7 +211,7 @@ function setupanchorspectrum( p_cs::Vector{T},
     tmp2 = collect( state_labels[i][2] for i = 1:length(state_labels))
     states::Vector{Int} = unique([tmp1; tmp2])
 
-    return a0, F0, states, state_labels, H, H1, H2, eig_vals, Qs0
+    return a0, F0, states, state_labels, H, H1, H2, eig_vals, gs
 end
 
 

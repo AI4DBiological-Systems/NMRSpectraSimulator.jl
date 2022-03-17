@@ -142,12 +142,12 @@ function setupcompoundpartitionitp(d_max::T,
     Δκ_λ = 0.05) where T <: Real
 
     qs = Vector{Vector{Function}}(undef, length(αs))
-    qs0 = Vector{Vector{Function}}(undef, length(αs)) # no phase.
+    gs = Vector{Vector{Function}}(undef, length(αs)) # no phase.
     for i = 1:length(αs) # over elements in a spin group.
 
         N_partition_elements = length(part_inds_compound[i])
         qs[i] = Vector{Function}(undef, N_partition_elements)
-        qs0[i] = Vector{Function}(undef, N_partition_elements)
+        gs[i] = Vector{Function}(undef, N_partition_elements)
 
         for k = 1:N_partition_elements
             #println("i,k", (i,k))
@@ -160,11 +160,11 @@ function setupcompoundpartitionitp(d_max::T,
             qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*bb)
 
-            qs0[i][k] = (rr, ξξ)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))
+            gs[i][k] = (rr, ξξ)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))
         end
     end
 
-    return qs, qs0
+    return qs, gs
 end
 
 function evalsinglets(u::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
@@ -327,15 +327,15 @@ end
 #####
 
 # with κ-proxy. refactor/remove this later.
-function evalitpproxymixture(u, As::Vector{κCompoundFIDType{T,SST}};
-    w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real, SST}
+function evalitpproxymixture(u, Es::Vector{κCompoundFIDType{T,SST}};
+    w::Vector{T} = ones(T, length(Es)))::Complex{T} where {T <: Real, SST}
 
     u_rad = 2*π*u
 
     out = zero(Complex{T})
 
-    for n = 1:length(As)
-        out += w[n]*evalitpproxycompound(u, As[n])
+    for n = 1:length(Es)
+        out += w[n]*evalitpproxycompound(u, Es[n])
     end
 
     return out
@@ -346,12 +346,12 @@ function evalitpproxycompound(u, A::κCompoundFIDType{T,SST})::Complex{T} where 
 
     u_rad = 2*π*u
 
-    out_sys = evalκitpproxysys(A.κ, A.core.qs, u, A.core.ss_params)
+    out_sys = evalκitpproxysys(A.κs_α, A.core.qs, u, A.core.ss_params)
 
     out_singlets = evalκsinglets(u, A.core.d_singlets,
     A.core.αs_singlets, A.core.Ωs_singlets,
     A.core.β_singlets, A.core.λ0, A.core.κs_λ_singlets;
-    κ_α_singlets = A.κ_singlets)
+    κ_α_singlets = A.κs_α_singlets)
 
     return out_sys + out_singlets
 end

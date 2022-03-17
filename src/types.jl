@@ -35,7 +35,7 @@ mutable struct CompoundFIDType{T,SST}
 
     # resonance components in spin systems.
     qs::Vector{Vector{Function}} # spin group, partition element index.
-    qs0::Vector{Vector{Function}} # qs but no phase evaluation. For calibration's least squares.
+    gs::Vector{Vector{Function}} # qs but no phase evaluation. For calibration's least squares.
 
     αs::Vector{Vector{T}}
     Ωs::Vector{Vector{T}}
@@ -64,8 +64,8 @@ mutable struct CompoundFIDType{T,SST}
 end
 
 mutable struct κCompoundFIDType{T,SST}
-    κ::Vector{Vector{T}} # spin group, partition element index.
-    κ_singlets::Vector{T}
+    κs_α::Vector{Vector{T}} # spin group, partition element index.
+    κs_α_singlets::Vector{T}
     core::CompoundFIDType{T,SST}
 end
 
@@ -82,21 +82,21 @@ function κCompoundFIDType(core::CompoundFIDType{T,SST}) where {T,SST}
     return κCompoundFIDType(C, D, core)
 end
 
-# creates a reference from As.
-function fetchΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
+mutable struct zCompoundFIDType{T,SST}
+    zs::Vector{Vector{Complex{T}}} # spin group, partition element index.
+    zs_singlets::Vector{Complex{T}}
+    core::CompoundFIDType{T,SST}
+end
 
-    ΩS = Vector{Vector{Vector{T}}}(undef, 0)
-    j = 0
+function zCompoundFIDType(core::CompoundFIDType{T,SST}) where {T,SST}
 
-    for n = 1:length(As)
-
-        push!(ΩS, As[n].Ωs)
-        j += 1
-
-        for i = 1:length(As[n].Ωs_singlets)
-            push!(ΩS[j], [ As[n].Ωs_singlets[i]; ])
-        end
+    N_spins = length(core.part_inds_compound)
+    C = Vector{Vector{Complex{T}}}(undef, N_spins)
+    for i = 1:N_spins
+        C[i] = ones(Complex{T}, length(core.part_inds_compound[i]))
     end
 
-    return ΩS
+    D = ones(Complex{T}, length(core.d_singlets))
+
+    return zCompoundFIDType(C, D, core)
 end

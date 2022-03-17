@@ -100,11 +100,11 @@ As2 = collect( NMRSpectraSimulator.κCompoundFIDType(As[i]) for i = 1:length(As)
 # purposely modify As2, DSS element.
 Eg = As2[end]
 #Eg.ss_params.κ = collect( rand(length(Eg.κ[i])) for i = 1:length(Eg.κ) )
-#Eg.κ_singlets = rand(length(Eg.κ_singlets))
-Eg.κ[1][1] = 0.3
-Eg.κ[1][2] = 0.7
-Eg.κ[1][3] = 0.1
-Eg.κ_singlets[1] = 0.4
+#Eg.κs_α_singlets = rand(length(Eg.κs_α_singlets))
+Eg.κs_α[1][1] = 0.3
+Eg.κs_α[1][2] = 0.7
+Eg.κs_α[1][3] = 0.1
+Eg.κs_α_singlets[1] = 0.4
 
 fill!(Ag.ss_params.d, 0.0) # shift back.
 

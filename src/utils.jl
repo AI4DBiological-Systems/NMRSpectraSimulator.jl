@@ -1,3 +1,23 @@
+
+# creates a reference from As.
+function fetchΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
+
+    ΩS = Vector{Vector{Vector{T}}}(undef, 0)
+    j = 0
+
+    for n = 1:length(As)
+
+        push!(ΩS, As[n].Ωs)
+        j += 1
+
+        for i = 1:length(As[n].Ωs_singlets)
+            push!(ΩS[j], [ As[n].Ωs_singlets[i]; ])
+        end
+    end
+
+    return ΩS
+end
+
 function combinevectors(x::Vector{Vector{T}})::Vector{T} where T
 
     if isempty(x)
