@@ -122,12 +122,6 @@ q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, As2)
 
 q_U = q.(U)
 
-discrepancy = abs.(f_U-q_U)
-max_val, ind = findmax(discrepancy)
-println("relative discrepancy = ", norm(discrepancy)/norm(f_U))
-println("max discrepancy: ", max_val)
-println()
-
 ## visualize.
 PyPlot.figure(fig_num)
 fig_num += 1

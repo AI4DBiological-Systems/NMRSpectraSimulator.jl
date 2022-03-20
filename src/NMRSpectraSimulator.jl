@@ -1,6 +1,6 @@
 module NMRSpectraSimulator
 
-using Distributed, LinearAlgebra, FFTW, SharedArrays, OffsetArrays
+using Distributed, LinearAlgebra, FFTW, SharedArrays, OffsetArrays, Statistics
 
 import Kronecker, Interpolations, NearestNeighbors
 # import FiniteDiff, Optim, NLopt, Random, Unicode, FileIO, DelimitedFiles

@@ -57,8 +57,12 @@ function evalcLcompoundviapartitions(u,
         for k = 1:length(part_inds_compound[i])
             inds = part_inds_compound[i][k]
 
+            c = Statistics.mean( Δc_m_compound[i][inds] )
             out += evalcLpartitionelement(r, αs[i][inds],
-            Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], Δc_m_compound[i][k]))
+                Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], c))
+
+            # out += evalcLpartitionelement(r, αs[i][inds],
+            # Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], Δc_m_compound[i][k]))
         end
     end
 
@@ -79,8 +83,11 @@ function evalcLcompoundviapartitions(u,
             r = u_rad - x.d[i][k]
             inds = part_inds_compound[i][k]
 
+            c = Statistics.mean( Δc_m_compound[i][inds] )
             out += evalcLpartitionelement(r, αs[i][inds],
-            Ωs[i][inds], x.κs_λ[i][k]*λ0)*exp(im*dot(x.κs_β[i], Δc_m_compound[i][k]))
+                Ωs[i][inds], x.κs_λ[i][k]*λ0)*exp(im*dot(x.κs_β[i], c))
+            # out += evalcLpartitionelement(r, αs[i][inds],
+            # Ωs[i][inds], x.κs_λ[i][k]*λ0)*exp(im*dot(x.κs_β[i], Δc_m_compound[i][k]))
         end
     end
 
@@ -151,13 +158,17 @@ function setupcompoundpartitionitp(d_max::T,
 
         for k = 1:N_partition_elements
             #println("i,k", (i,k))
-            α = αs[i][part_inds_compound[i][k]]
-            Ω = Ωs[i][part_inds_compound[i][k]]
+
+            inds = part_inds_compound[i][k]
+            α = αs[i][inds]
+            Ω = Ωs[i][inds]
             real_sitp, imag_sitp = setuppartitionitp(α, Ω,
             d_max, λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
             Δr = Δr, Δκ_λ = Δκ_λ)
 
-            qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
+            c = Statistics.mean( Δc_m_compound[i][inds] )
+            qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, c))
+            #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*bb)
 
             gs[i][k] = (rr, ξξ)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))
