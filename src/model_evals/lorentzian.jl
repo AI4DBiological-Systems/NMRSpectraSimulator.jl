@@ -6,8 +6,11 @@ function evalcompound(u, A::CompoundFIDType{T,SST})::Complex{T} where {T <: Real
 
     u_rad = 2*π*u
 
+    # out_sys = evalcLcompoundviapartitions(u, A.αs, A.Ωs, A.ss_params,
+    # A.λ0, A.Δc_m_compound, A.part_inds_compound)
+
     out_sys = evalcLcompoundviapartitions(u, A.αs, A.Ωs, A.ss_params,
-    A.λ0, A.Δc_m_compound, A.part_inds_compound)
+    A.λ0, A.Δc_avg, A.part_inds_compound)
 
     out_singlets = evalsinglets(u, A.d_singlets, A.αs_singlets, A.Ωs_singlets,
     A.β_singlets, A.λ0, A.κs_λ_singlets)
@@ -46,7 +49,7 @@ end
 function evalcLcompoundviapartitions(u,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     x::SpinSysFIDType1{T}, λ0::T,
-    Δc_m_compound, part_inds_compound)::Complex{T} where T <: Real
+    c, part_inds_compound)::Complex{T} where T <: Real
 
     u_rad = 2*π*u
 
@@ -57,9 +60,12 @@ function evalcLcompoundviapartitions(u,
         for k = 1:length(part_inds_compound[i])
             inds = part_inds_compound[i][k]
 
-            c = Statistics.mean( Δc_m_compound[i][inds] )
             out += evalcLpartitionelement(r, αs[i][inds],
-                Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], c))
+                Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], c[i][k]))
+            
+            # c2 = Statistics.mean( Δc_m_compound[i][inds] )
+            # out += evalcLpartitionelement(r, αs[i][inds],
+            #     Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], c2))
 
             # out += evalcLpartitionelement(r, αs[i][inds],
             # Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], Δc_m_compound[i][k]))
@@ -72,7 +78,7 @@ end
 function evalcLcompoundviapartitions(u,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     x::SpinSysFIDType2{T}, λ0::T,
-    Δc_m_compound, part_inds_compound)::Complex{T} where T <: Real
+    c, part_inds_compound)::Complex{T} where T <: Real
 
     u_rad = 2*π*u
 
@@ -83,9 +89,9 @@ function evalcLcompoundviapartitions(u,
             r = u_rad - x.d[i][k]
             inds = part_inds_compound[i][k]
 
-            c = Statistics.mean( Δc_m_compound[i][inds] )
+            #c = Statistics.mean( Δc_m_compound[i][inds] )
             out += evalcLpartitionelement(r, αs[i][inds],
-                Ωs[i][inds], x.κs_λ[i][k]*λ0)*exp(im*dot(x.κs_β[i], c))
+                Ωs[i][inds], x.κs_λ[i][k]*λ0)*exp(im*dot(x.κs_β[i], c[i][k]))
             # out += evalcLpartitionelement(r, αs[i][inds],
             # Ωs[i][inds], x.κs_λ[i][k]*λ0)*exp(im*dot(x.κs_β[i], Δc_m_compound[i][k]))
         end
@@ -150,11 +156,14 @@ function setupcompoundpartitionitp(d_max::T,
 
     qs = Vector{Vector{Function}}(undef, length(αs))
     gs = Vector{Vector{Function}}(undef, length(αs)) # no phase.
+    Δc_avg = Vector{Vector{Vector{T}}}(undef, length(αs))
+
     for i = 1:length(αs) # over elements in a spin group.
 
         N_partition_elements = length(part_inds_compound[i])
         qs[i] = Vector{Function}(undef, N_partition_elements)
         gs[i] = Vector{Function}(undef, N_partition_elements)
+        Δc_avg[i] = Vector{Vector{T}}(undef, N_partition_elements)
 
         for k = 1:N_partition_elements
             #println("i,k", (i,k))
@@ -166,9 +175,9 @@ function setupcompoundpartitionitp(d_max::T,
             d_max, λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
             Δr = Δr, Δκ_λ = Δκ_λ)
 
-            c = Statistics.mean( Δc_m_compound[i][inds] )
+            Δc_avg[i][k] = Statistics.mean( Δc_m_compound[i][inds] )
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, c)) # unpackaged.
-            qs[i][k] = (rr, ξξ, bb)->evalq(real_sitp, imag_sitp, rr, ξξ, bb, c) # packaged.
+            qs[i][k] = (rr, ξξ, bb)->evalq(real_sitp, imag_sitp, rr, ξξ, bb, Δc_avg[i][k]) # packaged.
 
 
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
@@ -178,7 +187,7 @@ function setupcompoundpartitionitp(d_max::T,
         end
     end
 
-    return qs, gs
+    return qs, gs, Δc_avg
 end
 
 function evalq(real_sitp, imag_sitp, r, ξ, b::Vector{T}, c)::Complex{T} where T <: Real

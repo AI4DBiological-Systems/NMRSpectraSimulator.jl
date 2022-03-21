@@ -42,6 +42,8 @@ mutable struct CompoundFIDType{T,SST}
     part_inds_compound::Vector{Vector{Vector{Int}}}
     Δc_m_compound::Vector{Vector{Vector{T}}}
 
+    Δc_avg::Vector{Vector{Vector{T}}}
+
     # κs_λ::Vector{T} # multipliers for each spin group.
     # κs_β::Vector{Vector{T}} # coefficients for each (spin group, partition element).
     # d::Vector{T}

@@ -10,6 +10,9 @@ import PyPlot
 #import Clustering
 import Statistics
 
+import Random 
+Random.seed!(25)
+
 PyPlot.close("all")
 fig_num = 1
 
@@ -84,7 +87,7 @@ U = ppm2hzfunc.(P)
 Ag = As[end]
 Ag.ss_params.d[1] = convertΔcstoΔω0(1.0*0.05, fs, SW) # increase by 0.05 ppm
 Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
-Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
+Ag.ss_params.κs_β[:] = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
 
 
 f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)

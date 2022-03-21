@@ -12,6 +12,9 @@ import PyPlot
 #import Clustering
 import Statistics
 
+import Random 
+Random.seed!(25)
+
 PyPlot.close("all")
 fig_num = 1
 
