@@ -167,7 +167,10 @@ function setupcompoundpartitionitp(d_max::T,
             Δr = Δr, Δκ_λ = Δκ_λ)
 
             c = Statistics.mean( Δc_m_compound[i][inds] )
-            qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, c))
+            #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, c)) # unpackaged.
+            qs[i][k] = (rr, ξξ, bb)->evalq(real_sitp, imag_sitp, rr, ξξ, bb, c) # packaged.
+
+
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*bb)
 
@@ -176,6 +179,10 @@ function setupcompoundpartitionitp(d_max::T,
     end
 
     return qs, gs
+end
+
+function evalq(real_sitp, imag_sitp, r, ξ, b::Vector{T}, c)::Complex{T} where T <: Real
+    return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*exp(im*dot(b, c))
 end
 
 function evalsinglets(u::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
