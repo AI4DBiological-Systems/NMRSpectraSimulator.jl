@@ -132,11 +132,13 @@ function setuppartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     f = (rr,ξξ)->evalcLpartitionelement(rr, α, Ω, ξξ*λ0)
     A = [f(x1,x2) for x1 in A_r, x2 in A_ξ]
 
-    real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    #real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     real_sitp = Interpolations.scale(real_itp, A_r, A_ξ)
     real_setp = Interpolations.extrapolate(real_sitp, 0.0) # zero outside interp range.
 
-    imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    #imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     imag_sitp = Interpolations.scale(imag_itp, A_r, A_ξ)
     imag_setp = Interpolations.extrapolate(imag_sitp, 0.0) # zero outside interp range.
 
@@ -145,6 +147,7 @@ function setuppartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
 end
 
 function setupcompoundpartitionitp(d_max::T,
+    x::SST,
     Δc_m_compound::Vector{Vector{Vector{T}}},
     part_inds_compound::Vector{Vector{Vector{Int}}},
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
@@ -152,7 +155,7 @@ function setupcompoundpartitionitp(d_max::T,
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5,
     Δr = 1.0,
-    Δκ_λ = 0.05) where T <: Real
+    Δκ_λ = 0.05) where {T <: Real, SST}
 
     qs = Vector{Vector{Function}}(undef, length(αs))
     gs = Vector{Vector{Function}}(undef, length(αs)) # no phase.
@@ -177,7 +180,8 @@ function setupcompoundpartitionitp(d_max::T,
 
             Δc_avg[i][k] = Statistics.mean( Δc_m_compound[i][inds] )
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, c)) # unpackaged.
-            qs[i][k] = (rr, ξξ, bb)->evalq(real_sitp, imag_sitp, rr, ξξ, bb, Δc_avg[i][k]) # packaged.
+            #qs[i][k] = (rr, ξξ, bb)->evalq(real_sitp, imag_sitp, rr, ξξ, bb, Δc_avg[i][k]) # packaged.
+            qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, x.κs_β[i], Δc_avg[i][k])
 
 
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
@@ -190,8 +194,21 @@ function setupcompoundpartitionitp(d_max::T,
     return qs, gs, Δc_avg
 end
 
-function evalq(real_sitp, imag_sitp, r, ξ, b::Vector{T}, c)::Complex{T} where T <: Real
-    return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*exp(im*dot(b, c))
+function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} where T <: Real
+    
+    #return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*exp(im*dot(b, c))
+    
+    # # i (a sin(x) + b cos(x)) + a cos(x) - b sin(x)
+    # x = dot(b,c)
+    # s_x = sin(x)
+    # c_x = cos(x)
+    # a = real_sitp(r,ξ)
+    # b = imag_sitp(r,ξ)
+    # return im*(a*s_x + b*c_x) + a*c_x - b*s_x
+
+    ## speed test.
+    return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))
+    #return real_sitp(r,ξ)
 end
 
 function evalsinglets(u::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
@@ -233,7 +250,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 
     d = x.d
     κs_λ = x.κs_λ
-    κs_β = x.κs_β
+    #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
 
@@ -244,7 +261,8 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
         r = u_rad - d[i]
 
         for k = 1:length(qs[i])
-            out += qs[i][k](r, κs_λ[i], κs_β[i])
+            #out += qs[i][k](r, κs_λ[i], κs_β[i])
+            out += qs[i][k](r, κs_λ[i])
         end
     end
 
@@ -256,7 +274,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 
     d = x.d
     κs_λ = x.κs_λ
-    κs_β = x.κs_β
+    #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
 
@@ -268,7 +286,8 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
         for k = 1:length(qs[i])
             r = u_rad - d[i][k]
 
-            out += qs[i][k](r, κs_λ[i][k], κs_β[i])
+            #out += qs[i][k](r, κs_λ[i][k], κs_β[i])
+            out += qs[i][k](r, κs_λ[i][k])
         end
     end
 
@@ -280,7 +299,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 
     d = x.d
     κs_λ = x.κs_λ
-    κs_β = x.κs_β
+    #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
 
@@ -291,7 +310,8 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
         r = u_rad - d[i]
 
         for k = 1:length(qs[i])
-            out += κ_α[i][k]*qs[i][k](r, κs_λ[i], κs_β[i])
+            #out += κ_α[i][k]*qs[i][k](r, κs_λ[i], κs_β[i])
+            out += κ_α[i][k]*qs[i][k](r, κs_λ[i])
         end
     end
 
@@ -303,7 +323,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 
     d = x.d
     κs_λ = x.κs_λ
-    κs_β = x.κs_β
+    #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
 
@@ -315,7 +335,8 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
         for k = 1:length(qs[i])
             r = u_rad - d[i][k]
 
-            out += κ_α[i][k]*qs[i][k](r, κs_λ[i][k], κs_β[i])
+            #out += κ_α[i][k]*qs[i][k](r, κs_λ[i][k], κs_β[i])
+            out += κ_α[i][k]*qs[i][k](r, κs_λ[i][k])
         end
     end
 

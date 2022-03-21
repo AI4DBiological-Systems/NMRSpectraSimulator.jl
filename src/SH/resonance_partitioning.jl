@@ -148,6 +148,7 @@ function fitproxy!(A::CompoundFIDType{T,SST};
 
     d_max = ppm2hzfunc(A.Δcs_max)-ppm2hzfunc(0.0)
     A.qs, A.gs, A.Δc_avg = setupcompoundpartitionitp(d_max,
+        A.ss_params,
         A.Δc_m_compound,
         A.part_inds_compound,
         A.αs, A.Ωs,
