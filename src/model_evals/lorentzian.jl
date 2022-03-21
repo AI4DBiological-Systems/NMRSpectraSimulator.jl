@@ -196,7 +196,7 @@ end
 
 function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} where T <: Real
     
-    #return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*exp(im*dot(b, c))
+    return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*exp(im*dot(b, c))
     
     # # i (a sin(x) + b cos(x)) + a cos(x) - b sin(x)
     # x = dot(b,c)
@@ -207,7 +207,7 @@ function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} w
     # return im*(a*s_x + b*c_x) + a*c_x - b*s_x
 
     ## speed test.
-    return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))
+    #return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))
     #return real_sitp(r,ξ)
 end
 
