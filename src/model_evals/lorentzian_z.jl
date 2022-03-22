@@ -1,37 +1,37 @@
 # with z-proxy. refactor/remove this later.
-function evalitpproxymixture(u, Es::Vector{zCompoundFIDType{T,SST}};
+function evalitpproxymixture(u_rad, Es::Vector{zCompoundFIDType{T,SST}};
     w::Vector{T} = ones(T, length(Es)))::Complex{T} where {T <: Real, SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
 
     for n = 1:length(Es)
-        out += w[n]*evalitpproxycompound(u, Es[n])
+        out += w[n]*evalitpproxycompound(u_rad, Es[n])
     end
 
     return out
 end
 
 # with z-proxy.
-function evalitpproxycompound(u, A::zCompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalitpproxycompound(u_rad, A::zCompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
-    out_sys = evalzitpproxysys(A.zs, A.core.gs, u, A.core.ss_params)
+    out_sys = evalzitpproxysys(A.zs, A.core.gs, u_rad, A.core.ss_params)
 
-    out_singlets = evalzsinglets(u, A.core.d_singlets,
+    out_singlets = evalzsinglets(u_rad, A.core.d_singlets,
     A.core.αs_singlets, A.core.Ωs_singlets, A.core.λ0,
     A.core.κs_λ_singlets, A.zs_singlets)
 
     return out_sys + out_singlets
 end
 
-function evalzsinglets(u::T, d::Vector{T},
+function evalzsinglets(u_rad::T, d::Vector{T},
     αs_singlets::Vector{T}, Ωs_singlets, λ0::T, λ_multipliers::Vector{T},
     zs_singlets::Vector{Complex{T}}) where T <: Real
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for i = 1:length(αs_singlets)
@@ -45,7 +45,7 @@ function evalzsinglets(u::T, d::Vector{T},
 end
 
 function evalzitpproxysys(zs::Vector{Vector{Complex{T}}}, gs::Vector{Vector{Function}},
-    u::T, x::SpinSysFIDType1{T})::Complex{T} where T
+    u_rad::T, x::SpinSysFIDType1{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -54,7 +54,7 @@ function evalzitpproxysys(zs::Vector{Vector{Complex{T}}}, gs::Vector{Vector{Func
 
     out = zero(Complex{T})
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
     for i = 1:length(gs)
         r = u_rad - d[i]
 
@@ -67,7 +67,7 @@ function evalzitpproxysys(zs::Vector{Vector{Complex{T}}}, gs::Vector{Vector{Func
 end
 
 function evalκitpproxysys(zs::Vector{Vector{Complex{T}}}, gs::Vector{Vector{Function}},
-    u::T, x::SpinSysFIDType2{T})::Complex{T} where T
+    u_rad::T, x::SpinSysFIDType2{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -76,7 +76,7 @@ function evalκitpproxysys(zs::Vector{Vector{Complex{T}}}, gs::Vector{Vector{Fun
 
     out = zero(Complex{T})
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
     for i = 1:length(gs)
 
         for k = 1:length(gs[i])

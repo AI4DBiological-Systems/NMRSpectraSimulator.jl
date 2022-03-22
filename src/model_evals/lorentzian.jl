@@ -2,30 +2,30 @@
 
 
 
-function evalcompound(u, A::CompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalcompound(u_rad, A::CompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     # out_sys = evalcLcompoundviapartitions(u, A.αs, A.Ωs, A.ss_params,
     # A.λ0, A.Δc_m_compound, A.part_inds_compound)
 
-    out_sys = evalcLcompoundviapartitions(u, A.αs, A.Ωs, A.ss_params,
+    out_sys = evalcLcompoundviapartitions(u_rad, A.αs, A.Ωs, A.ss_params,
     A.λ0, A.Δc_avg, A.part_inds_compound)
 
-    out_singlets = evalsinglets(u, A.d_singlets, A.αs_singlets, A.Ωs_singlets,
+    out_singlets = evalsinglets(u_rad, A.d_singlets, A.αs_singlets, A.Ωs_singlets,
     A.β_singlets, A.λ0, A.κs_λ_singlets)
 
     return out_sys + out_singlets
 end
 
-function evalmixture(u, As::Vector{CompoundFIDType{T,SST}};
+function evalmixture(u_rad, As::Vector{CompoundFIDType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real, SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for n = 1:length(As)
-        out += w[n]*evalcompound(u, As[n])
+        out += w[n]*evalcompound(u_rad, As[n])
     end
 
     return out
@@ -46,12 +46,12 @@ function evalcLpartitionelement(r,
     return out
 end
 
-function evalcLcompoundviapartitions(u,
+function evalcLcompoundviapartitions(u_rad,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     x::SpinSysFIDType1{T}, λ0::T,
     c, part_inds_compound)::Complex{T} where T <: Real
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for i = 1:length(αs)
@@ -62,7 +62,7 @@ function evalcLcompoundviapartitions(u,
 
             out += evalcLpartitionelement(r, αs[i][inds],
                 Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], c[i][k]))
-            
+
             # c2 = Statistics.mean( Δc_m_compound[i][inds] )
             # out += evalcLpartitionelement(r, αs[i][inds],
             #     Ωs[i][inds], x.κs_λ[i]*λ0)*exp(im*dot(x.κs_β[i], c2))
@@ -75,12 +75,12 @@ function evalcLcompoundviapartitions(u,
     return out
 end
 
-function evalcLcompoundviapartitions(u,
+function evalcLcompoundviapartitions(u_rad,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     x::SpinSysFIDType2{T}, λ0::T,
     c, part_inds_compound)::Complex{T} where T <: Real
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for i = 1:length(αs)
@@ -195,9 +195,9 @@ function setupcompoundpartitionitp(d_max::T,
 end
 
 function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} where T <: Real
-    
+
     return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*exp(im*dot(b, c))
-    
+
     # # i (a sin(x) + b cos(x)) + a cos(x) - b sin(x)
     # x = dot(b,c)
     # s_x = sin(x)
@@ -211,10 +211,10 @@ function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} w
     #return real_sitp(r,ξ)
 end
 
-function evalsinglets(u::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
+function evalsinglets(u_rad::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
     βs_singlets, λ0::T, λ_multipliers::Vector{T}) where T <: Real
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for i = 1:length(αs_singlets)
@@ -227,12 +227,12 @@ function evalsinglets(u::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singlets,
     return out
 end
 
-function evalκsinglets(u::T, d::Vector{T},
+function evalκsinglets(u_rad::T, d::Vector{T},
     αs_singlets::Vector{T}, Ωs_singlets,
     βs_singlets, λ0::T, λ_multipliers::Vector{T};
     κ_α_singlets::Vector{T} = ones(T, length(αs_singlets))) where T <: Real
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for i = 1:length(αs_singlets)
@@ -246,7 +246,7 @@ function evalκsinglets(u::T, d::Vector{T},
 end
 
 function evalitpproxysys(qs::Vector{Vector{Function}},
-    u::T, x::SpinSysFIDType1{T})::Complex{T} where T
+    u_rad::T, x::SpinSysFIDType1{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -256,7 +256,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 
     out = zero(Complex{T})
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
     for i = 1:length(qs)
         r = u_rad - d[i]
 
@@ -270,7 +270,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalitpproxysys(qs::Vector{Vector{Function}},
-    u::T, x::SpinSysFIDType2{T})::Complex{T} where T
+    u_rad::T, x::SpinSysFIDType2{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -280,7 +280,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 
     out = zero(Complex{T})
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
     for i = 1:length(qs)
 
         for k = 1:length(qs[i])
@@ -295,7 +295,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u::T, x::SpinSysFIDType1{T})::Complex{T} where T
+    u_rad::T, x::SpinSysFIDType1{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -305,7 +305,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 
     out = zero(Complex{T})
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
     for i = 1:length(qs)
         r = u_rad - d[i]
 
@@ -319,7 +319,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 end
 
 function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u::T, x::SpinSysFIDType2{T})::Complex{T} where T
+    u_rad::T, x::SpinSysFIDType2{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -329,7 +329,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 
     out = zero(Complex{T})
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
     for i = 1:length(qs)
 
         for k = 1:length(qs[i])
@@ -344,28 +344,28 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 end
 
 # with proxy.
-function evalitpproxymixture(u, As::Vector{CompoundFIDType{T,SST}};
+function evalitpproxymixture(u_rad, As::Vector{CompoundFIDType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real,SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
 
     for n = 1:length(As)
-        out += w[n]*evalitpproxycompound(u, As[n])
+        out += w[n]*evalitpproxycompound(u_rad, As[n])
     end
 
     return out
 end
 
 # with proxy.
-function evalitpproxycompound(u, A::CompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalitpproxycompound(u_rad, A::CompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
-    out_sys = evalitpproxysys(A.qs, u, A.ss_params)
+    out_sys = evalitpproxysys(A.qs, u_rad, A.ss_params)
 
-    out_singlets = evalsinglets(u, A.d_singlets, A.αs_singlets, A.Ωs_singlets,
+    out_singlets = evalsinglets(u_rad, A.d_singlets, A.αs_singlets, A.Ωs_singlets,
     A.β_singlets, A.λ0, A.κs_λ_singlets)
 
     return out_sys + out_singlets
@@ -375,28 +375,28 @@ end
 #####
 
 # with κ-proxy. refactor/remove this later.
-function evalitpproxymixture(u, Es::Vector{κCompoundFIDType{T,SST}};
+function evalitpproxymixture(u_rad, Es::Vector{κCompoundFIDType{T,SST}};
     w::Vector{T} = ones(T, length(Es)))::Complex{T} where {T <: Real, SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
     out = zero(Complex{T})
 
     for n = 1:length(Es)
-        out += w[n]*evalitpproxycompound(u, Es[n])
+        out += w[n]*evalitpproxycompound(u_rad, Es[n])
     end
 
     return out
 end
 
 # with κ-proxy.
-function evalitpproxycompound(u, A::κCompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalitpproxycompound(u_rad, A::κCompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
 
-    u_rad = 2*π*u
+    #u_rad = 2*π*u
 
-    out_sys = evalκitpproxysys(A.κs_α, A.core.qs, u, A.core.ss_params)
+    out_sys = evalκitpproxysys(A.κs_α, A.core.qs, u_rad, A.core.ss_params)
 
-    out_singlets = evalκsinglets(u, A.core.d_singlets,
+    out_singlets = evalκsinglets(u_rad, A.core.d_singlets,
     A.core.αs_singlets, A.core.Ωs_singlets,
     A.core.β_singlets, A.core.λ0, A.core.κs_λ_singlets;
     κ_α_singlets = A.κs_α_singlets)

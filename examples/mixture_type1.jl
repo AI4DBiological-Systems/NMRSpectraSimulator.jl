@@ -12,7 +12,7 @@ import PyPlot
 #import Clustering
 import Statistics
 
-import Random 
+import Random
 Random.seed!(25)
 
 PyPlot.close("all")
@@ -106,14 +106,15 @@ f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
 
 P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
 U = ppm2hzfunc.(P)
+U_rad = U .* (2*π)
 
 ## parameters that affect qs.
 # A.d, A.κs_λ, A.κs_β
 # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
 q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params)
 
-f_U = f.(U)
-q_U = q.(U)
+f_U = f.(U_rad)
+q_U = q.(U_rad)
 
 discrepancy = abs.(f_U-q_U)
 max_val, ind = findmax(discrepancy)

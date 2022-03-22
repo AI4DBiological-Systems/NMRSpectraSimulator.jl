@@ -10,7 +10,7 @@ import PyPlot
 #import Clustering
 import Statistics
 
-import Random 
+import Random
 Random.seed!(25)
 
 PyPlot.close("all")
@@ -82,6 +82,7 @@ end
 
 P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
 U = ppm2hzfunc.(P)
+U_rad = U .* (2*π)
 
 # purposely distort the spectra by setting non-autophased FID values.
 Ag = As[end]
@@ -91,7 +92,7 @@ Ag.ss_params.κs_β[:] = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π)
 
 
 f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
-f_U = f.(U)
+f_U = f.(U_rad)
 
 # test params.
 ΩS_ppm = collect( hz2ppmfunc.( NMRSpectraSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in mixture_params )
@@ -123,7 +124,7 @@ fill!(Ag.ss_params.d, 0.0) # shift back.
 q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, As2)
 
 
-q_U = q.(U)
+q_U = q.(U_rad)
 
 ## visualize.
 PyPlot.figure(fig_num)

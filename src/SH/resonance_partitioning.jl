@@ -307,41 +307,6 @@ function setupSSFIDparams(dummy_SSFID::SpinSysFIDType2{T}, part_inds_compound::V
 end
 
 
-# function fetchsubset(As::Vector{CompoundFIDType{T,SpinSysFIDType1{T}}}, indices::Vector{Tuple{Int,Int}}) where {T <: Real,SST}
-#
-#     # get
-#     inds = collect( findall(xx->xx[1]==n, indices) for n = 1:length(As) )
-#     filter!(xx->!isempty(xx), inds)
-#
-#     Bs = Vector{CompoundFIDType{T,SST}}(undef, length(inds))
-#
-#     for j = 1:length(inds)
-#         ks = inds[j]
-#         n, _ = indices[ks[1]]
-#         A = As[n]
-#
-#         is = collect( indices[ks[l]][2] for l = 1:length(ks) )
-#         is_sys = filter(xx->xx<=length(A.qs), is)
-#
-#         N_sys = length(A.qs)
-#         is_singlets = filter(xx->xx>length(A.qs), is) .- N_sys
-#
-#
-#         Bs[j] = CompoundFIDType(A.qs[is_sys], A.αs[is_sys], A.Ωs[is_sys],
-#         A.part_inds_compound[is_sys], A.Δc_m_compound[is_sys],
-#         SpinSysFIDType1{T}(A.κs_λ[is_sys], A.κs_β[is_sys], A.d[is_sys]),
-#         A.αs_singlets[is_singlets],
-#         A.Ωs_singlets[is_singlets],
-#         A.κs_λ_singlets[is_singlets],
-#         A.β_singlets[is_singlets],
-#         A.d_singlets[is_singlets],
-#         A.λ0, A.fs, A.SW, A.Δcs_max, A.ν_0ppm)
-#     end
-#
-#     return Bs
-# end
-
-
 function getNβ(A::CompoundFIDType{T,SST}) where {T,SST}
 
     counter_sys = 0
