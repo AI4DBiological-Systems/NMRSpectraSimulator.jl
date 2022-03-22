@@ -10,22 +10,18 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
     @assert length(d) == length(qs)
 
     out = zero(Complex{T})
-    # out_real::T = zero(T) # slower.
-    # out_imag::T = zero(T)
 
-    #u_rad = 2*π*u
     for i = 1:length(qs)
         r = u_rad - d[i]
 
         for k = 1:length(qs[i])
 
             out += qs[i][k](r, κs_λ[i])
-            # a, b = qs[i][k](r, κs_λ[i]) # slower.
-            # out_real += a
-            # out_imag += b
         end
     end
-    #out = out_real + im*out_imag
+
+    ## slower possibly due to r = u_rad - d[i] being evaluated every time qs is called.
+    #out = sum( sum(qs[i][k](u_rad - d[i], κs_λ[i]) for k = 1:length(qs[i])) for i = 1:length(qs) )
 
     return out
 end
