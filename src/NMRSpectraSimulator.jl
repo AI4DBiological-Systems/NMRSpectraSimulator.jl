@@ -27,6 +27,9 @@ include("../src/conversions/cs_parse.jl")
 include("../src/model_evals/lorentzian.jl")
 include("../src/model_evals/lorentzian_z.jl")
 
+include("../src/model_evals/setup_itp.jl")
+include("../src/model_evals/itp_evals.jl")
+
 
 #include("../src/library/database_helpers.jl")
 #include("../src/model/parse.jl")

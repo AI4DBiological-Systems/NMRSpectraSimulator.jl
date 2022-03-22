@@ -139,9 +139,11 @@ A = As[1];
 println("qs[i][k] eval:")
 r0 = 2*π*U[m] - A.ss_params.d[1]
 @btime A.qs[1][1](r0, 1.0)
+@btime A.gs[1][1](r0, 1.0)
 
 println("q eval.")
 @btime q.(U[1]);
 
 println("q_U eval")
 @btime q.(U);
+println()
