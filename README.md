@@ -13,4 +13,6 @@ We will officially register the pre-requisite packages with JuliaHub once we pub
  Describe what the field names of As[i] are, and the front end functions that calls them.
  
 ## Examples (in progress)
-In the example folder. We will use Weave.jl to convert the existing example scripts there to something more along the lines of an user-friendly tutorial.
+The preliminary library description and tutorial (in progress) website is located [here](https://ai4dbiological-systems.github.io/NMRSpectraSimulator.jl/)
+
+More examples in the example folder. We will continue to use Weave.jl to work off the existing example scripts to finish annoted tutorials.

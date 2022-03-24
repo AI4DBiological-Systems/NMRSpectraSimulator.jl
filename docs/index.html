@@ -660,11 +660,39 @@ div.title {text-align: center;}
 
         <p>&quot;&quot;&quot; title: NMRSpectraSimulator.jl Documentation author Roy Wang date: 2022-03-23 &quot;&quot;&quot;</p>
 <h1>Library description</h1>
-<p>Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of the 1D 1H NMR experiment signal. The signal model is taken to be the complex-valued free-induction decay model:</p>
+<p>Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of the 1D 1H NMR experiment signal.</p>
+<h1>Background: Signal Model</h1>
+<p>The signal model is taken to be the complex-valued free-induction decay &#40;FID&#41; model </p>
 <p class="math">\[
-f_{\text{FID}}\left(t,\,w,\,\alpha,\,\Omega,\,\lambda,\,\beta\right)=\sum_{n,l_n}w_{n}\alpha_{n,l_n}e^{i\left(\Omega_{n,l_n}t-\beta_{n,l_n}\right)}e^{-\lambda_{n,l_n}t},\,t>0
+f_{\text{FID}}(t,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\alpha_{n,l}e^{\iota\left(\Omega_{n,l}t-\beta_{n,l}\right)}e^{-\lambda_{n,l}t},\,t>0,
 \]</p>
-<p>Here, <span class="math">$n$</span> is the compound index, <span class="math">$l_n$</span> is the resonance component index for compound <span class="math">$n$</span>. The parameters of this signal model are: The compound molar concentration <span class="math">$w$</span>, the resonance frequency <span class="math">$\Omega$</span>, the resonance amplitude <span class="math">$\alpha$</span>, the resonance T2 decay <span class="math">$\lambda$</span>, the resonance phase <span class="math">$\beta$</span>. The resonance frequencies and amplitudes of a compound can be simulated if the physical chemistry parameters, chemical shift and J-coupling, are known. This library uses the physical chemistry parameters from the <a href="http://gissmo.nmrfam.wisc.edu/library">GISSMO website</a>, which were obtained by empirically fitting a different forward model than the one used in this library against real NMR experiments. For GISSMO-related details, see <a href="https://pubs.acs.org/doi/abs/10.1021/acs.analchem.8b02660">Dashti et. al 2017</a> and <a href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b02884">Dashti et. al 2018</a> for their official journal publications.</p>
+<p>and its Fourier transform, also referred to as the Fourier FID or FID spectra model </p>
+<p class="math">\[
+f_{\text{FFID}}(u,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u-\Omega_{n,l})}.
+\]</p>
+<p>Here, <span class="math">$n$</span> is the compound index, <span class="math">$\left(n,l\right)$</span> is the resonance component index for compound <span class="math">$n$</span>, <span class="math">$N$</span> is the number of compounds in the isotropic mixture sample, <span class="math">$L_{n}$</span> is the number of resonance components for compound <span class="math">$n$</span>, and <span class="math">$\iota$</span> is the imaginary number. The parameters of this signal model are: The compound molar concentration <span class="math">$w$</span>, the resonance frequency <span class="math">$\Omega$</span>, the resonance amplitude <span class="math">$\alpha$</span>, the resonance T2 decay <span class="math">$\lambda$</span>, the resonance phase <span class="math">$\beta$</span>. The resonance frequencies and amplitudes of a compound can be simulated if the physical chemistry parameters, chemical shift and J-coupling, are known. This library uses the physical chemistry parameters from the <a href="http://gissmo.nmrfam.wisc.edu/library">GISSMO website</a>, which were obtained by empirically fitting a different forward model than the one used in this library against real NMR experiments. For GISSMO-related details, see <a href="https://pubs.acs.org/doi/abs/10.1021/acs.analchem.8b02660">Dashti et. al 2017</a> and <a href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b02884">Dashti et. al 2018</a> for their official journal publications.</p>
+<h1>Background: Calibration Challenge</h1>
+<p>One approach to fitting this model to experimental data, i.e., to calibrate this model to data, is to assign bound constraints on every model parameter. The following forward model used for fitting against a cost function illustrates this approach: </p>
+<p class="math">\[
+g_{\text{FFID}}(u,w,d,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u+d_{n,l}-\Omega_{n,l})}.
+\]</p>
+<p>here, the frequency variable <span class="math">$u$</span> is in Hz. Many publicly-available NMR spectra model fitting routines are based on an internal or external library that contain a set of resonance frequencies <span class="math">$\Omega$</span> and amplitudes <span class="math">$\alpha$</span> for each library compound. These values are usually empirically fitted against experiments called compound standards, where only the compound and the bare minimum ingredients are placed in the mixture. In a non-trivial NMR experiment, the different compounds interact with each other, causing small frequency shifts away from the set of library frequencies <span class="math">$\Omega$</span>. Thus, the parameter <span class="math">$d$</span> is required to compensate for this shift. It is often assumed that the set of library resonance amplitudes <span class="math">$\alpha$</span> does not change across different experiments. The fit against data in the calibration problem is over the variables <span class="math">$u$</span>, <span class="math">$w$</span>, <span class="math">$d$</span>, <span class="math">$\lambda$</span>, and <span class="math">$\beta$</span>. Due to the large number of resonance components for each compound, there are too many degrees of freedom to produce a good and sensible fit for most NMR applications in a reasonable computation time. From physical chemistry theory, some resonance components should shift only in a certain manner. See figures x and y in our survey for an example of poor and non-sensible fit of select fitting algorithms against a real-world mixture.</p>
+<h1>NMRSPectraSimulator: Proposed Model &amp; Surrogate Model</h1>
+<p>Let <span class="math">$\left[L\right]:=1,\dots,L$</span>, which is a set of size <span class="math">$L$</span>. Our modified FID spectra model </p>
+<p class="math">\[
+g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}
+\]</p>
+<p>have grouping information that reduce the number of variables to calibrate. It essentially replace the index <span class="math">$l\in\left[L_{n}\right]$</span> by multi-indices <span class="math">$\left(i,k,l\right)\in\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$</span>. Note that the size of <span class="math">$\left[L_{n}\right]$</span> is the same as <span class="math">$\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$</span> because they describe two different ways of grouping the resonance components of compound <span class="math">$n$</span>. Instead of having all parameters indexed by <span class="math">$\left(i,k,l\right)$</span>, the frequency shift parameters <span class="math">$d$</span> is now indexed by <span class="math">$\left(n,i\right)$</span>, and both the T2 decay <span class="math">$\lambda$</span> and phase <span class="math">$\beta$</span> are now indexed by <span class="math">$\left(n,i,k\right)$</span>. The physical interpretation and derivation of this grouping and associated variables will be discussed in detail in our upcoming journal article.</p>
+<p>To further speed up the computation, we use a spline-based surrogate <span class="math">$q$</span> for these models instead of the modified model <span class="math">$g_{\text{mFFID}}$</span> during numerical optimization or statistical inference. Our local <span class="math">$k_{i_{n}}$</span> surrogate model</p>
+<p class="math">\[
+q_{n,i,k}(r,h)\approx\sum_{l=1}^{L_{n,i,k}}\frac{\alpha_{n,i,k,l}}{h+\iota(r-\Omega_{n,i,k,l})}
+\]</p>
+<p>is comprised of spline interpolation fits of the RHS of the above equation; one for the real part, and one for the imaginary part. The Interpolations.jl spline library is used. The surrogate model that we use for the entire mixture is </p>
+<p class="math">\[
+q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\lambda_{n,i,k}\right)
+\]</p>
+<p>where  <span class="math">$z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }\in\mathbb{C}$</span>  was used to reduce clutter.</p>
+<h1>under construction.</h1>
 <p>We do not recommend allowing each resonance component to have its only degree of freedom when fitting this simulated signal to data. This is because there are a large number of resonance coherences &#40;e.g., up to 3003 for alpha-D-Glucose&#41;. To address this application challenge, this library also provides grouping information for the resonance components, such that the changes in frequency that one sees across experiments for the components in a frequency group are approximately constant within each group. A separate grouping for changes in T2 decay and phase is also provided.</p>
 <p>These grouping information and the resonance components are used by this library to provide fast spline-based surrogate models to the simulated spectra. This surrogate model is what is used in NMRCalibrate.jl to do model fitting against data.</p>
 <h1>What this tutorial is about.</h1>
@@ -743,7 +771,7 @@ display&#40;fig&#41;
         <HR/>
         <div class="footer">
           <p>
-            Published from <a href="doc.md">doc.md</a>
+            Published from <a href="index.md">index.md</a>
             using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-03-24.
           </p>
         </div>
