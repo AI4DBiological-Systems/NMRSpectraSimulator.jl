@@ -2,8 +2,9 @@
 
 [![Build Status](https://github.com/RoyCCWang/NMRSpectraSimulator.jl/workflows/CI/badge.svg)](https://github.com/RoyCCWang/NMRSpectraSimulator.jl/actions)
 [![Coverage](https://codecov.io/gh/RoyCCWang/NMRSpectraSimulator.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/RoyCCWang/NMRSpectraSimulator.jl)
-Uses the spin Hamiltonian theory for isotropic liquid 1D 1H NMR spectroscopy. See Ernst's "Principles of Nuclear Magnetic Resonance in One and Two Dimensions" (ISBN 0-19-855647-0) and Levitt's "Spin Dynamics" (ISBN 978-0-470-51117-6) for the theory.
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ai4dbiological-systems.github.io/NMRSpectraSimulator.jl/)
+Uses the spin Hamiltonian theory for isotropic liquid 1D 1H NMR spectroscopy. See Ernst's "Principles of Nuclear Magnetic Resonance in One and Two Dimensions" (ISBN 0-19-855647-0) and Levitt's "Spin Dynamics" (ISBN 978-0-470-51117-6) for the theory.
+
 
 ## To Install:
 Since the pre-requisite packages are not registered with the Julia public registry, you must manually install them first.
