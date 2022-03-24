@@ -56,7 +56,7 @@ only in a certain manner. See figures x and y in our survey for an
 example of poor and non-sensible fit of select fitting algorithms
 against a real-world mixture.
 
-# NMRSPectraSimulator: Proposed Model & Surrogate Model
+# NMRSpectraSimulator: Proposed Model & Surrogate Model
 Let $\left[L\right]:=1,\dots,L$, which is a set of size $L$. Our
 modified FID spectra model 
 
