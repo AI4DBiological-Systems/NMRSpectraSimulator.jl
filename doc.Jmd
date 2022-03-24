@@ -1,0 +1,57 @@
+"""
+title: tutorial
+author Roy Wang
+date: 2022-03-23
+"""
+
+# What is markdown?
+
+simple way to specify how text looks like. *It can be italics*, or **bold**, or **both**.]
+
+
+1. It can have lists
+    - list can begin
+        -nested
+1. It can have other things
+And mathematics, $f(x)=x^2$
+
+## This is subtitle: what is Julia markdown.
+
+A way to have *code in addition to text, and to #run# this code as part of the text.
+
+```julia
+f = (x) -> x^2
+```
+
+We fcan apply this code:
+
+```julia
+f(3)
+```
+
+support inline eval: $f(4) = `j f(4)`$
+
+```julia; echo=false, results="hidden"
+#using Plots
+import PyPlot
+```
+
+Do plot.
+
+```julia; fig_cap="This is a plot of the func x2", echo=false
+#theme(:bright)
+#plot(f, xlim=(0,2), frame=:box, dpi=300)
+
+fig = PyPlot.figure()
+t = LinRange(-3,3,5000)
+y = f.(t)
+
+PyPlot.plot(t, y, label = "f")
+
+PyPlot.legend()
+PyPlot.xlabel("t")
+PyPlot.ylabel("f")
+PyPlot.title("test plot")
+display(fig)
+
+```
