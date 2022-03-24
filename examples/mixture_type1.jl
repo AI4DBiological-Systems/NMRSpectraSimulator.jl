@@ -88,7 +88,7 @@ NMRSpectraSimulator.fitproxies!(As;
 
 ### plot.
 
-# purposely distort the spectra by setting non-autophased FID values.
+# purposely distort the spectra by assigning random values to model parameters.
 Ag = As[1]
 Ag.ss_params.d = rand(length(Ag.ss_params.d))
 Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
@@ -98,10 +98,8 @@ Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) fo
 f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
 
 # test params.
-ΩS_ppm = collect( hz2ppmfunc.( NMRSpectraSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in mixture_params )
+#ΩS_ppm = collect( hz2ppmfunc.( NMRSpectraSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in mixture_params )
 #ΩS_ppm_flat = NMRSpectraSimulator.combinevectors(ΩS_ppm)
-
-
 
 
 P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
@@ -133,6 +131,23 @@ PyPlot.legend()
 PyPlot.xlabel("ppm")
 PyPlot.ylabel("real")
 PyPlot.title("f vs q")
+
+
+## visualize. zoom in.
+
+inds = findall(xx->(2.5<xx<3.9), P)
+
+PyPlot.figure(fig_num)
+fig_num += 1
+
+PyPlot.plot(P[inds], real.(f_U[inds]), label = "f")
+PyPlot.plot(P[inds], real.(q_U[inds]), label = "q")
+
+PyPlot.legend()
+PyPlot.xlabel("ppm")
+PyPlot.ylabel("real")
+PyPlot.title("f vs q")
+
 
 using BenchmarkTools
 

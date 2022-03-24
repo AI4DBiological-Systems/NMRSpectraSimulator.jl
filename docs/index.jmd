@@ -1,0 +1,311 @@
+"""
+title: NMRSpectraSimulator.jl Documentation
+author Roy Wang
+date: 2022-03-23
+"""
+
+## Library description
+
+Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of our proposed modified FFID model and its surrogate. Details on the model and parameters are forthcoming in an upcoming publication, but a brief overview is presented in the Background section below.
+
+## Background: Signal Model
+The signal model is taken to be the complex-valued free-induction decay (FID) model 
+
+$f_{\text{FID}}(t,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\alpha_{n,l}e^{\iota\left(\Omega_{n,l}t-\beta_{n,l}\right)}e^{-\lambda_{n,l}t},\,t>0,$
+and its Fourier transform, also referred to as the Fourier FID or FID spectra model 
+
+$f_{\text{FFID}}(u,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u-\Omega_{n,l})}.$
+
+Here, $n$ is the compound index, $\left(n,l\right)$ is the resonance
+component index for compound $n$, $N$ is the number of compounds
+in the isotropic mixture sample, $L_{n}$ is the number of resonance
+components for compound $n$, and $\iota$ is the imaginary number.
+The parameters of this signal model are: The compound molar concentration
+$w$, the resonance frequency $\Omega$, the resonance amplitude $\alpha$,
+the resonance T2 decay $\lambda$, the resonance phase $\beta$. The
+resonance frequencies and amplitudes of a compound can be simulated
+if the physical chemistry parameters, chemical shift and J-coupling,
+are known. This library uses the physical chemistry parameters from the [GISSMO website](http://gissmo.nmrfam.wisc.edu/library), which were obtained by empirically fitting a different forward model than the one used in this library against real NMR experiments. For GISSMO-related details, see [Dashti et. al 2017](https://pubs.acs.org/doi/abs/10.1021/acs.analchem.8b02660) and [Dashti et. al 2018](http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b02884) for their official journal publications.
+
+### Background: Calibration Challenge
+One approach to fitting this model to experimental data, i.e., to
+calibrate this model to data, is to assign bound constraints on every
+model parameter. The following forward model used for fitting against
+a cost function illustrates this approach: 
+
+$g_{\text{FFID}}(u,w,d,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u+d_{n,l}-\Omega_{n,l})}.$
+
+here, the frequency variable $u$ is in Hz. Many publicly-available
+NMR spectra model fitting routines are based on an internal or external
+library that contain a set of resonance frequencies $\Omega$ and
+amplitudes $\alpha$ for each library compound. These values are usually
+empirically fitted against experiments called compound standards,
+where only the compound and the bare minimum ingredients are placed
+in the mixture. In a non-trivial NMR experiment, the different compounds
+interact with each other, causing small frequency shifts away from
+the set of library frequencies $\Omega$. Thus, the parameter $d$
+is required to compensate for this shift. It is often assumed that
+the set of library resonance amplitudes $\alpha$ does not change
+across different experiments. The fit against data in the calibration
+problem is over the variables $u$, $w$, $d$, $\lambda$, and $\beta$.
+Due to the large number of resonance components for each compound,
+there are too many degrees of freedom to produce a good and sensible
+fit for most NMR applications in a reasonable computation time. From
+physical chemistry theory, some resonance components should shift
+only in a certain manner. See figures 4 and 5 in [this](https://www.mdpi.com/2218-1989/11/3/157) article for an example of poor and non-sensible fit of select fitting algorithms against a real-world mixture.
+
+
+
+
+### NMRSpectraSimulator: Proposed Model & Surrogate Model
+Let $\left[L\right]:=1,\dots,L$, which is a set of size $L$. Our
+modified FID spectra model 
+
+$g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}$
+
+have grouping information that reduce the number of variables to
+calibrate. It essentially replace the index $l\in\left[L_{n}\right]$
+by multi-indices $\left(i,k,l\right)\in\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$.
+Note that the size of $\left[L_{n}\right]$ is the same as $\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$
+because they describe two different ways of grouping the resonance
+components of compound $n$. Instead of having all parameters indexed
+by $\left(i,k,l\right)$, the frequency shift parameters $d$ is now
+indexed by $\left(n,i\right)$, and both the T2 decay $\lambda$ and
+phase $\beta$ are now indexed by $\left(n,i,k\right)$. The physical
+interpretation and derivation of this grouping and associated
+variables will be discussed in detail in our upcoming journal article.
+
+Instead of using a library of resonance frequency and amplitude values that were fitted empirically against data, we opt for simulating resonance frequencies and amplitudes, using physical chemistry parameters that were fitted empirically against data. The advantage is that the signal model can be generalized to different NMR spectrometer settings (i.e. spectral width and field strength). The disadvantage is that the simulated spectra via spin Hamiltonian theory is known to have incorrect amplitude values for certain compounds at certain resonance components. For example, see the discrepancy between the simulated and data spectra at the bottom of the [L-Phenyalanine GISSMO entry webpage](http://gissmo.nmrfam.wisc.edu/entry/bmse000921/simulation_1); zoom in around 3.1 to 3.3 ppm on the horizontal axis. Another example is the [D-Glucose GISSMO entry webpage](http://gissmo.nmrfam.wisc.edu/entry/bmse000015/simulation_1), around 5.2 ppm. We address this by fitting the compensation multiplier $\kappa_{n,i,k}$ for the spin-Hamiltonian simulated amplitude $\alpha_{n,i,k}$.
+
+To further speed up the computation, we use a spline-based surrogate
+$q$ for these models instead of the modified model $g_{\text{mFFID}}$
+during numerical optimization or statistical inference. Our local
+$k_{i_{n}}$ surrogate model
+
+$q_{n,i,k}(r,h)\approx\sum_{l=1}^{L_{n,i,k}}\frac{\alpha_{n,i,k,l}}{h+\iota(r-\Omega_{n,i,k,l})}$
+
+is comprised of spline interpolation fits of the RHS of the above
+equation; one for the real part, and one for the imaginary part. The
+Interpolations.jl spline library is used. The surrogate model that
+we use for the entire mixture is 
+
+$q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\lambda_{n,i,k}\right)$
+where 
+$z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }\in\mathbb{C}$ 
+was used to reduce clutter.
+
+### Identifiability
+The compound concentration w_{n} parameter and the amplitude compensation parameter \kappa_{n,i,k} should not be jointly fitted due to identifiability issues. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we provide routines to first fit \kappa_{n,i,k} against compound standard experiments whilst holding the concentration to be constant for all compounds of interest. The compound standard experiments can be obtained from the GISSMO webpage for each it's compound entry, or from the [BMRB database](https://bmrb.io/) if an experiment with alternative spectrometer parameters is desired. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we also provide routines to fit the surrogate model that has w as a fit variable and \kappa is kept constant. The constant assigned to each \kappa can be a value that was learned from compound standards data. More on this procedure and its application in quantifying metabolites in [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl).
+
+
+## Getting Started
+Add (currently) unregistered public Julia package for dependency before installing NMRSpectraSimulator.jl
+```
+import Pkg
+Pkg.add(path="https://github.com/AI4DBiological-Systems/GISSMOReader.jl")
+Pkg.add(path="https://github.com/AI4DBiological-Systems/NMRSpectraSimulator.jl")
+
+```
+
+         
+## Tutorials
+
+
+### Simulating a mixture of compounds, given spin simulation, machine, experimental parameters.
+
+Load required packages and set up random seed.
+```julia; results="hidden"
+import NMRSpectraSimulator
+
+using LinearAlgebra
+using FFTW
+import PyPlot
+import Statistics
+
+import Random
+Random.seed!(25)
+```
+
+Two types of parameters: the spin-Hamiltonian simulation and spectrometer/experiment parameters.
+
+Spin-related parameters for the spectrum simulation.
+
+```julia; results="hidden"
+# spin-related parameters
+tol_coherence = 1e-2
+α_relative_threshold = 0.05
+Δcs_max = 0.2 # TODO: this variable no longer used in latest version. Verify then remove.
+κ_λ_lb = 0.5
+κ_λ_ub = 2.5
+
+# experiment-related parameters
+λ0 = 3.4 
+ν_0ppm = 10656.011933076665 # where the 0 ppm reference freuency should be, in Hz.
+
+# spectrometer parameters
+fs = 14005.602240896402 # sampling frequency, in Hz.
+SW = 20.0041938620844 # spectral window, in ppm. Described in Bruker 
+```
+The local surrogate model fits spline interpolators over the following variables, with their corresponding interpolation domain interval:
+```
+r in [u_min, u_max] # we'll defined u_min and u_max later.
+λ in [κ_λ_lb*λ0, κ_λ_ub*λ0]
+λ0 is the resonance component at the 0 ppm frequency reference.
+```
+
+
+
+Spectrometer and experiment-related parameters can be obtained from a given NMR experiment from the [NMRDataSetup.jl](https://github.com/AI4DBiological-Systems/NMRDataSetup.jl) package. The values provided here were taken from an experiment from the BMRB database, and resembles a typical 1D 1H NMR spectrometer and experiment.
+
+
+
+NMR spectroscopy uses ppm as the frequency unit. The physics simulation use frequency units in Hz. The following are the conversion formulae that are used by the routines of this Julia package:
+```julia; results="hidden"
+hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
+ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
+```
+
+We need to provide the path to the location of the [/src/input/molcules](https://github.com/AI4DBiological-Systems/NMRData/tree/main/src/input/molecules) in the [NMRData.jl](https://github.com/AI4DBiological-Systems/NMRData) repository. This folder contain the JLD files that contain J-coupling and chemical shift constants from the [GISSMO library](http://gissmo.nmrfam.wisc.edu/library).
+
+```julia; results="hidden"
+base_path_JLD = "/home/roy/Documents/repo/NMRData/src/input/molecules"
+```
+Note that the chemical shift tend to change slightly (within +/- 0.1 ppm) for every NMR experiment. The J-coupling constants for a compound shouldn't change in theory, but the values provided by the GISSMO library are empirically fitted, thus prone to misfit error and physics model descrepancy. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we work on the fitting of the simulated spectra (provided in this package) to NMR experiment data.
+
+
+
+Let's simulate following compounds:
+```julia; results="hidden"
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
+```
+See [GISSMOReader.jl](https://github.com/AI4DBiological-Systems/GISSMOReader.jl) for the current list of feasible compounds.
+
+
+Setup our proposed signal model of our specified compounds, and allocate the data structure that contain the surrogate and model parameters.
+
+```julia; results="hidden"
+Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names)) # TODO: verify if this is still used in the latest version.
+
+dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0);
+mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
+    base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
+    ν_0ppm, dummy_SSFID;
+    tol_coherence = tol_coherence,
+    α_relative_threshold = α_relative_threshold);
+As = mixture_params
+```
+We will describe the datatype of `As[n]` in the (forthcoming) API document.
+
+
+Fit the local surrogate models to the proposed modified FFID model.
+Provide the frequency interval to build the local surrogate models. We'll just use the same interval for all the compounds.
+
+```julia; results="hidden"
+u_min = ppm2hzfunc(-0.5)
+u_max = ppm2hzfunc(4.0)
+
+NMRSpectraSimulator.fitproxies!(As;
+    κ_λ_lb = κ_λ_lb,
+    κ_λ_ub = κ_λ_ub,
+    u_min = u_min,
+    u_max = u_max,
+    Δr = 1.0,
+    Δκ_λ = 0.05)
+```
+The interpolation fitting sampling interval for the $r$ argument of the local surrogate model is given by `Δr`, and similarly for the $h$ argument and `Δκ_λ`. See the Background section for the $r$ and $h$ arguments.
+
+
+Our proposed modified FFID model for the entire mixture of compounds:
+```julia; results = "hidden"
+f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
+```
+
+It's surrogate:
+```julia; results = "hidden"
+q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params)
+```
+
+
+Prepare visualization.
+```julia; results = "hidden"
+P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
+U = ppm2hzfunc.(P)
+U_rad = U .* (2*π)
+
+f_U = f.(U_rad)
+q_U = q.(U_rad)
+```
+
+The l-2 discrepancy between the models `f` and its surrogate `q` over the evaluation locations in `U`.
+```julia
+discrepancy = abs.(f_U-q_U)
+max_val, ind = findmax(discrepancy)
+println("relative discrepancy = ", norm(discrepancy)/norm(f_U))
+println("max discrepancy: ", max_val)
+println()
+```
+
+
+```julia; fig_cap="", echo=false
+
+fig = PyPlot.figure()
+PyPlot.plot(P, real.(f_U), label = "f")
+PyPlot.plot(P, real.(q_U), label = "q")
+
+PyPlot.legend()
+PyPlot.xlabel("ppm")
+PyPlot.ylabel("real")
+PyPlot.title("f vs q")
+display(fig)
+
+```
+
+Zoom in.
+```julia; fig_cap="", echo=false
+
+inds = findall(xx->(2.5<xx<4), P)
+
+fig2 = PyPlot.figure()
+
+
+PyPlot.plot(P[inds], real.(f_U[inds]), label = "f")
+PyPlot.plot(P[inds], real.(q_U[inds]), label = "q")
+
+PyPlot.legend()
+PyPlot.xlabel("ppm")
+PyPlot.ylabel("real")
+PyPlot.title("f vs q")
+display(fig2)
+
+```
+
+
+Now, show the effect of parameter values on the spectra. Purposely distort the spectra by assigning random values to model parameters.
+```julia; results="hidden"
+Ag = As[1]
+Ag.ss_params.d = rand(length(Ag.ss_params.d))
+Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
+Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
+```
+This mutates `mixture_params`, aka `As`.
+
+
+Re-evaluate at evaluation locations, and plot.
+```julia; fig_cap="", echo=false
+f_U = f.(U_rad)
+q_U = q.(U_rad)
+
+inds = findall(xx->(2.5<xx<4), P)
+
+fig3 = PyPlot.figure()
+
+
+PyPlot.plot(P[inds], real.(f_U[inds]), label = "f")
+PyPlot.plot(P[inds], real.(q_U[inds]), label = "q")
+
+PyPlot.legend()
+PyPlot.xlabel("ppm")
+PyPlot.ylabel("real")
+PyPlot.title("f vs q")
+display(fig3)
+```

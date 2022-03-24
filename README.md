@@ -7,12 +7,13 @@ Uses the spin Hamiltonian theory for isotropic liquid 1D 1H NMR spectroscopy. Se
 
 
 ## To Install:
-Since the pre-requisite packages are not registered with the Julia public registry, you must manually install them first.
-From the Julia REPL, type `]` then `add https://github.com/AI4DBiological-Systems/GISSMOReader`
-We will officially register the pre-requisite packages with JuliaHub once we publish our work, so that this manual step won't be needed.
+Since the pre-requisite package GISSMOReader.jl is an unregistered with the Julia public registry, you must manually install them first. Open a Julia REPL session, and run the following commands.
+```
+import Pkg
+Pkg.add(path="https://github.com/AI4DBiological-Systems/GISSMOReader.jl")
+Pkg.add(path="https://github.com/AI4DBiological-Systems/NMRSpectraSimulator.jl")
+```
 
-## Layout of As. (documentation in progress)
- Describe what the field names of As[i] are, and the front end functions that calls them.
  
 ## Examples (in progress)
 The preliminary library description and tutorial (in progress) website is located [here](https://ai4dbiological-systems.github.io/NMRSpectraSimulator.jl/)
