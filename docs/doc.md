@@ -1,14 +1,28 @@
 """
-title: tutorial
+title: NMRSpectraSimulator.jl Documentation
 author Roy Wang
 date: 2022-03-23
 """
 
+# Library description
+
+Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of the 1D 1H NMR experiment signal. The signal model is taken to be the complex-valued free-induction decay (FID) model 
+
+$f_{\text{FID}}\left(t,\,w,\,\alpha,\,\Omega,\,\lambda,\,\beta\right)=\sum_{n,l_n}w_{n}\alpha_{n,l_n}e^{i\left(\Omega_{n,l_n}t-\beta_{n,l_n}\right)}e^{-\lambda_{n,l_n}t},\,t>0,$
+and its Fourier transform, called the FID spectra model, is 
+
+Here, $n$ is the compound index, $l_n$ is the resonance component index for compound $n$. The parameters of this signal model are: The compound molar concentration $w$, the resonance frequency $\Omega$, the resonance amplitude $\alpha$, the resonance T2 decay $\lambda$, the resonance phase $\beta$. The resonance frequencies and amplitudes of a compound can be simulated if the physical chemistry parameters, chemical shift and J-coupling, are known. This library uses the physical chemistry parameters from the [GISSMO website](http://gissmo.nmrfam.wisc.edu/library), which were obtained by empirically fitting a different forward model than the one used in this library against real NMR experiments. For GISSMO-related details, see [Dashti et. al 2017](https://pubs.acs.org/doi/abs/10.1021/acs.analchem.8b02660) and [Dashti et. al 2018](http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b02884) for their official journal publications.
+
+
+We do not recommend allowing each resonance component to have its only degree of freedom when fitting this simulated signal to data. This is because there are a large number of resonance coherences (e.g., up to 3003 for alpha-D-Glucose). To address this application challenge, this library also provides grouping information for the resonance components, such that the changes in frequency that one sees across experiments for the components in a frequency group are approximately constant within each group. A separate grouping for changes in T2 decay and phase is also provided.
+
+These grouping information and the resonance components are used by this library to provide fast spline-based surrogate models to the simulated spectra. This surrogate model is what is used in NMRCalibrate.jl to do model fitting against data.
+
 # What this tutorial is about.
+The workflow is 
 
-This library provides the simulated resonance components of the user-specified compounds, given the coherence simulation and spectrometer parameters. It also provides a proxy to the simulated spectra (i.e. Fourier-domain representation) of the free-induction decay signal model of the resonance components according to:
-$math here.$
 
+# Getting Started
 
 ## Tutorial for simulating a mixture of compounds.
 
@@ -26,7 +40,10 @@ import Random
 Random.seed!(25)
 ```
 
-Spin-related parameters for the spectrum simulation.
+Two types of parameters: the coherence simulation and spectrometer/experiment parameters.
+
+
+Coherence-related parameters for the spectrum simulation.
 
 ```julia
 tol_coherence = 1e-2

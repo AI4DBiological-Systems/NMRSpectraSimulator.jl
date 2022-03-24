@@ -658,305 +658,92 @@ div.title {text-align: center;}
           
         </div>
 
-        <p>&quot;&quot;&quot; title: tutorial author Roy Wang date: 2022-03-23 &quot;&quot;&quot;</p>
-<h1>What is markdown?</h1>
-<p>simple way to specify how text looks like. <em>It can be italics</em>, or <strong>bold</strong>, or <strong>both</strong>.&#93;</p>
-<ol>
-<li><p>It can have lists</p>
-<ul>
-<li><p>list can begin   -nested</p>
-</li>
-</ul>
-</li>
-<li><p>It can have other things</p>
-</li>
-</ol>
-<p>And mathematics, <span class="math">$f(x)=x^2$</span></p>
-<h2>This is subtitle: what is Julia markdown.</h2>
-<p>A way to have *code in addition to text, and to #run# this code as part of the text.</p>
+        <p>&quot;&quot;&quot; title: NMRSpectraSimulator.jl Documentation author Roy Wang date: 2022-03-23 &quot;&quot;&quot;</p>
+<h1>Library description</h1>
+<p>Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of the 1D 1H NMR experiment signal. The signal model is taken to be the complex-valued free-induction decay model:</p>
+<p class="math">\[
+f_{\text{FID}}\left(t,\,w,\,\alpha,\,\Omega,\,\lambda,\,\beta\right)=\sum_{n,l_n}w_{n}\alpha_{n,l_n}e^{i\left(\Omega_{n,l_n}t-\beta_{n,l_n}\right)}e^{-\lambda_{n,l_n}t},\,t>0
+\]</p>
+<p>Here, <span class="math">$n$</span> is the compound index, <span class="math">$l_n$</span> is the resonance component index for compound <span class="math">$n$</span>. The parameters of this signal model are: The compound molar concentration <span class="math">$w$</span>, the resonance frequency <span class="math">$\Omega$</span>, the resonance amplitude <span class="math">$\alpha$</span>, the resonance T2 decay <span class="math">$\lambda$</span>, the resonance phase <span class="math">$\beta$</span>. The resonance frequencies and amplitudes of a compound can be simulated if the physical chemistry parameters, chemical shift and J-coupling, are known. This library uses the physical chemistry parameters from the <a href="http://gissmo.nmrfam.wisc.edu/library">GISSMO website</a>, which were obtained by empirically fitting a different forward model than the one used in this library against real NMR experiments. For GISSMO-related details, see <a href="https://pubs.acs.org/doi/abs/10.1021/acs.analchem.8b02660">Dashti et. al 2017</a> and <a href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b02884">Dashti et. al 2018</a> for their official journal publications.</p>
+<p>We do not recommend allowing each resonance component to have its only degree of freedom when fitting this simulated signal to data. This is because there are a large number of resonance coherences &#40;e.g., up to 3003 for alpha-D-Glucose&#41;. To address this application challenge, this library also provides grouping information for the resonance components, such that the changes in frequency that one sees across experiments for the components in a frequency group are approximately constant within each group. A separate grouping for changes in T2 decay and phase is also provided.</p>
+<p>These grouping information and the resonance components are used by this library to provide fast spline-based surrogate models to the simulated spectra. This surrogate model is what is used in NMRCalibrate.jl to do model fitting against data.</p>
+<h1>What this tutorial is about.</h1>
+<p>The workflow is </p>
+<h1>Getting Started</h1>
+<h2>Tutorial for simulating a mixture of compounds.</h2>
+<p>#Describe what this tutorial is about.</p>
+<pre><code class="language-julia; echo&#61;false, results&#61;&quot;hidden&quot;">import NMRSpectraSimulator
 
+using LinearAlgebra
+using FFTW
+import PyPlot
+import Statistics
 
-<p>Spin-related parameters for the spectrum simulation.</p>
-
-
-<pre class='hljl'>
-<span class='hljl-n'>tol_coherence</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>1e-2</span><span class='hljl-t'>
-</span><span class='hljl-n'>α_relative_threshold</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.05</span><span class='hljl-t'>
-</span><span class='hljl-n'>λ0</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>3.4</span><span class='hljl-t'>
-</span><span class='hljl-n'>Δcs_max</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.2</span><span class='hljl-t'>
-</span><span class='hljl-n'>κ_λ_lb</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.5</span><span class='hljl-t'>
-</span><span class='hljl-n'>κ_λ_ub</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>2.5</span>
-</pre>
-
-
-<pre class="output">
-2.5
-</pre>
-
-
+import Random
+Random.seed&#33;&#40;25&#41;</code></pre>
+<p>Two types of parameters: the coherence simulation and spectrometer/experiment parameters.</p>
+<p>Coherence-related parameters for the spectrum simulation.</p>
+<pre><code class="language-julia">tol_coherence &#61; 1e-2
+α_relative_threshold &#61; 0.05
+λ0 &#61; 3.4
+Δcs_max &#61; 0.2
+κ_λ_lb &#61; 0.5
+κ_λ_ub &#61; 2.5</code></pre>
 <p>Δcs_max</p>
 <p>Spectrometer-related parameters. The <a href="https://github.com/AI4DBiological-Systems/NMRDataSetup.jl">NMRDataSetup.jl</a> library get these parameters from user-supplied NMR experiments.</p>
-
-
-<pre class='hljl'>
-<span class='hljl-n'>fs</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>14005.602240896402</span><span class='hljl-t'> </span><span class='hljl-cs'># sampling frequency, in Hz.</span><span class='hljl-t'>
-</span><span class='hljl-n'>SW</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>20.0041938620844</span><span class='hljl-t'> </span><span class='hljl-cs'># spectral window, in ppm. Described in Bruker TopSpin manual,</span><span class='hljl-t'>
-</span><span class='hljl-n'>ν_0ppm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>10656.011933076665</span><span class='hljl-t'> </span><span class='hljl-cs'># where the 0 ppm reference freuency should be, in Hz.</span>
-</pre>
-
-
-<pre class="output">
-10656.011933076665
-</pre>
-
-
+<pre><code class="language-julia">fs &#61; 14005.602240896402 # sampling frequency, in Hz.
+SW &#61; 20.0041938620844 # spectral window, in ppm. Described in Bruker TopSpin manual,
+ν_0ppm &#61; 10656.011933076665 # where the 0 ppm reference freuency should be, in Hz.</code></pre>
 <p>NMR spectroscopy uses ppm as the frequency unit. The physics simulation use frequency units in Hz. The following are the conversion formulae:</p>
-
-
-<pre class='hljl'>
-<span class='hljl-n'>hz2ppmfunc</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>uu</span><span class='hljl-oB'>-&gt;</span><span class='hljl-p'>(</span><span class='hljl-n'>uu</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-t'> </span><span class='hljl-n'>ν_0ppm</span><span class='hljl-p'>)</span><span class='hljl-oB'>*</span><span class='hljl-n'>SW</span><span class='hljl-oB'>/</span><span class='hljl-n'>fs</span><span class='hljl-t'>
-</span><span class='hljl-n'>ppm2hzfunc</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>pp</span><span class='hljl-oB'>-&gt;</span><span class='hljl-p'>(</span><span class='hljl-n'>ν_0ppm</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-n'>pp</span><span class='hljl-oB'>*</span><span class='hljl-n'>fs</span><span class='hljl-oB'>/</span><span class='hljl-n'>SW</span><span class='hljl-p'>)</span>
-</pre>
-
-
-<pre class="output">
-#3 &#40;generic function with 1 method&#41;
-</pre>
-
-
+<pre><code class="language-julia">hz2ppmfunc &#61; uu-&gt;&#40;uu - ν_0ppm&#41;*SW/fs
+ppm2hzfunc &#61; pp-&gt;&#40;ν_0ppm &#43; pp*fs/SW&#41;</code></pre>
 <p>We need to provide the path to the location of the <a href="https://github.com/AI4DBiological-Systems/NMRData/tree/main/src/input/molecules">/src/input/molcules</a> in the <a href="https://github.com/AI4DBiological-Systems/NMRData">NMRData.jl</a> repository. This folder contain the stored J-coupling and chemical shift constants from the <a href="http://gissmo.nmrfam.wisc.edu/library">GISSMO library</a>. Stored in JLD file format.</p>
-
-
-<pre class='hljl'>
-<span class='hljl-n'>base_path_JLD</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;/home/roy/Documents/repo/NMRData/src/input/molecules&quot;</span>
-</pre>
-
-
-<pre class="output">
-&quot;/home/roy/Documents/repo/NMRData/src/input/molecules&quot;
-</pre>
-
-
+<pre><code class="language-julia">base_path_JLD &#61; &quot;/home/roy/Documents/repo/NMRData/src/input/molecules&quot;</code></pre>
 <p>Note that the chemical shift tend to change slightly &#40;within &#43;/- 0.1 ppm&#41; for every NMR experiment. The J-coupling constants for a compound shouldn&#39;t change in theory, but the values provided by the GISSMO library are empirically fitted, thus prone to misfit error and physics model descrepancy. In <a href="https://github.com/AI4DBiological-Systems/NMRCalibrate.jl">NMRCalibrate.jl</a>, we work on the fitting of the simulated spectra &#40;provided in this package&#41; to NMR experiment data.</p>
 <p>In this tutorial, we simulate following compounds:</p>
-
-
-<pre class='hljl'>
-<span class='hljl-n'>molecule_names</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;L-Serine&quot;</span><span class='hljl-p'>;</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;L-Phenylalanine&quot;</span><span class='hljl-p'>;</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;DSS&quot;</span><span class='hljl-p'>;]</span>
-</pre>
-
-
-<pre class="output">
-3-element Vector&#123;String&#125;:
- &quot;L-Serine&quot;
- &quot;L-Phenylalanine&quot;
- &quot;DSS&quot;
-</pre>
-
-
+<pre><code class="language-julia">molecule_names &#61; &#91;&quot;L-Serine&quot;; &quot;L-Phenylalanine&quot;; &quot;DSS&quot;;&#93;</code></pre>
 <p>See <a href="https://github.com/AI4DBiological-Systems/GISSMOReader.jl">GISSMOReader.jl</a> for the current list of feasible compounds.</p>
-<p>This library provides the simulated resonance components of the user-specified compounds, given the coherence simulation and spectrometer parameters. It also provides a proxy to the simulated spectra &#40;i.e. Fourier-domain representation&#41; of the free-induction decay signal model of the resonance components according to: <span class="math">$math here.$</span></p>
 <p>Provide the range of frequency shift that we </p>
+<pre><code class="language-julia">Δcs_max_mixture &#61; collect&#40; Δcs_max for i &#61; 1:length&#40;molecule_names&#41;&#41;
 
 
-<pre class='hljl'>
-<span class='hljl-n'>Δcs_max_mixture</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>collect</span><span class='hljl-p'>(</span><span class='hljl-t'> </span><span class='hljl-n'>Δcs_max</span><span class='hljl-t'> </span><span class='hljl-k'>for</span><span class='hljl-t'> </span><span class='hljl-n'>i</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-nf'>length</span><span class='hljl-p'>(</span><span class='hljl-n'>molecule_names</span><span class='hljl-p'>))</span><span class='hljl-t'>
-
-
-</span><span class='hljl-n'>dummy_SSFID</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>NMRSpectraSimulator</span><span class='hljl-oB'>.</span><span class='hljl-nf'>SpinSysFIDType1</span><span class='hljl-p'>(</span><span class='hljl-nfB'>0.0</span><span class='hljl-p'>)</span><span class='hljl-t'>
-</span><span class='hljl-nd'>@time</span><span class='hljl-t'> </span><span class='hljl-n'>mixture_params</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>NMRSpectraSimulator</span><span class='hljl-oB'>.</span><span class='hljl-nf'>setupmixtureproxies</span><span class='hljl-p'>(</span><span class='hljl-n'>molecule_names</span><span class='hljl-p'>,</span><span class='hljl-t'>
-    </span><span class='hljl-n'>base_path_JLD</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>Δcs_max_mixture</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>hz2ppmfunc</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>ppm2hzfunc</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>fs</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>SW</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>λ0</span><span class='hljl-p'>,</span><span class='hljl-t'>
-    </span><span class='hljl-n'>ν_0ppm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>dummy_SSFID</span><span class='hljl-p'>;</span><span class='hljl-t'>
-    </span><span class='hljl-n'>tol_coherence</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>tol_coherence</span><span class='hljl-p'>,</span><span class='hljl-t'>
-    </span><span class='hljl-n'>α_relative_threshold</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>α_relative_threshold</span><span class='hljl-p'>)</span><span class='hljl-t'>
-</span><span class='hljl-n'>As</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>mixture_params</span>
-</pre>
-
-
-<pre class="output">
-0.616450 seconds &#40;1.49 M allocations: 85.415 MiB, 2.91&#37; gc time, 95.00&#37; c
-ompilation time&#41;
-3-element Vector&#123;NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSim
-ulator.SpinSysFIDType1&#123;Float64&#125;&#125;&#125;:
- NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSimulator.SpinSysFI
-DType1&#123;Float64&#125;&#125;&#40;Vector&#123;Function&#125;&#91;&#93;, Vector&#123;Function&#125;&#91;&#93;, &#91;&#91;0.22220105129942
-25, 0.3786266834246926, 0.14917226527588492, 0.3403987535349512, 0.25866421
-05104006, 0.1318006487371542, 0.2381759621056323, 0.369540545111647, 0.1609
-4023378218253, 0.34911903343342177, 0.12039853864543162, 0.2804824279211464
-&#93;&#93;, &#91;&#91;83771.62619950518, 84285.21193557105, 84471.9538231886, 84322.5208087
-9912, 83808.93507273323, 84495.08581803314, 83794.7581943497, 84393.3064832
-1068, 84206.56459559312, 84416.4384780552, 84243.87346882117, 83832.0670675
-7777&#93;&#93;, &#91;&#91;&#91;2, 4, 9, 11&#93;, &#91;3, 6, 8, 10&#93;, &#91;1, 5, 7, 12&#93;&#93;&#93;, &#91;&#91;&#91;-0.000328056089
-8519802, -0.0014614118260978803, -0.9982105320840502&#93;, &#91;-0.0455078532175240
-4, -0.9527933956628398, -0.0016987511196360772&#93;, &#91;-0.9541640906926239, -0.0
-45745192511062294, -9.071679631372787e-5&#93;, &#91;-0.05636239561302714, -0.942533
-0202060093, -0.001104584180963597&#93;, &#91;-0.011182598485355078, 0.0087989636307
-32681, -0.9976163651453777&#93;, &#91;-0.9432424542536086, -0.0564946000516065, -0.
-0002629456947848552&#93;, &#91;0.0105935803491633, -0.01221081936664209, -0.9983827
-609825213&#93;, &#91;-0.954231184736136, -0.04525616042734887, -0.00051265483651519
-17&#93;, &#91;-0.04557494726103617, -0.9523043635791264, -0.002120689159837541&#93;, &#91;-
-0.9433095482971209, -0.056005567967892855, -0.0006848837349862635&#93;, &#91;-0.056
-42948965653938, -0.9420439881222956, -0.0015265222211650054&#93;, &#91;-0.000260962
-0463399076, -0.0019504439098113058, -0.9977885940438487&#93;&#93;&#93;, Vector&#123;Vector&#123;F
-loat64&#125;&#125;&#91;&#93;, NMRSpectraSimulator.SpinSysFIDType1&#123;Float64&#125;&#40;&#91;1.0&#93;, &#91;&#91;0.0, 0.0,
- 0.0&#93;&#93;, &#91;0.0&#93;&#41;, Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, 3.4,
- 14005.602240896402, 20.0041938620844, 0.2, 10656.011933076665&#41;
- NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSimulator.SpinSysFI
-DType1&#123;Float64&#125;&#125;&#40;Vector&#123;Function&#125;&#91;&#93;, Vector&#123;Function&#125;&#91;&#93;, &#91;&#91;0.11193113555256
-429, 0.036319159955959614, 0.1642497044914771, 0.11189406203528451, 0.04049
-7974408290116, 0.040476057413898266, 0.1106064808808327, 0.0500416920876931
-3, 0.029759903171629087, 0.07589491551286025  …  0.04884872238381286, 0.046
-448497079815125, 0.09220041392370068, 0.030786929096368116, 0.0644851194002
-4008, 0.09213514421235683, 0.139642572698544, 0.08748663054528952, 0.085462
-15503064564, 0.139551214424066&#93;, &#91;0.2792798878727903, 0.2148246235637866, 0
-.2558954885634228, 0.2802041849095602, 0.21399734125318876, 0.2490751166371
-274, 0.28766137650293, 0.25082646435562567, 0.2182341111491615, 0.244201527
-07408044, 0.2867373110950295, 0.21906116183088986&#93;&#93;, &#91;&#91;99107.33694369963, 9
-9294.77277775921, 99523.50213203227, 99107.28929726302, 99295.29451767285, 
-99295.33253647463, 99107.89670241505, 99509.24222598271, 99093.07703765007,
- 99521.06708138395  …  99614.87275637496, 99567.3972207396, 99385.932303173
-28, 99625.03151131602, 99576.0067597605, 99385.96095971746, 99155.355584959
-14, 99617.08496264485, 99386.68786810021, 99155.29390814304&#93;, &#91;80684.196498
-14541, 81369.14729654147, 84412.53329646162, 81278.80311744059, 80593.85231
-904453, 84463.38343556978, 80735.04663725356, 84443.57519557915, 81400.1891
-9565898, 84494.42533468729, 81309.8450165581, 80644.7024581527&#93;&#93;, &#91;&#91;&#91;3, 8, 
-10, 12, 14, 17, 19, 24, 27, 30  …  41, 42, 44, 49, 53, 55, 56, 58, 59, 62&#93;,
- &#91;1, 4, 7, 9, 11, 13, 15, 21, 22, 23  …  35, 38, 43, 47, 48, 51, 52, 54, 61
-, 64&#93;, &#91;2, 5, 6, 16, 18, 20, 28, 31, 34, 37, 45, 46, 50, 57, 60, 63&#93;&#93;, &#91;&#91;1,
- 5, 7, 12&#93;, &#91;2, 4, 9, 11&#93;, &#91;3, 6, 8, 10&#93;&#93;&#93;, &#91;&#91;&#91;-9.948231125889162e-5, -0.00
-1739340318468452, -0.0017393403183614264, -0.49821091854180544, -0.49821091
-85101058&#93;, &#91;-0.979375178850592, -0.010144878600871543, -0.01014487860095469
-9, -0.00016753197379248963, -0.00016753197378926998&#93;, &#91;-0.02052533883814911
-, -0.4881157810781686, -0.4881157810831754, -0.001621549500245456, -0.00162
-15495002615543&#93;, &#91;-9.957632529644656e-8, -0.0018575823538963254, -0.0018575
-823540072922, -0.49814236784203775, -0.49814236787373334&#93;, &#91;-0.982622969446
-9463, -0.008317412900278043, -0.008317412900169407, -0.0003711023918329399,
- -0.00037110236077334056&#93;, &#91;-0.9823883816308514, -0.008231230909477416, -0.
-008231230909586773, -0.0005745782595132916, -0.0005745782905711423&#93;, &#91;-0.00
-3112685091518297, 0.000174307372925675, 0.00017430737300649923, -0.49861796
-482752624, -0.4986179648268877&#93;, &#91;-0.0065254350194451916, -0.49466725756565
-29, -0.49466725755966773, -0.00207002490856481, -0.0020700249466694127&#93;, &#91;0
-.013900421507445027, -0.008290816805952676, -0.008290816794853748, -0.49865
-939395012476, -0.49865939395651365&#93;, &#91;-0.009603605313994235, -0.49355420551
-31372, -0.49355420551908147, -0.0016439918458856506, -0.0016439918079013405
-&#93;  …  &#91;-0.011462890202941667, -0.49299006431883763, -0.49299006429471426, -
-0.0012784905789651466, -0.001278490604541299&#93;, &#91;-0.014652833839547685, -0.4
-9137809316332953, -0.49137809308590297, -0.0012954899934652373, -0.00129548
-99177545218&#93;, &#91;-0.9739672048008949, -0.013253252369180402, -0.0132532523691
-25779, 0.00023685476653057024, 0.0002368547726705754&#93;, &#91;-0.0068407247218147
-95, -0.495467876697642, -0.4954678767216754, -0.0011117609423672568, -0.001
-1117609165007256&#93;, &#91;-0.019060860688263626, -0.48911202144869387, -0.4891120
-215262633, -0.001357548130382552, -0.0013575482063968303&#93;, &#91;-0.973970433772
-1781, -0.013152421871125142, -0.013152421871219344, 0.0001376387603202467, 
-0.00013763875420214067&#93;, &#91;-4.007298383679192e-7, -0.0012664727199986903, -0
-.0012664727200150105, -0.4987333269159031, -0.49873332691424505&#93;, &#91;-0.02023
-7144442665722, -0.48856498619072736, -0.48856498619426414, -0.0013164415861
-666168, -0.0013164415861761647&#93;, &#91;-0.9797098806673585, -0.01003675670510151
-3, -0.010036756705092076, -0.00010830296122399385, -0.00010830296122388283&#93;
-, &#91;-5.2974889975576644e-5, -0.0013982571024131474, -0.001398257102401712, -
-0.49857525545177894, -0.49857525545343045&#93;&#93;, &#91;&#91;-0.9955608633846502, -0.0043
-8889752927063, -5.0239086079151285e-5&#93;, &#91;-0.004393269961166679, -0.99558625
-08639117, -2.047917492153939e-5&#93;, &#91;-4.586665418315761e-5, -2.48516068175330
-67e-5, -0.9999292817389993&#93;, &#91;-0.00439457286165601, -0.9955865522759043, -1
-.8874862439677287e-5&#93;, &#91;-0.9955621662851395, -0.004389198941263162, -4.8634
-77359728918e-5&#93;, &#91;0.0001687927745102069, -0.00024815571854602814, -0.999920
-6370559641&#93;, &#91;-0.9953462039559569, -0.004612201640999125, -4.15944030440762
-45e-5&#93;, &#91;-0.00025922318238708053, 0.0001987539169033825, -0.999939530734516
-2&#93;, &#91;-0.004606626489370602, -0.9953626453401909, -3.0728170438587554e-5&#93;, &#91;
--4.4563753693771524e-5, -2.4550194825057048e-5, -0.9999308860514812&#93;, &#91;-0.0
-04607929389859988, -0.9953629467521834, -2.912385795666994e-5&#93;, &#91;-0.9953475
-068564462, -0.004612503052991601, -3.999009056215863e-5&#93;&#93;&#93;, Vector&#123;Vector&#123;F
-loat64&#125;&#125;&#91;&#93;, NMRSpectraSimulator.SpinSysFIDType1&#123;Float64&#125;&#40;&#91;1.0, 1.0&#93;, &#91;&#91;0.0,
- 0.0, 0.0, 0.0, 0.0&#93;, &#91;0.0, 0.0, 0.0&#93;&#93;, &#91;0.0, 0.0&#93;&#41;, Float64&#91;&#93;, Float64&#91;&#93;, 
-Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, 3.4, 14005.602240896402, 20.0041938620844,
- 0.2, 10656.011933076665&#41;
- NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSimulator.SpinSysFI
-DType1&#123;Float64&#125;&#125;&#40;Vector&#123;Function&#125;&#91;&#93;, Vector&#123;Function&#125;&#91;&#93;, &#91;&#91;0.06114398246494
-3826, 0.06263391396837825, 0.06372210356667815, 0.061162709406614196, 0.060
-26132094219557, 0.061333259377486925, 0.031220797259418637, 0.0306596850445
-51417, 0.0300508365340785, 0.03184028770500808  …  0.03066228949840839, 0.0
-61271678736449446, 0.06252977474034001, 0.06386108510603425, 0.061271494334
-539295, 0.031271139794298075, 0.032457228176396694, 0.06126496724964265, 0.
-06239260380974551, 0.0638424289406119&#93;&#93;, &#91;&#91;69651.44714148855, 74579.0632977
-3946, 79693.4132742158, 69651.95644228804, 74630.068041158, 69702.451884907
-09, 74612.11427630819, 69685.07097263471, 74652.87623651313, 69725.83293283
-965  …  69685.0737942246, 79792.88539515833, 74734.96648176979, 69759.38479
-83952, 79792.89029009052, 74752.34729382375, 74711.58533361887, 79792.89637
-889017, 74785.9565177767, 69758.90119314191&#93;&#93;, &#91;&#91;&#91;2, 5, 7, 9, 11, 17, 19, 2
-1, 23, 27  …  112, 118, 120, 122, 123, 126, 133, 136, 137, 139&#93;, &#91;1, 4, 6, 
-8, 10, 13, 14, 24, 25, 26  …  105, 109, 113, 121, 124, 127, 130, 131, 134, 
-140&#93;, &#91;3, 12, 15, 16, 18, 20, 22, 31, 34, 37  …  115, 116, 117, 119, 125, 1
-28, 129, 132, 135, 138&#93;&#93;&#93;, &#91;&#91;&#91;-0.49994056960488503, -0.4999405696047662, -5
-.9428937198791054e-5, -5.942893719812492e-5, -1.4579758511601426e-9, -1.457
-9758511601426e-9&#93;, &#91;-5.942904175421093e-5, -5.942904175415542e-5, -0.499893
-28560849144, -0.49989328560672547, -4.72853506373605e-5, -4.728535063724948
-e-5&#93;, &#91;-1.3534202092380099e-9, -1.3534202092380099e-9, -4.7285455193057935e
--5, -4.7285455193057935e-5, -0.4999527131936593, -0.4999527131891142&#93;, &#91;-0.
-4999930311888452, -0.499993031188964, -6.968816398000843e-6, -6.96881639861
-1466e-6, 5.3028137436683664e-12, 5.302758232517135e-12&#93;, &#91;-5.67681634329179
-25e-5, -5.6768163692508444e-5, -0.49989573490869216, -0.49989573490862327, 
--4.749692777961112e-5, -4.749692777961112e-5&#93;, &#91;-0.49993790872656374, -0.49
-993790872670457, -6.187823739946672e-5, -6.187823909591991e-5, -2.130351181
-0177866e-7, -2.1303511821280097e-7&#93;, &#91;-8.555388253477159e-6, -8.55538792080
-5027e-6, -0.49996460230702955, -0.4999646023072439, -2.684230477600913e-5, 
--2.684230477606464e-5&#93;, &#91;-0.4999914442834502, -0.4999914442832367, 1.303282
-500833035e-5, 1.3032826560794745e-5, -2.1588542440997838e-5, -2.15885424411
-0886e-5&#93;, &#91;-8.555385478589241e-6, -8.555385425176411e-6, -0.499964627701204
-3, -0.4999646277012687, -2.6816913311578094e-5, -2.6816913311633606e-5&#93;, &#91;-
-0.4999914442806753, -0.4999914442807411, 1.3007430833573313e-5, 1.300743253
-601452e-5, -2.1563150976566803e-5, -2.1563150976677825e-5&#93;  …  &#91;-0.49999177
-954878066, -0.49999177954874324, 1.3140177401190849e-5, 1.3140177798500157e
--5, -2.1360628837951978e-5, -2.136062883800749e-5&#93;, &#91;1.2618320896166715e-6,
- 1.2618326356539266e-6, -4.967308357683997e-5, -4.967308357683997e-5, -0.49
-995158874890683, -0.49995158874866447&#93;, &#91;-5.962112733299217e-5, -5.96211264
-925342e-5, -0.4998927767527672, -0.49989277675286786, -4.760212026955202e-5
-, -4.760212026960753e-5&#93;, &#91;-0.49999019697359665, -0.49999019697293684, -9.8
-0297592256818e-6, -9.802975922457158e-6, -5.081063347844861e-11, -5.0810744
-50075107e-11&#93;, &#91;1.6579275609551455e-7, 1.6579221297320982e-7, -4.8458299544
-02969e-5, -4.8458299544140715e-5, -0.4999517074932405, -0.49995170749264034
-&#93;, &#91;-8.22012064197703e-6, -8.220121374638827e-6, -0.49996496296484083, -0.4
-99964962964763, -2.6816914189820018e-5, -2.6816914189708996e-5&#93;, &#91;-8.220123
-33390353e-6, -8.220123953228831e-6, -0.49996493757072136, -0.49996493757068
-29, -2.6842305654306564e-5, -2.6842305654362075e-5&#93;, &#91;-1.4143610727046507e-
-9, -1.4143610727046507e-9, -4.933628631353937e-5, -4.933628631348386e-5, -0
-.49995066229904767, -0.49995066229960317&#93;, &#91;-5.710068718528527e-5, -5.71006
-8718528527e-5, -0.4998935630154076, -0.4998935630150459, -4.933629758802072
-e-5, -4.9336297587965205e-5&#93;, &#91;-0.49994289789812374, -0.4999428978987836, -
-5.710069845982213e-5, -5.710069845982213e-5, -1.4030865913561286e-9, -1.403
-0865913561286e-9&#93;&#93;&#93;, Vector&#123;Vector&#123;Float64&#125;&#125;&#91;&#93;, NMRSpectraSimulator.SpinSys
-FIDType1&#123;Float64&#125;&#40;&#91;1.0&#93;, &#91;&#91;0.0, 0.0, 0.0, 0.0, 0.0, 0.0&#93;&#93;, &#91;0.0&#93;&#41;, &#91;9.0&#93;, &#91;
-66953.69761103764&#93;, &#91;1.0&#93;, &#91;0.0&#93;, &#91;0.0&#93;, 3.4, 14005.602240896402, 20.004193
-8620844, 0.2, 10656.011933076665&#41;
-</pre>
-
-
+dummy_SSFID &#61; NMRSpectraSimulator.SpinSysFIDType1&#40;0.0&#41;
+@time mixture_params &#61; NMRSpectraSimulator.setupmixtureproxies&#40;molecule_names,
+    base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
+    ν_0ppm, dummy_SSFID;
+    tol_coherence &#61; tol_coherence,
+    α_relative_threshold &#61; α_relative_threshold&#41;
+As &#61; mixture_params</code></pre>
 <p>We fcan apply this code:</p>
-
-
-<pre class='hljl'>
-<span class='hljl-n'>f</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>xx</span><span class='hljl-oB'>-&gt;</span><span class='hljl-n'>xx</span><span class='hljl-oB'>^</span><span class='hljl-ni'>2</span><span class='hljl-t'>
-</span><span class='hljl-nf'>f</span><span class='hljl-p'>(</span><span class='hljl-ni'>3</span><span class='hljl-p'>)</span>
+<pre><code class="language-julia">f &#61; xx-&gt;xx^2
+f&#40;3&#41;</code></pre>
+<p>support inline eval: f&#40;4&#41; &#61; </p>
+<pre class="julia-error">
+ERROR: UndefVarError: f not defined
 </pre>
+:Do
+<p>plot.</p>
+<pre><code class="language-julia; fig_cap&#61;&quot;This is a plot of the func x2&quot;, echo&#61;false">#theme&#40;:bright&#41;
+#plot&#40;f, xlim&#61;&#40;0,2&#41;, frame&#61;:box, dpi&#61;300&#41;
 
+fig &#61; PyPlot.figure&#40;&#41;
+t &#61; LinRange&#40;-3,3,5000&#41;
+y &#61; f.&#40;t&#41;
 
-<pre class="output">
-9
-</pre>
+PyPlot.plot&#40;t, y, label &#61; &quot;f&quot;&#41;
 
-
-<p>support inline eval: <span class="math">$f(4) = 16$</span></p>
-<p>Do plot.</p>
-
-<figure>
-<img src="data:image/png;base64,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"  />
-<figcaption>This is a plot of the func x2</figcaption>
-</figure>
+PyPlot.legend&#40;&#41;
+PyPlot.xlabel&#40;&quot;t&quot;&#41;
+PyPlot.ylabel&#40;&quot;f&quot;&#41;
+PyPlot.title&#40;&quot;test plot&quot;&#41;
+display&#40;fig&#41;
+</code></pre>
 
 
         <HR/>
         <div class="footer">
           <p>
-            Published from <a href="doc.Jmd">doc.Jmd</a>
+            Published from <a href="doc.md">doc.md</a>
             using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-03-24.
           </p>
         </div>
