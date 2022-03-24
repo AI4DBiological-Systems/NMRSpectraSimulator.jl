@@ -1,0 +1,140 @@
+"""
+title: tutorial
+author Roy Wang
+date: 2022-03-23
+"""
+
+# What this tutorial is about.
+
+This library provides the simulated resonance components of the user-specified compounds, given the coherence simulation and spectrometer parameters. It also provides a proxy to the simulated spectra (i.e. Fourier-domain representation) of the free-induction decay signal model of the resonance components according to:
+$math here.$
+
+
+## Tutorial for simulating a mixture of compounds.
+
+#Describe what this tutorial is about.
+
+```julia; echo=false, results="hidden"
+import NMRSpectraSimulator
+
+using LinearAlgebra
+using FFTW
+import PyPlot
+import Statistics
+
+import Random
+Random.seed!(25)
+```
+
+Spin-related parameters for the spectrum simulation.
+
+```julia
+tol_coherence = 1e-2
+α_relative_threshold = 0.05
+λ0 = 3.4
+Δcs_max = 0.2
+κ_λ_lb = 0.5
+κ_λ_ub = 2.5
+```
+Δcs_max
+
+
+Spectrometer-related parameters. The [NMRDataSetup.jl](https://github.com/AI4DBiological-Systems/NMRDataSetup.jl) library get these parameters from user-supplied NMR experiments.
+```julia
+fs = 14005.602240896402 # sampling frequency, in Hz.
+SW = 20.0041938620844 # spectral window, in ppm. Described in Bruker TopSpin manual,
+ν_0ppm = 10656.011933076665 # where the 0 ppm reference freuency should be, in Hz.
+```
+
+NMR spectroscopy uses ppm as the frequency unit. The physics simulation use frequency units in Hz. The following are the conversion formulae:
+```julia
+hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
+ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
+```
+
+
+We need to provide the path to the location of the [/src/input/molcules](https://github.com/AI4DBiological-Systems/NMRData/tree/main/src/input/molecules) in the [NMRData.jl](https://github.com/AI4DBiological-Systems/NMRData) repository. This folder contain the stored J-coupling and chemical shift constants from the [GISSMO library](http://gissmo.nmrfam.wisc.edu/library). Stored in JLD file format.
+
+```julia
+base_path_JLD = "/home/roy/Documents/repo/NMRData/src/input/molecules"
+```
+Note that the chemical shift tend to change slightly (within +/- 0.1 ppm) for every NMR experiment. The J-coupling constants for a compound shouldn't change in theory, but the values provided by the GISSMO library are empirically fitted, thus prone to misfit error and physics model descrepancy. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we work on the fitting of the simulated spectra (provided in this package) to NMR experiment data.
+
+
+In this tutorial, we simulate following compounds:
+```julia
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
+```
+See [GISSMOReader.jl](https://github.com/AI4DBiological-Systems/GISSMOReader.jl) for the current list of feasible compounds.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Provide the range of frequency shift that we 
+```julia
+Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names))
+
+
+dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0)
+@time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
+    base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
+    ν_0ppm, dummy_SSFID;
+    tol_coherence = tol_coherence,
+    α_relative_threshold = α_relative_threshold)
+As = mixture_params
+```
+
+
+
+
+
+
+
+
+We fcan apply this code:
+
+```julia
+f = xx->xx^2
+f(3)
+```
+
+support inline eval: $f(4) = `j f(4)`$
+
+
+
+Do plot.
+
+```julia; fig_cap="This is a plot of the func x2", echo=false
+#theme(:bright)
+#plot(f, xlim=(0,2), frame=:box, dpi=300)
+
+fig = PyPlot.figure()
+t = LinRange(-3,3,5000)
+y = f.(t)
+
+PyPlot.plot(t, y, label = "f")
+
+PyPlot.legend()
+PyPlot.xlabel("t")
+PyPlot.ylabel("f")
+PyPlot.title("test plot")
+display(fig)
+
+```

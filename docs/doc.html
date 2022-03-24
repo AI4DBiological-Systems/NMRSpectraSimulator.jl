@@ -676,13 +676,257 @@ div.title {text-align: center;}
 <p>A way to have *code in addition to text, and to #run# this code as part of the text.</p>
 
 
+<p>Spin-related parameters for the spectrum simulation.</p>
+
+
 <pre class='hljl'>
-<span class='hljl-n'>f</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-n'>x</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>-&gt;</span><span class='hljl-t'> </span><span class='hljl-n'>x</span><span class='hljl-oB'>^</span><span class='hljl-ni'>2</span>
+<span class='hljl-n'>tol_coherence</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>1e-2</span><span class='hljl-t'>
+</span><span class='hljl-n'>α_relative_threshold</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.05</span><span class='hljl-t'>
+</span><span class='hljl-n'>λ0</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>3.4</span><span class='hljl-t'>
+</span><span class='hljl-n'>Δcs_max</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.2</span><span class='hljl-t'>
+</span><span class='hljl-n'>κ_λ_lb</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>0.5</span><span class='hljl-t'>
+</span><span class='hljl-n'>κ_λ_ub</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>2.5</span>
 </pre>
 
 
 <pre class="output">
-#1 &#40;generic function with 1 method&#41;
+2.5
+</pre>
+
+
+<p>Δcs_max</p>
+<p>Spectrometer-related parameters. The <a href="https://github.com/AI4DBiological-Systems/NMRDataSetup.jl">NMRDataSetup.jl</a> library get these parameters from user-supplied NMR experiments.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>fs</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>14005.602240896402</span><span class='hljl-t'> </span><span class='hljl-cs'># sampling frequency, in Hz.</span><span class='hljl-t'>
+</span><span class='hljl-n'>SW</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>20.0041938620844</span><span class='hljl-t'> </span><span class='hljl-cs'># spectral window, in ppm. Described in Bruker TopSpin manual,</span><span class='hljl-t'>
+</span><span class='hljl-n'>ν_0ppm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>10656.011933076665</span><span class='hljl-t'> </span><span class='hljl-cs'># where the 0 ppm reference freuency should be, in Hz.</span>
+</pre>
+
+
+<pre class="output">
+10656.011933076665
+</pre>
+
+
+<p>NMR spectroscopy uses ppm as the frequency unit. The physics simulation use frequency units in Hz. The following are the conversion formulae:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>hz2ppmfunc</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>uu</span><span class='hljl-oB'>-&gt;</span><span class='hljl-p'>(</span><span class='hljl-n'>uu</span><span class='hljl-t'> </span><span class='hljl-oB'>-</span><span class='hljl-t'> </span><span class='hljl-n'>ν_0ppm</span><span class='hljl-p'>)</span><span class='hljl-oB'>*</span><span class='hljl-n'>SW</span><span class='hljl-oB'>/</span><span class='hljl-n'>fs</span><span class='hljl-t'>
+</span><span class='hljl-n'>ppm2hzfunc</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>pp</span><span class='hljl-oB'>-&gt;</span><span class='hljl-p'>(</span><span class='hljl-n'>ν_0ppm</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-n'>pp</span><span class='hljl-oB'>*</span><span class='hljl-n'>fs</span><span class='hljl-oB'>/</span><span class='hljl-n'>SW</span><span class='hljl-p'>)</span>
+</pre>
+
+
+<pre class="output">
+#3 &#40;generic function with 1 method&#41;
+</pre>
+
+
+<p>We need to provide the path to the location of the <a href="https://github.com/AI4DBiological-Systems/NMRData/tree/main/src/input/molecules">/src/input/molcules</a> in the <a href="https://github.com/AI4DBiological-Systems/NMRData">NMRData.jl</a> repository. This folder contain the stored J-coupling and chemical shift constants from the <a href="http://gissmo.nmrfam.wisc.edu/library">GISSMO library</a>. Stored in JLD file format.</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>base_path_JLD</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;/home/roy/Documents/repo/NMRData/src/input/molecules&quot;</span>
+</pre>
+
+
+<pre class="output">
+&quot;/home/roy/Documents/repo/NMRData/src/input/molecules&quot;
+</pre>
+
+
+<p>Note that the chemical shift tend to change slightly &#40;within &#43;/- 0.1 ppm&#41; for every NMR experiment. The J-coupling constants for a compound shouldn&#39;t change in theory, but the values provided by the GISSMO library are empirically fitted, thus prone to misfit error and physics model descrepancy. In <a href="https://github.com/AI4DBiological-Systems/NMRCalibrate.jl">NMRCalibrate.jl</a>, we work on the fitting of the simulated spectra &#40;provided in this package&#41; to NMR experiment data.</p>
+<p>In this tutorial, we simulate following compounds:</p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>molecule_names</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-p'>[</span><span class='hljl-s'>&quot;L-Serine&quot;</span><span class='hljl-p'>;</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;L-Phenylalanine&quot;</span><span class='hljl-p'>;</span><span class='hljl-t'> </span><span class='hljl-s'>&quot;DSS&quot;</span><span class='hljl-p'>;]</span>
+</pre>
+
+
+<pre class="output">
+3-element Vector&#123;String&#125;:
+ &quot;L-Serine&quot;
+ &quot;L-Phenylalanine&quot;
+ &quot;DSS&quot;
+</pre>
+
+
+<p>See <a href="https://github.com/AI4DBiological-Systems/GISSMOReader.jl">GISSMOReader.jl</a> for the current list of feasible compounds.</p>
+<p>This library provides the simulated resonance components of the user-specified compounds, given the coherence simulation and spectrometer parameters. It also provides a proxy to the simulated spectra &#40;i.e. Fourier-domain representation&#41; of the free-induction decay signal model of the resonance components according to: <span class="math">$math here.$</span></p>
+<p>Provide the range of frequency shift that we </p>
+
+
+<pre class='hljl'>
+<span class='hljl-n'>Δcs_max_mixture</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>collect</span><span class='hljl-p'>(</span><span class='hljl-t'> </span><span class='hljl-n'>Δcs_max</span><span class='hljl-t'> </span><span class='hljl-k'>for</span><span class='hljl-t'> </span><span class='hljl-n'>i</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-ni'>1</span><span class='hljl-oB'>:</span><span class='hljl-nf'>length</span><span class='hljl-p'>(</span><span class='hljl-n'>molecule_names</span><span class='hljl-p'>))</span><span class='hljl-t'>
+
+
+</span><span class='hljl-n'>dummy_SSFID</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>NMRSpectraSimulator</span><span class='hljl-oB'>.</span><span class='hljl-nf'>SpinSysFIDType1</span><span class='hljl-p'>(</span><span class='hljl-nfB'>0.0</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-nd'>@time</span><span class='hljl-t'> </span><span class='hljl-n'>mixture_params</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>NMRSpectraSimulator</span><span class='hljl-oB'>.</span><span class='hljl-nf'>setupmixtureproxies</span><span class='hljl-p'>(</span><span class='hljl-n'>molecule_names</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>base_path_JLD</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>Δcs_max_mixture</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>hz2ppmfunc</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>ppm2hzfunc</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>fs</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>SW</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>λ0</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>ν_0ppm</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>dummy_SSFID</span><span class='hljl-p'>;</span><span class='hljl-t'>
+    </span><span class='hljl-n'>tol_coherence</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>tol_coherence</span><span class='hljl-p'>,</span><span class='hljl-t'>
+    </span><span class='hljl-n'>α_relative_threshold</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>α_relative_threshold</span><span class='hljl-p'>)</span><span class='hljl-t'>
+</span><span class='hljl-n'>As</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>mixture_params</span>
+</pre>
+
+
+<pre class="output">
+0.616450 seconds &#40;1.49 M allocations: 85.415 MiB, 2.91&#37; gc time, 95.00&#37; c
+ompilation time&#41;
+3-element Vector&#123;NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSim
+ulator.SpinSysFIDType1&#123;Float64&#125;&#125;&#125;:
+ NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSimulator.SpinSysFI
+DType1&#123;Float64&#125;&#125;&#40;Vector&#123;Function&#125;&#91;&#93;, Vector&#123;Function&#125;&#91;&#93;, &#91;&#91;0.22220105129942
+25, 0.3786266834246926, 0.14917226527588492, 0.3403987535349512, 0.25866421
+05104006, 0.1318006487371542, 0.2381759621056323, 0.369540545111647, 0.1609
+4023378218253, 0.34911903343342177, 0.12039853864543162, 0.2804824279211464
+&#93;&#93;, &#91;&#91;83771.62619950518, 84285.21193557105, 84471.9538231886, 84322.5208087
+9912, 83808.93507273323, 84495.08581803314, 83794.7581943497, 84393.3064832
+1068, 84206.56459559312, 84416.4384780552, 84243.87346882117, 83832.0670675
+7777&#93;&#93;, &#91;&#91;&#91;2, 4, 9, 11&#93;, &#91;3, 6, 8, 10&#93;, &#91;1, 5, 7, 12&#93;&#93;&#93;, &#91;&#91;&#91;-0.000328056089
+8519802, -0.0014614118260978803, -0.9982105320840502&#93;, &#91;-0.0455078532175240
+4, -0.9527933956628398, -0.0016987511196360772&#93;, &#91;-0.9541640906926239, -0.0
+45745192511062294, -9.071679631372787e-5&#93;, &#91;-0.05636239561302714, -0.942533
+0202060093, -0.001104584180963597&#93;, &#91;-0.011182598485355078, 0.0087989636307
+32681, -0.9976163651453777&#93;, &#91;-0.9432424542536086, -0.0564946000516065, -0.
+0002629456947848552&#93;, &#91;0.0105935803491633, -0.01221081936664209, -0.9983827
+609825213&#93;, &#91;-0.954231184736136, -0.04525616042734887, -0.00051265483651519
+17&#93;, &#91;-0.04557494726103617, -0.9523043635791264, -0.002120689159837541&#93;, &#91;-
+0.9433095482971209, -0.056005567967892855, -0.0006848837349862635&#93;, &#91;-0.056
+42948965653938, -0.9420439881222956, -0.0015265222211650054&#93;, &#91;-0.000260962
+0463399076, -0.0019504439098113058, -0.9977885940438487&#93;&#93;&#93;, Vector&#123;Vector&#123;F
+loat64&#125;&#125;&#91;&#93;, NMRSpectraSimulator.SpinSysFIDType1&#123;Float64&#125;&#40;&#91;1.0&#93;, &#91;&#91;0.0, 0.0,
+ 0.0&#93;&#93;, &#91;0.0&#93;&#41;, Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, 3.4,
+ 14005.602240896402, 20.0041938620844, 0.2, 10656.011933076665&#41;
+ NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSimulator.SpinSysFI
+DType1&#123;Float64&#125;&#125;&#40;Vector&#123;Function&#125;&#91;&#93;, Vector&#123;Function&#125;&#91;&#93;, &#91;&#91;0.11193113555256
+429, 0.036319159955959614, 0.1642497044914771, 0.11189406203528451, 0.04049
+7974408290116, 0.040476057413898266, 0.1106064808808327, 0.0500416920876931
+3, 0.029759903171629087, 0.07589491551286025  …  0.04884872238381286, 0.046
+448497079815125, 0.09220041392370068, 0.030786929096368116, 0.0644851194002
+4008, 0.09213514421235683, 0.139642572698544, 0.08748663054528952, 0.085462
+15503064564, 0.139551214424066&#93;, &#91;0.2792798878727903, 0.2148246235637866, 0
+.2558954885634228, 0.2802041849095602, 0.21399734125318876, 0.2490751166371
+274, 0.28766137650293, 0.25082646435562567, 0.2182341111491615, 0.244201527
+07408044, 0.2867373110950295, 0.21906116183088986&#93;&#93;, &#91;&#91;99107.33694369963, 9
+9294.77277775921, 99523.50213203227, 99107.28929726302, 99295.29451767285, 
+99295.33253647463, 99107.89670241505, 99509.24222598271, 99093.07703765007,
+ 99521.06708138395  …  99614.87275637496, 99567.3972207396, 99385.932303173
+28, 99625.03151131602, 99576.0067597605, 99385.96095971746, 99155.355584959
+14, 99617.08496264485, 99386.68786810021, 99155.29390814304&#93;, &#91;80684.196498
+14541, 81369.14729654147, 84412.53329646162, 81278.80311744059, 80593.85231
+904453, 84463.38343556978, 80735.04663725356, 84443.57519557915, 81400.1891
+9565898, 84494.42533468729, 81309.8450165581, 80644.7024581527&#93;&#93;, &#91;&#91;&#91;3, 8, 
+10, 12, 14, 17, 19, 24, 27, 30  …  41, 42, 44, 49, 53, 55, 56, 58, 59, 62&#93;,
+ &#91;1, 4, 7, 9, 11, 13, 15, 21, 22, 23  …  35, 38, 43, 47, 48, 51, 52, 54, 61
+, 64&#93;, &#91;2, 5, 6, 16, 18, 20, 28, 31, 34, 37, 45, 46, 50, 57, 60, 63&#93;&#93;, &#91;&#91;1,
+ 5, 7, 12&#93;, &#91;2, 4, 9, 11&#93;, &#91;3, 6, 8, 10&#93;&#93;&#93;, &#91;&#91;&#91;-9.948231125889162e-5, -0.00
+1739340318468452, -0.0017393403183614264, -0.49821091854180544, -0.49821091
+85101058&#93;, &#91;-0.979375178850592, -0.010144878600871543, -0.01014487860095469
+9, -0.00016753197379248963, -0.00016753197378926998&#93;, &#91;-0.02052533883814911
+, -0.4881157810781686, -0.4881157810831754, -0.001621549500245456, -0.00162
+15495002615543&#93;, &#91;-9.957632529644656e-8, -0.0018575823538963254, -0.0018575
+823540072922, -0.49814236784203775, -0.49814236787373334&#93;, &#91;-0.982622969446
+9463, -0.008317412900278043, -0.008317412900169407, -0.0003711023918329399,
+ -0.00037110236077334056&#93;, &#91;-0.9823883816308514, -0.008231230909477416, -0.
+008231230909586773, -0.0005745782595132916, -0.0005745782905711423&#93;, &#91;-0.00
+3112685091518297, 0.000174307372925675, 0.00017430737300649923, -0.49861796
+482752624, -0.4986179648268877&#93;, &#91;-0.0065254350194451916, -0.49466725756565
+29, -0.49466725755966773, -0.00207002490856481, -0.0020700249466694127&#93;, &#91;0
+.013900421507445027, -0.008290816805952676, -0.008290816794853748, -0.49865
+939395012476, -0.49865939395651365&#93;, &#91;-0.009603605313994235, -0.49355420551
+31372, -0.49355420551908147, -0.0016439918458856506, -0.0016439918079013405
+&#93;  …  &#91;-0.011462890202941667, -0.49299006431883763, -0.49299006429471426, -
+0.0012784905789651466, -0.001278490604541299&#93;, &#91;-0.014652833839547685, -0.4
+9137809316332953, -0.49137809308590297, -0.0012954899934652373, -0.00129548
+99177545218&#93;, &#91;-0.9739672048008949, -0.013253252369180402, -0.0132532523691
+25779, 0.00023685476653057024, 0.0002368547726705754&#93;, &#91;-0.0068407247218147
+95, -0.495467876697642, -0.4954678767216754, -0.0011117609423672568, -0.001
+1117609165007256&#93;, &#91;-0.019060860688263626, -0.48911202144869387, -0.4891120
+215262633, -0.001357548130382552, -0.0013575482063968303&#93;, &#91;-0.973970433772
+1781, -0.013152421871125142, -0.013152421871219344, 0.0001376387603202467, 
+0.00013763875420214067&#93;, &#91;-4.007298383679192e-7, -0.0012664727199986903, -0
+.0012664727200150105, -0.4987333269159031, -0.49873332691424505&#93;, &#91;-0.02023
+7144442665722, -0.48856498619072736, -0.48856498619426414, -0.0013164415861
+666168, -0.0013164415861761647&#93;, &#91;-0.9797098806673585, -0.01003675670510151
+3, -0.010036756705092076, -0.00010830296122399385, -0.00010830296122388283&#93;
+, &#91;-5.2974889975576644e-5, -0.0013982571024131474, -0.001398257102401712, -
+0.49857525545177894, -0.49857525545343045&#93;&#93;, &#91;&#91;-0.9955608633846502, -0.0043
+8889752927063, -5.0239086079151285e-5&#93;, &#91;-0.004393269961166679, -0.99558625
+08639117, -2.047917492153939e-5&#93;, &#91;-4.586665418315761e-5, -2.48516068175330
+67e-5, -0.9999292817389993&#93;, &#91;-0.00439457286165601, -0.9955865522759043, -1
+.8874862439677287e-5&#93;, &#91;-0.9955621662851395, -0.004389198941263162, -4.8634
+77359728918e-5&#93;, &#91;0.0001687927745102069, -0.00024815571854602814, -0.999920
+6370559641&#93;, &#91;-0.9953462039559569, -0.004612201640999125, -4.15944030440762
+45e-5&#93;, &#91;-0.00025922318238708053, 0.0001987539169033825, -0.999939530734516
+2&#93;, &#91;-0.004606626489370602, -0.9953626453401909, -3.0728170438587554e-5&#93;, &#91;
+-4.4563753693771524e-5, -2.4550194825057048e-5, -0.9999308860514812&#93;, &#91;-0.0
+04607929389859988, -0.9953629467521834, -2.912385795666994e-5&#93;, &#91;-0.9953475
+068564462, -0.004612503052991601, -3.999009056215863e-5&#93;&#93;&#93;, Vector&#123;Vector&#123;F
+loat64&#125;&#125;&#91;&#93;, NMRSpectraSimulator.SpinSysFIDType1&#123;Float64&#125;&#40;&#91;1.0, 1.0&#93;, &#91;&#91;0.0,
+ 0.0, 0.0, 0.0, 0.0&#93;, &#91;0.0, 0.0, 0.0&#93;&#93;, &#91;0.0, 0.0&#93;&#41;, Float64&#91;&#93;, Float64&#91;&#93;, 
+Float64&#91;&#93;, Float64&#91;&#93;, Float64&#91;&#93;, 3.4, 14005.602240896402, 20.0041938620844,
+ 0.2, 10656.011933076665&#41;
+ NMRSpectraSimulator.CompoundFIDType&#123;Float64, NMRSpectraSimulator.SpinSysFI
+DType1&#123;Float64&#125;&#125;&#40;Vector&#123;Function&#125;&#91;&#93;, Vector&#123;Function&#125;&#91;&#93;, &#91;&#91;0.06114398246494
+3826, 0.06263391396837825, 0.06372210356667815, 0.061162709406614196, 0.060
+26132094219557, 0.061333259377486925, 0.031220797259418637, 0.0306596850445
+51417, 0.0300508365340785, 0.03184028770500808  …  0.03066228949840839, 0.0
+61271678736449446, 0.06252977474034001, 0.06386108510603425, 0.061271494334
+539295, 0.031271139794298075, 0.032457228176396694, 0.06126496724964265, 0.
+06239260380974551, 0.0638424289406119&#93;&#93;, &#91;&#91;69651.44714148855, 74579.0632977
+3946, 79693.4132742158, 69651.95644228804, 74630.068041158, 69702.451884907
+09, 74612.11427630819, 69685.07097263471, 74652.87623651313, 69725.83293283
+965  …  69685.0737942246, 79792.88539515833, 74734.96648176979, 69759.38479
+83952, 79792.89029009052, 74752.34729382375, 74711.58533361887, 79792.89637
+889017, 74785.9565177767, 69758.90119314191&#93;&#93;, &#91;&#91;&#91;2, 5, 7, 9, 11, 17, 19, 2
+1, 23, 27  …  112, 118, 120, 122, 123, 126, 133, 136, 137, 139&#93;, &#91;1, 4, 6, 
+8, 10, 13, 14, 24, 25, 26  …  105, 109, 113, 121, 124, 127, 130, 131, 134, 
+140&#93;, &#91;3, 12, 15, 16, 18, 20, 22, 31, 34, 37  …  115, 116, 117, 119, 125, 1
+28, 129, 132, 135, 138&#93;&#93;&#93;, &#91;&#91;&#91;-0.49994056960488503, -0.4999405696047662, -5
+.9428937198791054e-5, -5.942893719812492e-5, -1.4579758511601426e-9, -1.457
+9758511601426e-9&#93;, &#91;-5.942904175421093e-5, -5.942904175415542e-5, -0.499893
+28560849144, -0.49989328560672547, -4.72853506373605e-5, -4.728535063724948
+e-5&#93;, &#91;-1.3534202092380099e-9, -1.3534202092380099e-9, -4.7285455193057935e
+-5, -4.7285455193057935e-5, -0.4999527131936593, -0.4999527131891142&#93;, &#91;-0.
+4999930311888452, -0.499993031188964, -6.968816398000843e-6, -6.96881639861
+1466e-6, 5.3028137436683664e-12, 5.302758232517135e-12&#93;, &#91;-5.67681634329179
+25e-5, -5.6768163692508444e-5, -0.49989573490869216, -0.49989573490862327, 
+-4.749692777961112e-5, -4.749692777961112e-5&#93;, &#91;-0.49993790872656374, -0.49
+993790872670457, -6.187823739946672e-5, -6.187823909591991e-5, -2.130351181
+0177866e-7, -2.1303511821280097e-7&#93;, &#91;-8.555388253477159e-6, -8.55538792080
+5027e-6, -0.49996460230702955, -0.4999646023072439, -2.684230477600913e-5, 
+-2.684230477606464e-5&#93;, &#91;-0.4999914442834502, -0.4999914442832367, 1.303282
+500833035e-5, 1.3032826560794745e-5, -2.1588542440997838e-5, -2.15885424411
+0886e-5&#93;, &#91;-8.555385478589241e-6, -8.555385425176411e-6, -0.499964627701204
+3, -0.4999646277012687, -2.6816913311578094e-5, -2.6816913311633606e-5&#93;, &#91;-
+0.4999914442806753, -0.4999914442807411, 1.3007430833573313e-5, 1.300743253
+601452e-5, -2.1563150976566803e-5, -2.1563150976677825e-5&#93;  …  &#91;-0.49999177
+954878066, -0.49999177954874324, 1.3140177401190849e-5, 1.3140177798500157e
+-5, -2.1360628837951978e-5, -2.136062883800749e-5&#93;, &#91;1.2618320896166715e-6,
+ 1.2618326356539266e-6, -4.967308357683997e-5, -4.967308357683997e-5, -0.49
+995158874890683, -0.49995158874866447&#93;, &#91;-5.962112733299217e-5, -5.96211264
+925342e-5, -0.4998927767527672, -0.49989277675286786, -4.760212026955202e-5
+, -4.760212026960753e-5&#93;, &#91;-0.49999019697359665, -0.49999019697293684, -9.8
+0297592256818e-6, -9.802975922457158e-6, -5.081063347844861e-11, -5.0810744
+50075107e-11&#93;, &#91;1.6579275609551455e-7, 1.6579221297320982e-7, -4.8458299544
+02969e-5, -4.8458299544140715e-5, -0.4999517074932405, -0.49995170749264034
+&#93;, &#91;-8.22012064197703e-6, -8.220121374638827e-6, -0.49996496296484083, -0.4
+99964962964763, -2.6816914189820018e-5, -2.6816914189708996e-5&#93;, &#91;-8.220123
+33390353e-6, -8.220123953228831e-6, -0.49996493757072136, -0.49996493757068
+29, -2.6842305654306564e-5, -2.6842305654362075e-5&#93;, &#91;-1.4143610727046507e-
+9, -1.4143610727046507e-9, -4.933628631353937e-5, -4.933628631348386e-5, -0
+.49995066229904767, -0.49995066229960317&#93;, &#91;-5.710068718528527e-5, -5.71006
+8718528527e-5, -0.4998935630154076, -0.4998935630150459, -4.933629758802072
+e-5, -4.9336297587965205e-5&#93;, &#91;-0.49994289789812374, -0.4999428978987836, -
+5.710069845982213e-5, -5.710069845982213e-5, -1.4030865913561286e-9, -1.403
+0865913561286e-9&#93;&#93;&#93;, Vector&#123;Vector&#123;Float64&#125;&#125;&#91;&#93;, NMRSpectraSimulator.SpinSys
+FIDType1&#123;Float64&#125;&#40;&#91;1.0&#93;, &#91;&#91;0.0, 0.0, 0.0, 0.0, 0.0, 0.0&#93;&#93;, &#91;0.0&#93;&#41;, &#91;9.0&#93;, &#91;
+66953.69761103764&#93;, &#91;1.0&#93;, &#91;0.0&#93;, &#91;0.0&#93;, 3.4, 14005.602240896402, 20.004193
+8620844, 0.2, 10656.011933076665&#41;
 </pre>
 
 
@@ -690,7 +934,8 @@ div.title {text-align: center;}
 
 
 <pre class='hljl'>
-<span class='hljl-nf'>f</span><span class='hljl-p'>(</span><span class='hljl-ni'>3</span><span class='hljl-p'>)</span>
+<span class='hljl-n'>f</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>xx</span><span class='hljl-oB'>-&gt;</span><span class='hljl-n'>xx</span><span class='hljl-oB'>^</span><span class='hljl-ni'>2</span><span class='hljl-t'>
+</span><span class='hljl-nf'>f</span><span class='hljl-p'>(</span><span class='hljl-ni'>3</span><span class='hljl-p'>)</span>
 </pre>
 
 
@@ -700,8 +945,6 @@ div.title {text-align: center;}
 
 
 <p>support inline eval: <span class="math">$f(4) = 16$</span></p>
-
-
 <p>Do plot.</p>
 
 <figure>
@@ -714,7 +957,7 @@ div.title {text-align: center;}
         <div class="footer">
           <p>
             Published from <a href="doc.Jmd">doc.Jmd</a>
-            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-03-23.
+            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-03-24.
           </p>
         </div>
       </div>
