@@ -662,25 +662,25 @@ div.title {text-align: center;}
 <h2>Library description</h2>
 <p>Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of our proposed modified FFID model and its surrogate. Details on the model and parameters are forthcoming in an upcoming publication, but a brief overview is presented in the Background section below.</p>
 <h2>Background: Signal Model</h2>
-<p>The signal model is taken to be the complex-valued free-induction decay &#40;FID&#41; model </p>
+<p>The signal model is taken to be the complex-valued free-induction decay &#40;FID&#41; model</p>
 <p class="math">\[
 f_{\text{FID}}(t,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\alpha_{n,l}e^{\iota\left(\Omega_{n,l}t-\beta_{n,l}\right)}e^{-\lambda_{n,l}t},\,t>0,
 \]</p>
-<p>and its Fourier transform, also referred to as the Fourier FID or FID spectra model </p>
+<p>and its Fourier transform, also referred to as the Fourier FID or FID spectra model</p>
 <p class="math">\[
 f_{\text{FFID}}(u,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u-\Omega_{n,l})}.
 \]</p>
 <p>Here, <span class="math">$n$</span> is the compound index, <span class="math">$\left(n,l\right)$</span> is the resonance component index for compound <span class="math">$n$</span>, <span class="math">$N$</span> is the number of compounds in the isotropic mixture sample, <span class="math">$L_{n}$</span> is the number of resonance components for compound <span class="math">$n$</span>, and <span class="math">$\iota$</span> is the imaginary number. The parameters of this signal model are: The compound molar concentration <span class="math">$w$</span>, the resonance frequency <span class="math">$\Omega$</span>, the resonance amplitude <span class="math">$\alpha$</span>, the resonance T2 decay <span class="math">$\lambda$</span>, the resonance phase <span class="math">$\beta$</span>. The resonance frequencies and amplitudes of a compound can be simulated if the physical chemistry parameters, chemical shift and J-coupling, are known. This library uses the physical chemistry parameters from the <a href="http://gissmo.nmrfam.wisc.edu/library">GISSMO website</a>, which were obtained by empirically fitting a different forward model than the one used in this library against real NMR experiments. For GISSMO-related details, see <a href="https://pubs.acs.org/doi/abs/10.1021/acs.analchem.8b02660">Dashti et. al 2017</a> and <a href="http://pubs.acs.org/doi/abs/10.1021/acs.analchem.7b02884">Dashti et. al 2018</a> for their official journal publications.</p>
 <h3>Background: Calibration Challenge</h3>
-<p>One approach to fitting this model to experimental data, i.e., to calibrate this model to data, is to assign bound constraints on every model parameter. The following forward model used for fitting against a cost function illustrates this approach: </p>
+<p>One approach to fitting this model to experimental data, i.e., to calibrate this model to data, is to assign bound constraints on every model parameter. The following forward model used for fitting against a cost function illustrates this approach:</p>
 <p class="math">\[
 g_{\text{FFID}}(u,w,d,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u+d_{n,l}-\Omega_{n,l})}.
 \]</p>
 <p>here, the frequency variable <span class="math">$u$</span> is in Hz. Many publicly-available NMR spectra model fitting routines are based on an internal or external library that contain a set of resonance frequencies <span class="math">$\Omega$</span> and amplitudes <span class="math">$\alpha$</span> for each library compound. These values are usually empirically fitted against experiments called compound standards, where only the compound and the bare minimum ingredients are placed in the mixture. In a non-trivial NMR experiment, the different compounds interact with each other, causing small frequency shifts away from the set of library frequencies <span class="math">$\Omega$</span>. Thus, the parameter <span class="math">$d$</span> is required to compensate for this shift. It is often assumed that the set of library resonance amplitudes <span class="math">$\alpha$</span> does not change across different experiments. The fit against data in the calibration problem is over the variables <span class="math">$u$</span>, <span class="math">$w$</span>, <span class="math">$d$</span>, <span class="math">$\lambda$</span>, and <span class="math">$\beta$</span>. Due to the large number of resonance components for each compound, there are too many degrees of freedom to produce a good and sensible fit for most NMR applications in a reasonable computation time. From physical chemistry theory, some resonance components should shift only in a certain manner. See figures 4 and 5 in <a href="https://www.mdpi.com/2218-1989/11/3/157">this</a> article for an example of poor and non-sensible fit of select fitting algorithms against a real-world mixture.</p>
 <h3>NMRSpectraSimulator: Proposed Model &amp; Surrogate Model</h3>
-<p>Let <span class="math">$\left[L\right]:=1,\dots,L$</span>, which is a set of size <span class="math">$L$</span>. Our modified FID spectra model </p>
+<p>Let <span class="math">$\left[L\right]:=1,\dots,L$</span>, which is a set of size <span class="math">$L$</span>. Our modified FID spectra model</p>
 <p class="math">\[
-g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}
+g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}
 \]</p>
 <p>have grouping information that reduce the number of variables to calibrate. It essentially replace the index <span class="math">$l\in\left[L_{n}\right]$</span> by multi-indices <span class="math">$\left(i,k,l\right)\in\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$</span>. Note that the size of <span class="math">$\left[L_{n}\right]$</span> is the same as <span class="math">$\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$</span> because they describe two different ways of grouping the resonance components of compound <span class="math">$n$</span>. Instead of having all parameters indexed by <span class="math">$\left(i,k,l\right)$</span>, the frequency shift parameters <span class="math">$d$</span> is now indexed by <span class="math">$\left(n,i\right)$</span>, and both the T2 decay <span class="math">$\lambda$</span> and phase <span class="math">$\beta$</span> are now indexed by <span class="math">$\left(n,i,k\right)$</span>. The physical interpretation and derivation of this grouping and associated variables will be discussed in detail in our upcoming journal article.</p>
 <p>Instead of using a library of resonance frequency and amplitude values that were fitted empirically against data, we opt for simulating resonance frequencies and amplitudes, using physical chemistry parameters that were fitted empirically against data. The advantage is that the signal model can be generalized to different NMR spectrometer settings &#40;i.e. spectral width and field strength&#41;. The disadvantage is that the simulated spectra via spin Hamiltonian theory is known to have incorrect amplitude values for certain compounds at certain resonance components. For example, see the discrepancy between the simulated and data spectra at the bottom of the <a href="http://gissmo.nmrfam.wisc.edu/entry/bmse000921/simulation_1">L-Phenyalanine GISSMO entry webpage</a>; zoom in around 3.1 to 3.3 ppm on the horizontal axis. Another example is the <a href="http://gissmo.nmrfam.wisc.edu/entry/bmse000015/simulation_1">D-Glucose GISSMO entry webpage</a>, around 5.2 ppm. We address this by fitting the compensation multiplier <span class="math">$\kappa_{n,i,k}$</span> for the spin-Hamiltonian simulated amplitude <span class="math">$\alpha_{n,i,k}$</span>.</p>
@@ -688,12 +688,18 @@ g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_
 <p class="math">\[
 q_{n,i,k}(r,h)\approx\sum_{l=1}^{L_{n,i,k}}\frac{\alpha_{n,i,k,l}}{h+\iota(r-\Omega_{n,i,k,l})}
 \]</p>
-<p>is comprised of spline interpolation fits of the RHS of the above equation; one for the real part, and one for the imaginary part. The Interpolations.jl spline library is used. The surrogate model that we use for the entire mixture is </p>
+<p>is comprised of spline interpolation fits of the RHS of the above equation; one for the real part, and one for the imaginary part. The surrogate model that we use for the entire mixture is</p>
 <p class="math">\[
 q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\lambda_{n,i,k}\right)
 \]</p>
-<p>where  <span class="math">$z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }\in\mathbb{C}$</span>  was used to reduce clutter.</p>
-<h3>Identifiability</h3>
+<p>where</p>
+<p class="math">\[
+z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i},\bar{c}_{n,i}\right\rangle }\in\mathbb{C},
+\]</p>
+<p>was used to reduce clutter. The average</p>
+<p><span class="math">$\bar{c}_{n,i}:=\frac{1}{K_{n,i}}\sum_{k=1}^{K_{n,i}}c_{n,i,k},$</span></p>
+<p>is used instead of individual <span class="math">$c_{n,i,k}$</span>&#39;s so that the local surrogate does not need to approximate arguments of <span class="math">$\beta_{n,i}$</span> in addition to the arguments <span class="math">$r$</span> and <span class="math">$h$</span>. The fast spline interpolation Julia package interpolations.jl was used to create a good surrogate <span class="math">$q_{n,i,k}$</span> over <span class="math">$r$</span> and <span class="math">$h$</span>.</p>
+<h3>Identifiability &#40;in progress&#41;</h3>
 <p>The compound concentration w<em>&#123;n&#125; parameter and the amplitude compensation parameter \kappa</em>&#123;n,i,k&#125; should not be jointly fitted due to identifiability issues. In <a href="https://github.com/AI4DBiological-Systems/NMRCalibrate.jl">NMRCalibrate.jl</a>, we provide routines to first fit \kappa_&#123;n,i,k&#125; against compound standard experiments whilst holding the concentration to be constant for all compounds of interest. The compound standard experiments can be obtained from the GISSMO webpage for each it&#39;s compound entry, or from the <a href="https://bmrb.io/">BMRB database</a> if an experiment with alternative spectrometer parameters is desired. In <a href="https://github.com/AI4DBiological-Systems/NMRCalibrate.jl">NMRCalibrate.jl</a>, we also provide routines to fit the surrogate model that has w as a fit variable and \kappa is kept constant. The constant assigned to each \kappa can be a value that was learned from compound standards data. More on this procedure and its application in quantifying metabolites in <a href="https://github.com/AI4DBiological-Systems/NMRCalibrate.jl">NMRCalibrate.jl</a>.</p>
 <h2>Getting Started</h2>
 <p>Add &#40;currently&#41; unregistered public Julia package for dependency before installing NMRSpectraSimulator.jl</p>
@@ -733,7 +739,7 @@ Pkg.add&#40;path&#61;&quot;https://github.com/AI4DBiological-Systems/NMRSpectraS
 </span><span class='hljl-n'>κ_λ_ub</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>2.5</span><span class='hljl-t'>
 
 </span><span class='hljl-cs'># experiment-related parameters</span><span class='hljl-t'>
-</span><span class='hljl-n'>λ0</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>3.4</span><span class='hljl-t'> 
+</span><span class='hljl-n'>λ0</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>3.4</span><span class='hljl-t'>
 </span><span class='hljl-n'>ν_0ppm</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nfB'>10656.011933076665</span><span class='hljl-t'> </span><span class='hljl-cs'># where the 0 ppm reference freuency should be, in Hz.</span><span class='hljl-t'>
 
 </span><span class='hljl-cs'># spectrometer parameters</span><span class='hljl-t'>
@@ -902,7 +908,7 @@ max discrepancy: 0.00026859336818550256
         <div class="footer">
           <p>
             Published from <a href="index.jmd">index.jmd</a>
-            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-03-24.
+            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-03-30.
           </p>
         </div>
       </div>

@@ -9,10 +9,10 @@ date: 2022-03-23
 Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of our proposed modified FFID model and its surrogate. Details on the model and parameters are forthcoming in an upcoming publication, but a brief overview is presented in the Background section below.
 
 ## Background: Signal Model
-The signal model is taken to be the complex-valued free-induction decay (FID) model 
+The signal model is taken to be the complex-valued free-induction decay (FID) model
 
 $f_{\text{FID}}(t,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\alpha_{n,l}e^{\iota\left(\Omega_{n,l}t-\beta_{n,l}\right)}e^{-\lambda_{n,l}t},\,t>0,$
-and its Fourier transform, also referred to as the Fourier FID or FID spectra model 
+and its Fourier transform, also referred to as the Fourier FID or FID spectra model
 
 $f_{\text{FFID}}(u,w,\alpha,\Omega,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u-\Omega_{n,l})}.$
 
@@ -31,7 +31,7 @@ are known. This library uses the physical chemistry parameters from the [GISSMO 
 One approach to fitting this model to experimental data, i.e., to
 calibrate this model to data, is to assign bound constraints on every
 model parameter. The following forward model used for fitting against
-a cost function illustrates this approach: 
+a cost function illustrates this approach:
 
 $g_{\text{FFID}}(u,w,d,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{\alpha_{n,l}e^{\iota\beta_{n,l}}}{\lambda_{n,l}+\iota(2\pi u+d_{n,l}-\Omega_{n,l})}.$
 
@@ -59,9 +59,9 @@ only in a certain manner. See figures 4 and 5 in [this](https://www.mdpi.com/221
 
 ### NMRSpectraSimulator: Proposed Model & Surrogate Model
 Let $\left[L\right]:=1,\dots,L$, which is a set of size $L$. Our
-modified FID spectra model 
+modified FID spectra model
 
-$g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}$
+$g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}$
 
 have grouping information that reduce the number of variables to
 calibrate. It essentially replace the index $l\in\left[L_{n}\right]$
@@ -85,16 +85,26 @@ $k_{i_{n}}$ surrogate model
 $q_{n,i,k}(r,h)\approx\sum_{l=1}^{L_{n,i,k}}\frac{\alpha_{n,i,k,l}}{h+\iota(r-\Omega_{n,i,k,l})}$
 
 is comprised of spline interpolation fits of the RHS of the above
-equation; one for the real part, and one for the imaginary part. The
-Interpolations.jl spline library is used. The surrogate model that
-we use for the entire mixture is 
+equation; one for the real part, and one for the imaginary part. The surrogate model that
+we use for the entire mixture is
 
 $q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\lambda_{n,i,k}\right)$
-where 
-$z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i,k},c_{n,i,k}\right\rangle }\in\mathbb{C}$ 
-was used to reduce clutter.
+where
 
-### Identifiability
+$z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i},\bar{c}_{n,i}\right\rangle }\in\mathbb{C},$
+
+ was used to reduce clutter. The average
+
+ $\bar{c}_{n,i}:=\frac{1}{K_{n,i}}\sum_{k=1}^{K_{n,i}}c_{n,i,k},$
+
+ is used instead of individual $c_{n,i,k}$'s so that the local surrogate
+does not need to approximate arguments of $\beta_{n,i}$ in addition
+to the arguments $r$ and $h$. The fast spline interpolation Julia
+package interpolations.jl was used to create a good surrogate $q_{n,i,k}$
+over $r$ and $h$.
+
+
+### Identifiability (in progress)
 The compound concentration w_{n} parameter and the amplitude compensation parameter \kappa_{n,i,k} should not be jointly fitted due to identifiability issues. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we provide routines to first fit \kappa_{n,i,k} against compound standard experiments whilst holding the concentration to be constant for all compounds of interest. The compound standard experiments can be obtained from the GISSMO webpage for each it's compound entry, or from the [BMRB database](https://bmrb.io/) if an experiment with alternative spectrometer parameters is desired. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we also provide routines to fit the surrogate model that has w as a fit variable and \kappa is kept constant. The constant assigned to each \kappa can be a value that was learned from compound standards data. More on this procedure and its application in quantifying metabolites in [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl).
 
 
@@ -107,7 +117,7 @@ Pkg.add(path="https://github.com/AI4DBiological-Systems/NMRSpectraSimulator.jl")
 
 ```
 
-         
+
 ## Tutorials
 
 
@@ -139,12 +149,12 @@ tol_coherence = 1e-2
 κ_λ_ub = 2.5
 
 # experiment-related parameters
-λ0 = 3.4 
+λ0 = 3.4
 ν_0ppm = 10656.011933076665 # where the 0 ppm reference freuency should be, in Hz.
 
 # spectrometer parameters
 fs = 14005.602240896402 # sampling frequency, in Hz.
-SW = 20.0041938620844 # spectral window, in ppm. Described in Bruker 
+SW = 20.0041938620844 # spectral window, in ppm. Described in Bruker
 ```
 The local surrogate model fits spline interpolators over the following variables, with their corresponding interpolation domain interval:
 ```
