@@ -61,7 +61,7 @@ only in a certain manner. See figures 4 and 5 in [this](https://www.mdpi.com/221
 Let $\left[L\right]:=1,\dots,L$, which is a set of size $L$. Our
 modified FID spectra model
 
-$g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}$
+$g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i},c_{n,i,k}\right\rangle }}{\lambda_{n,i}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}$
 
 have grouping information that reduce the number of variables to
 calibrate. It essentially replace the index $l\in\left[L_{n}\right]$
@@ -77,23 +77,18 @@ variables will be discussed in detail in our upcoming journal article.
 
 Instead of using a library of resonance frequency and amplitude values that were fitted empirically against data, we opt for simulating resonance frequencies and amplitudes, using physical chemistry parameters that were fitted empirically against data. The advantage is that the signal model can be generalized to different NMR spectrometer settings (i.e. spectral width and field strength). The disadvantage is that the simulated spectra via spin Hamiltonian theory is known to have incorrect amplitude values for certain compounds at certain resonance components. For example, see the discrepancy between the simulated and data spectra at the bottom of the [L-Phenyalanine GISSMO entry webpage](http://gissmo.nmrfam.wisc.edu/entry/bmse000921/simulation_1); zoom in around 3.1 to 3.3 ppm on the horizontal axis. Another example is the [D-Glucose GISSMO entry webpage](http://gissmo.nmrfam.wisc.edu/entry/bmse000015/simulation_1), around 5.2 ppm. We address this by fitting the compensation multiplier $\kappa_{n,i,k}$ for the spin-Hamiltonian simulated amplitude $\alpha_{n,i,k}$.
 
-To further speed up the computation, we use a spline-based surrogate
-$q$ for these models instead of the modified model $g_{\text{mFFID}}$
-during numerical optimization or statistical inference. Our local
-$k_{i_{n}}$ surrogate model
+To further speed up the computation, we use a spline-based surrogate $q$ for these models instead of the modified model $g_{\text{mFFID}}$ during numerical optimization or statistical inference. Our local $k_{i_{n}}$ surrogate model
 
 $q_{n,i,k}(r,h)\approx\sum_{l=1}^{L_{n,i,k}}\frac{\alpha_{n,i,k,l}}{h+\iota(r-\Omega_{n,i,k,l})}$
 
-is comprised of spline interpolation fits of the RHS of the above
-equation; one for the real part, and one for the imaginary part. The surrogate model that
-we use for the entire mixture is
+is comprised of spline interpolation fits of the RHS of the above equation; one for the real part, and one for the imaginary part. The surrogate model that we use for the entire mixture is
 
-$q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\lambda_{n,i,k}\right)$
+$q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\xi_{n,i}\lambda_{0}\right)$
 where
 
 $z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i},\bar{c}_{n,i}\right\rangle }\in\mathbb{C},$
 
- was used to reduce clutter. The average
+ was used to reduce clutter, and $\lambda_{0}$ is the T2 decay estimate for the reference compound's resonance at 0 ppm from a pre-processing step. The average
 
  $\bar{c}_{n,i}:=\frac{1}{K_{n,i}}\sum_{k=1}^{K_{n,i}}c_{n,i,k},$
 

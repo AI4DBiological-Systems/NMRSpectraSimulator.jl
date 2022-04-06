@@ -680,7 +680,7 @@ g_{\text{FFID}}(u,w,d,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{l=1}^{L_{n}}\frac{
 <h3>NMRSpectraSimulator: Proposed Model &amp; Surrogate Model</h3>
 <p>Let <span class="math">$\left[L\right]:=1,\dots,L$</span>, which is a set of size <span class="math">$L$</span>. Our modified FID spectra model</p>
 <p class="math">\[
-g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i},c_{n,i,k}\right\rangle }}{\lambda_{n,i,k}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}
+g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i},c_{n,i,k}\right\rangle }}{\lambda_{n,i}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}
 \]</p>
 <p>have grouping information that reduce the number of variables to calibrate. It essentially replace the index <span class="math">$l\in\left[L_{n}\right]$</span> by multi-indices <span class="math">$\left(i,k,l\right)\in\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$</span>. Note that the size of <span class="math">$\left[L_{n}\right]$</span> is the same as <span class="math">$\left[G_{n}\times K_{n,i}\times L_{n,i,k}\right]$</span> because they describe two different ways of grouping the resonance components of compound <span class="math">$n$</span>. Instead of having all parameters indexed by <span class="math">$\left(i,k,l\right)$</span>, the frequency shift parameters <span class="math">$d$</span> is now indexed by <span class="math">$\left(n,i\right)$</span>, and both the T2 decay <span class="math">$\lambda$</span> and phase <span class="math">$\beta$</span> are now indexed by <span class="math">$\left(n,i,k\right)$</span>. The physical interpretation and derivation of this grouping and associated variables will be discussed in detail in our upcoming journal article.</p>
 <p>Instead of using a library of resonance frequency and amplitude values that were fitted empirically against data, we opt for simulating resonance frequencies and amplitudes, using physical chemistry parameters that were fitted empirically against data. The advantage is that the signal model can be generalized to different NMR spectrometer settings &#40;i.e. spectral width and field strength&#41;. The disadvantage is that the simulated spectra via spin Hamiltonian theory is known to have incorrect amplitude values for certain compounds at certain resonance components. For example, see the discrepancy between the simulated and data spectra at the bottom of the <a href="http://gissmo.nmrfam.wisc.edu/entry/bmse000921/simulation_1">L-Phenyalanine GISSMO entry webpage</a>; zoom in around 3.1 to 3.3 ppm on the horizontal axis. Another example is the <a href="http://gissmo.nmrfam.wisc.edu/entry/bmse000015/simulation_1">D-Glucose GISSMO entry webpage</a>, around 5.2 ppm. We address this by fitting the compensation multiplier <span class="math">$\kappa_{n,i,k}$</span> for the spin-Hamiltonian simulated amplitude <span class="math">$\alpha_{n,i,k}$</span>.</p>
@@ -690,13 +690,13 @@ q_{n,i,k}(r,h)\approx\sum_{l=1}^{L_{n,i,k}}\frac{\alpha_{n,i,k,l}}{h+\iota(r-\Om
 \]</p>
 <p>is comprised of spline interpolation fits of the RHS of the above equation; one for the real part, and one for the imaginary part. The surrogate model that we use for the entire mixture is</p>
 <p class="math">\[
-q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\lambda_{n,i,k}\right)
+q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\xi_{n,i}\lambda_{0}\right)
 \]</p>
 <p>where</p>
 <p class="math">\[
 z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i},\bar{c}_{n,i}\right\rangle }\in\mathbb{C},
 \]</p>
-<p>was used to reduce clutter. The average</p>
+<p>was used to reduce clutter, and <span class="math">$\lambda_{0}$</span> is the T2 decay estimate for the reference compound&#39;s resonance at 0 ppm from a pre-processing step. The average</p>
 <p><span class="math">$\bar{c}_{n,i}:=\frac{1}{K_{n,i}}\sum_{k=1}^{K_{n,i}}c_{n,i,k},$</span></p>
 <p>is used instead of individual <span class="math">$c_{n,i,k}$</span>&#39;s so that the local surrogate does not need to approximate arguments of <span class="math">$\beta_{n,i}$</span> in addition to the arguments <span class="math">$r$</span> and <span class="math">$h$</span>. The fast spline interpolation Julia package interpolations.jl was used to create a good surrogate <span class="math">$q_{n,i,k}$</span> over <span class="math">$r$</span> and <span class="math">$h$</span>.</p>
 <h3>Identifiability &#40;in progress&#41;</h3>
@@ -908,7 +908,7 @@ max discrepancy: 0.00026859336818550256
         <div class="footer">
           <p>
             Published from <a href="index.jmd">index.jmd</a>
-            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-03-30.
+            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-04-06.
           </p>
         </div>
       </div>
