@@ -1,6 +1,10 @@
 
-# creates a reference from As.
-function fetchΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
+"""
+getΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
+
+returns ΩS::Vector{Vector{Vector{T}}}
+"""
+function getΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
 
     ΩS = Vector{Vector{Vector{T}}}(undef, 0)
     j = 0
@@ -16,6 +20,32 @@ function fetchΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
     end
 
     return ΩS
+end
+
+"""
+getPs( ΩS::Vector{Vector{Vector{T}}}, hz2ppmfunc) where T <: Real
+
+returns Ps::Vector{Vector{Vector{T}}}
+"""
+function getPs( ΩS::Vector{Vector{Vector{T}}}, hz2ppmfunc) where T <: Real
+
+    N_compounds = length(ΩS)
+
+    Ps = Vector{Vector{Vector{T}}}(undef, N_compounds)
+    for n = 1:N_compounds
+
+        Ps[n] = Vector{Vector{T}}(undef, length(ΩS[n]))
+        for i = 1:length(ΩS[n])
+
+            Ps[n][i] = Vector{T}(undef, length(ΩS[n][i]))
+            for l = 1:length(ΩS[n][i])
+
+                Ps[n][i][l] = hz2ppmfunc( ΩS[n][i][l]/(2*π) )
+            end
+        end
+    end
+
+    return Ps
 end
 
 function combinevectors(x::Vector{Vector{T}})::Vector{T} where T
