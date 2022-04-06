@@ -1,4 +1,9 @@
 
+# I am here. turn this into a tutorial.
+# then, move onto NMRCalibrate's fit.jl, to fit n,i.
+# repeat for n,i,k.
+# repeat for different compounds and regions.
+
 
 using LinearAlgebra, FFTW
 import BSON, Statistics, Random
