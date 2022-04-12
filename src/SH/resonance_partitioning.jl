@@ -20,6 +20,8 @@ function partitionresonancesbyneighbors(x_in::Vector{Vector{T}},
 
     out_inds = Vector{Vector{Int}}(undef, 0)
 
+    x_maxs = Vector{Vector{T}}(undef, 0)
+
     max_amplitude, max_ind = findmax(amplitudes)
     while !isempty(amplitudes) || max_amplitude < threshold_amplitude
 
@@ -34,6 +36,7 @@ function partitionresonancesbyneighbors(x_in::Vector{Vector{T}},
             reorder = false)
 
         inds = NearestNeighbors.inrange(balltree, x[max_ind], radius, true)
+        push!(x_maxs, x[max_ind])
 
         # book keep.
         push!(out_inds, inds_buffer[inds])
@@ -43,12 +46,12 @@ function partitionresonancesbyneighbors(x_in::Vector{Vector{T}},
         deleteat!(inds_buffer, inds)
 
         if isempty(amplitudes)
-            return out_inds
+            return out_inds, x_maxs
         end
         max_amplitude, max_ind = findmax(amplitudes)
     end
 
-    return out_inds
+    return out_inds, x_maxs
 end
 
 """
@@ -70,6 +73,10 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
     Fs = Vector{Vector{T}}(undef, N_groups)
 
     N_spin_sys = length(coherence_state_pairs_sys)
+    @assert N_groups == N_spin_sys
+    Δc_avg = Vector{Vector{Vector{T}}}(undef, N_spin_sys)
+
+    
     for i = 1:N_spin_sys
 
         α_tol = α_relative_threshold*maximum(αs[i])
@@ -83,7 +90,7 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
         c_m_s = collect( ms_sys[i][s] for (r,s) in c_states_prune )
         Δc_m = collect( c_m_r[j] - c_m_s[j] for j = 1:length(c_m_r))
 
-        part_inds = partitionresonancesbyneighbors(Δc_m,
+        part_inds, Δc_centroids = partitionresonancesbyneighbors(Δc_m,
             αs_i_prune, α_tol; radius = Δc_partition_radius)
 
         # partition_size = length(part_inds)
@@ -99,9 +106,33 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
 
         part_inds_set[i] = part_inds
         Δc_m_set[i] = Δc_m
+
+        Δc_avg[i] = Δc_centroids
     end
 
-    return as, Fs, part_inds_set, Δc_m_set
+    
+    
+    # for i = 1:N_spin_sys # over elements in a spin group.
+
+    #     N_partition_elements = length(part_inds_compound[i])
+    #     Δc_avg[i] = Vector{Vector{T}}(undef, N_partition_elements)
+
+    #     for k = 1:N_partition_elements
+
+    #         inds = part_inds_compound[i][k]
+            
+
+    #         Δc_avg[i][k] = Statistics.mean( Δc_m_compound[i][inds] )
+
+    #         # # weighted mean.
+    #         α = as[i][inds]
+    #         Ω = Ωs[i][inds]
+    #         # tmp = Δc_m_compound[i][inds]
+    #         # Δc_avg[i][k] = sum(tmp[l] .* α[l]) / sum(α)
+    #     end
+    # end
+
+    return as, Fs, part_inds_set, Δc_m_set, Δc_avg
 end
 
 
@@ -147,9 +178,11 @@ function fitproxy!(A::CompoundFIDType{T,SST};
     end
 
     d_max = ppm2hzfunc(A.Δcs_max)-ppm2hzfunc(0.0)
-    A.qs, A.gs, A.Δc_avg = setupcompoundpartitionitp(d_max,
+    #A.qs, A.gs, A.Δc_avg = setupcompoundpartitionitp(d_max,
+    A.qs, A.gs = setupcompoundpartitionitp(d_max,
         A.ss_params,
-        A.Δc_m_compound,
+        #A.Δc_m_compound,
+        A.Δc_avg,
         A.part_inds_compound,
         A.αs, A.Ωs,
         A.λ0, u_min, u_max;
@@ -242,12 +275,10 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     end
 
     αs, Ωs, part_inds_compound,
-    Δc_m_compound = partitionresonances(coherence_state_pairs_sys,
+    Δc_m_compound, Δc_avg = partitionresonances(coherence_state_pairs_sys,
     ms_sys, αs_spin_sys, Ωs_spin_sys;
     α_relative_threshold = α_relative_threshold,
     Δc_partition_radius = Δc_partition_radius)
-
-    Δc_avg = Vector{Vector{Vector{T}}}(undef, 0)
 
     # proxy placeholder.
     qs = Vector{Vector{Function}}(undef, 0)
