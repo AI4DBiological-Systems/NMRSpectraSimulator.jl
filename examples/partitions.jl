@@ -28,8 +28,8 @@ max_iters = 50000
 
 ##### global constants.
 projects_dir = "/home/roy/MEGAsync/outputs/NMR/calibrate/"
-base_path_JLD = "/home/roy/Documents/repo/NMRData//src/input/molecules"
-cs_config_path = "/home/roy/Documents/repo/NMRData/src/input/reduced_cs_config.txt"
+base_path_JLD = "/home/roy/Documents/repo/NMRData//input/molecules"
+cs_config_path = "/home/roy/Documents/repo/NMRData/input/reduced_cs_config.txt"
 #####
 
 

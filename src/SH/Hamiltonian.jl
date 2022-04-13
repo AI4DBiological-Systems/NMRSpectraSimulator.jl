@@ -270,26 +270,24 @@ function getaΩ( Iz_full,
     #     for s = 1:M
     for (r,s) in Base.Iterators.product(1:M,1:M)
 
-    #if Utilities.isnumericallyclose(p[r,s], -one(T), tol)
-    if isnumericallyclose(round(p[r,s]), -one(T), tol)
-    #println("i_out = ", i_out)
-    i_out += 1
+        #if Utilities.isnumericallyclose(p[r,s], -one(T), tol)
+        if isnumericallyclose(round(p[r,s]), -one(T), tol)
+            #println("i_out = ", i_out)
+            i_out += 1
 
-    inds[i_out] = (r,s)
+            inds[i_out] = (r,s)
 
-    ## signal amplitude. Section A.8.2 Spin Dynamics, Eq 2.1.131 Ernst.
-    t1 = -dot(conj(Q[r]), IyQs[s])
-    t2 = dot(conj(Q[s]), IxQs[r])
+            ## signal amplitude. Section A.8.2 Spin Dynamics, Eq 2.1.131 Ernst.
+            t1 = -dot(conj(Q[r]), IyQs[s])
+            t2 = dot(conj(Q[s]), IxQs[r])
 
-    # factor 2 instead of 2*im since Iys_no_im_full
-    #   is divided by 2 instead of 2*im.
-    a[i_out] = 2*(t1 * t2)
+            # factor 2 instead of 2*im since Iys_no_im_full
+            #   is divided by 2 instead of 2*im.
+            a[i_out] = 2*(t1 * t2)
 
-    ## signal frequency.
-    F[i_out] = λ[s] - λ[r]
-    end
-
-
+            ## signal frequency.
+            F[i_out] = λ[s] - λ[r]
+        end
     end
 
     resize!(inds, i_out)
