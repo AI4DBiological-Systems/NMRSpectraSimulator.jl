@@ -61,7 +61,7 @@ only in a certain manner. See figures 4 and 5 in [this](https://www.mdpi.com/221
 Let $\left[L\right]:=1,\dots,L$, which is a set of size $L$. Our
 modified FID spectra model
 
-$g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \beta_{n,i},c_{n,i,k}\right\rangle }}{\lambda_{n,i}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}$
+$g_{mFFID}(u,d,\kappa,w,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}\sum_{l=1}^{L_{n,i,k}}\frac{\kappa_{\alpha,n,i,k}\alpha_{n,i,k,l}e^{\iota\left\langle \kappa_{\beta,n,i},\Delta c_{n,i,k,l}\right\rangle }}{\lambda_{n,i}+\iota(2\pi u+d_{n,i}-\Omega_{n,i,k,l})}$
 
 have grouping information that reduce the number of variables to
 calibrate. It essentially replace the index $l\in\left[L_{n}\right]$
@@ -86,21 +86,15 @@ is comprised of spline interpolation fits of the RHS of the above equation; one 
 $q(u,w,\kappa,\lambda,\beta)=\sum_{n=1}^{N}w_{n}\sum_{i=1}^{G_{n}}\sum_{k=1}^{K_{n,i}}z_{n,i,k}q_{n,i,k}\left(2\pi u-d_{n,i},\xi_{n,i}\lambda_{0}\right)$
 where
 
-$z_{n,i,k}:=\kappa_{n,i,k}e^{\iota\left\langle \beta_{n,i},\bar{c}_{n,i}\right\rangle }\in\mathbb{C},$
+$z_{n,i,k}:=\kappa_{\alpha,n,i,k}e^{\iota\left\langle \kappa_{\beta,n,i},\Delta\bar{c}_{n,i,k}\right\rangle }\in\mathbb{C},$
 
  was used to reduce clutter, and $\lambda_{0}$ is the T2 decay estimate for the reference compound's resonance at 0 ppm from a pre-processing step. The average
 
- $\bar{c}_{n,i}:=\frac{1}{K_{n,i}}\sum_{k=1}^{K_{n,i}}c_{n,i,k},$
-
- is used instead of individual $c_{n,i,k}$'s so that the local surrogate
-does not need to approximate arguments of $\beta_{n,i}$ in addition
-to the arguments $r$ and $h$. The fast spline interpolation Julia
-package interpolations.jl was used to create a good surrogate $q_{n,i,k}$
-over $r$ and $h$.
+ $\Delta\bar{c}_{n,i,k}:=\frac{1}{L_{n,i,k}}\sum_{l=1}^{L_{n,i,k}}\Delta c_{n,i,k,l}$ 
+ 
+is used instead of individual $\Delta c_{n,i,k,l}$'s so that the local surrogate approximate a function with only the arguments $r$ and $h$, which can be well-approximated with $2$-D splines. The spline interpolation Julia package interpolations.jl was used to create a surrogate $q_{n,i,k}$ over $r$ and $h$.
 
 
-### Identifiability (in progress)
-The compound concentration w_{n} parameter and the amplitude compensation parameter \kappa_{n,i,k} should not be jointly fitted due to identifiability issues. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we provide routines to first fit \kappa_{n,i,k} against compound standard experiments whilst holding the concentration to be constant for all compounds of interest. The compound standard experiments can be obtained from the GISSMO webpage for each it's compound entry, or from the [BMRB database](https://bmrb.io/) if an experiment with alternative spectrometer parameters is desired. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we also provide routines to fit the surrogate model that has w as a fit variable and \kappa is kept constant. The constant assigned to each \kappa can be a value that was learned from compound standards data. More on this procedure and its application in quantifying metabolites in [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl).
 
 
 ## Getting Started
@@ -109,7 +103,9 @@ Add (currently) unregistered public Julia package for dependency before installi
 import Pkg
 Pkg.add(path="https://github.com/AI4DBiological-Systems/GISSMOReader.jl")
 Pkg.add(path="https://github.com/AI4DBiological-Systems/NMRSpectraSimulator.jl")
-
+Pkg.add("FFTW")
+Pkg.add("PlotlyJS")
+Pkg.add("Plots")
 ```
 
 
@@ -124,9 +120,9 @@ import NMRSpectraSimulator
 
 using LinearAlgebra
 using FFTW
-import PyPlot
+import PlotlyJS
+using Plots; plotly()
 import Statistics
-
 import Random
 Random.seed!(25)
 ```
@@ -170,10 +166,10 @@ hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 ```
 
-We need to provide the path to the location of the [/src/input/molcules](https://github.com/AI4DBiological-Systems/NMRData/tree/main/src/input/molecules) in the [NMRData.jl](https://github.com/AI4DBiological-Systems/NMRData) repository. This folder contain the JLD files that contain J-coupling and chemical shift constants from the [GISSMO library](http://gissmo.nmrfam.wisc.edu/library).
+We need to provide the path to the location of the [/src/input/molcules](https://github.com/AI4DBiological-Systems/NMRData/tree/main/input/molecules) in the [NMRData.jl](https://github.com/AI4DBiological-Systems/NMRData) repository. This folder contain the JLD files that contain J-coupling and chemical shift constants from the [GISSMO library](http://gissmo.nmrfam.wisc.edu/library).
 
 ```julia; results="hidden"
-base_path_JLD = "/home/roy/Documents/repo/NMRData/src/input/molecules"
+base_path_JLD = "/home/roy/Documents/repo/NMRData/input/molecules"
 ```
 Note that the chemical shift tend to change slightly (within +/- 0.1 ppm) for every NMR experiment. The J-coupling constants for a compound shouldn't change in theory, but the values provided by the GISSMO library are empirically fitted, thus prone to misfit error and physics model descrepancy. In [NMRCalibrate.jl](https://github.com/AI4DBiological-Systems/NMRCalibrate.jl), we work on the fitting of the simulated spectra (provided in this package) to NMR experiment data.
 
@@ -241,7 +237,7 @@ f_U = f.(U_rad)
 q_U = q.(U_rad)
 ```
 
-The l-2 discrepancy between the models `f` and its surrogate `q` over the evaluation locations in `U`.
+The l-2 discrepancy between the models `f` (the $g_{mFFID}$ function) and its surrogate `q` over the frequency locations in `U`.
 ```julia
 discrepancy = abs.(f_U-q_U)
 max_val, ind = findmax(discrepancy)
@@ -251,37 +247,57 @@ println()
 ```
 
 
-```julia; fig_cap="", echo=false
+```julia; fig_cap=""
 
-fig = PyPlot.figure()
-PyPlot.plot(P, real.(f_U), label = "f")
-PyPlot.plot(P, real.(q_U), label = "q")
+# real.
+display_mat = [ real.(f_U) real.(q_U) ]
+display_labels = ["proposed model" "spline surrogate"]
 
-PyPlot.legend()
-PyPlot.xlabel("ppm")
-PyPlot.ylabel("real")
-PyPlot.title("f vs q")
-display(fig)
+default(titlefont = (16, "times"), legendfontsize = 14, guidefont = (16, :black),
+tickfont = (12, :black))
+plot_handle = plot(P, display_mat,
+labels = display_labels,
+title = "Simulated Spectrum: $(join(molecule_names, ", "))",
+xlabel = "ppm",
+ylabel = "real part of spectrum",
+xflip = true,
+linewidth = 2, legend = :topright, size = (1000,400))
 
-```
-
-Zoom in.
-```julia; fig_cap="", echo=false
-
-inds = findall(xx->(2.5<xx<4), P)
-
-fig2 = PyPlot.figure()
+display(plot_handle)
 
 
-PyPlot.plot(P[inds], real.(f_U[inds]), label = "f")
-PyPlot.plot(P[inds], real.(q_U[inds]), label = "q")
+# imaginary.
+display_mat = [ imag.(f_U) imag.(q_U) ]
+display_labels = ["proposed model" "spline surrogate"]
 
-PyPlot.legend()
-PyPlot.xlabel("ppm")
-PyPlot.ylabel("real")
-PyPlot.title("f vs q")
-display(fig2)
+default(titlefont = (16, "times"), legendfontsize = 14, guidefont = (16, :black),
+tickfont = (12, :black))
+plot_handle = plot(P, display_mat,
+labels = display_labels,
+title = "Simulated Spectrum: $(join(molecule_names, ", "))",
+xlabel = "ppm",
+ylabel = "imaginary part of spectrum",
+xflip = true,
+linewidth = 2, legend = :topright, size = (1000,400))
 
+display(plot_handle)
+
+
+# magnitude.
+display_mat = [ abs.(f_U) abs.(q_U) ]
+display_labels = ["proposed model" "spline surrogate"]
+
+default(titlefont = (16, "times"), legendfontsize = 14, guidefont = (16, :black),
+tickfont = (12, :black))
+plot_handle = plot(P, display_mat,
+labels = display_labels,
+title = "Simulated Spectrum: $(join(molecule_names, ", "))",
+xlabel = "ppm",
+ylabel = "magnitude part of spectrum",
+xflip = true,
+linewidth = 2, legend = :topright, size = (1000,400))
+
+display(plot_handle)
 ```
 
 
@@ -295,22 +311,64 @@ Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) fo
 This mutates `mixture_params`, aka `As`.
 
 
-Re-evaluate at evaluation locations, and plot.
-```julia; fig_cap="", echo=false
+Re-evaluate at evaluation locations, and plot. Plotting code is hidden.
+
+```julia; fig_cap=""; results="hidden"
+
 f_U = f.(U_rad)
 q_U = q.(U_rad)
 
 inds = findall(xx->(2.5<xx<4), P)
+```
 
-fig3 = PyPlot.figure()
+```julia; fig_cap=""; echo=false
+# real.
+display_mat = [ real.(f_U[inds]) real.(q_U[inds]) ]
+display_labels = ["proposed model" "spline surrogate"]
+
+default(titlefont = (16, "times"), legendfontsize = 14, guidefont = (16, :black),
+tickfont = (12, :black))
+plot_handle = plot(P[inds], display_mat,
+labels = display_labels,
+title = "Simulated Spectrum: $(join(molecule_names, ", "))",
+xlabel = "ppm",
+ylabel = "real part of spectrum",
+xflip = true,
+linewidth = 2, legend = :topright, size = (1000,400))
+
+display(plot_handle)
 
 
-PyPlot.plot(P[inds], real.(f_U[inds]), label = "f")
-PyPlot.plot(P[inds], real.(q_U[inds]), label = "q")
+# imaginary.
+display_mat = [ imag.(f_U[inds]) imag.(q_U[inds]) ]
+display_labels = ["proposed model" "spline surrogate"]
 
-PyPlot.legend()
-PyPlot.xlabel("ppm")
-PyPlot.ylabel("real")
-PyPlot.title("f vs q")
-display(fig3)
+default(titlefont = (16, "times"), legendfontsize = 14, guidefont = (16, :black),
+tickfont = (12, :black))
+plot_handle = plot(P[inds], display_mat,
+labels = display_labels,
+title = "Simulated Spectrum: $(join(molecule_names, ", "))",
+xlabel = "ppm",
+ylabel = "imaginary part of spectrum",
+xflip = true,
+linewidth = 2, legend = :topright, size = (1000,400))
+
+display(plot_handle)
+
+
+# magnitude.
+display_mat = [ abs.(f_U[inds]) abs.(q_U)[inds] ]
+display_labels = ["proposed model" "spline surrogate"]
+
+default(titlefont = (16, "times"), legendfontsize = 14, guidefont = (16, :black),
+tickfont = (12, :black))
+plot_handle = plot(P[inds], display_mat,
+labels = display_labels,
+title = "Simulated Spectrum: $(join(molecule_names, ", "))",
+xlabel = "ppm",
+ylabel = "magnitude part of spectrum",
+xflip = true,
+linewidth = 2, legend = :topright, size = (1000,400))
+
+display(plot_handle)
 ```
