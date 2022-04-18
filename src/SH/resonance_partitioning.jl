@@ -74,7 +74,7 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
 
     N_spin_sys = length(coherence_state_pairs_sys)
     @assert N_groups == N_spin_sys
-    Δc_avg = Vector{Vector{Vector{T}}}(undef, N_spin_sys)
+    Δc_bar = Vector{Vector{Vector{T}}}(undef, N_spin_sys)
 
     
     for i = 1:N_spin_sys
@@ -107,7 +107,7 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
         part_inds_set[i] = part_inds
         Δc_m_set[i] = Δc_m
 
-        Δc_avg[i] = Δc_centroids
+        Δc_bar[i] = Δc_centroids
     end
 
     
@@ -115,24 +115,24 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
     # for i = 1:N_spin_sys # over elements in a spin group.
 
     #     N_partition_elements = length(part_inds_compound[i])
-    #     Δc_avg[i] = Vector{Vector{T}}(undef, N_partition_elements)
+    #     Δc_bar[i] = Vector{Vector{T}}(undef, N_partition_elements)
 
     #     for k = 1:N_partition_elements
 
     #         inds = part_inds_compound[i][k]
             
 
-    #         Δc_avg[i][k] = Statistics.mean( Δc_m_compound[i][inds] )
+    #         Δc_bar[i][k] = Statistics.mean( Δc_m_compound[i][inds] )
 
     #         # # weighted mean.
     #         α = as[i][inds]
     #         Ω = Ωs[i][inds]
     #         # tmp = Δc_m_compound[i][inds]
-    #         # Δc_avg[i][k] = sum(tmp[l] .* α[l]) / sum(α)
+    #         # Δc_bar[i][k] = sum(tmp[l] .* α[l]) / sum(α)
     #     end
     # end
 
-    return as, Fs, part_inds_set, Δc_m_set, Δc_avg
+    return as, Fs, part_inds_set, Δc_m_set, Δc_bar
 end
 
 
@@ -178,11 +178,11 @@ function fitproxy!(A::CompoundFIDType{T,SST};
     end
 
     d_max = ppm2hzfunc(A.Δcs_max)-ppm2hzfunc(0.0)
-    #A.qs, A.gs, A.Δc_avg = setupcompoundpartitionitp(d_max,
+    #A.qs, A.gs, A.Δc_bar = setupcompoundpartitionitp(d_max,
     A.qs, A.gs = setupcompoundpartitionitp(d_max,
         A.ss_params,
         #A.Δc_m_compound,
-        A.Δc_avg,
+        A.Δc_bar,
         A.part_inds_compound,
         A.αs, A.Ωs,
         A.λ0, u_min, u_max;
@@ -208,7 +208,7 @@ function setupmixtureproxies(target_names::Vector{String},
 
     for n = 1:N_compounds
 
-        qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound, Δc_avg, N_spins_compound,
+        qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound, Δc_bar, N_spins_compound,
             αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
             λ0, fs, SW, Δcs_max, ν_0ppm = setupcompoundproxy(target_names[n],
             base_path_JLD, Δcs_max_mixture[n], hz2ppmfunc, ppm2hzfunc, fs, SW, λ0, ν_0ppm;
@@ -219,7 +219,7 @@ function setupmixtureproxies(target_names::Vector{String},
         SSFID_obj = setupSSFIDparams(dummy_SSFID, part_inds_compound, N_spins_compound)
 
         As[n] = CompoundFIDType(qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound,
-        Δc_avg, SSFID_obj,
+        Δc_bar, SSFID_obj,
         αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
         λ0, fs, SW, Δcs_max, ν_0ppm)
     end
@@ -275,7 +275,7 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     end
 
     αs, Ωs, part_inds_compound,
-    Δc_m_compound, Δc_avg = partitionresonances(coherence_state_pairs_sys,
+    Δc_m_compound, Δc_bar = partitionresonances(coherence_state_pairs_sys,
     ms_sys, αs_spin_sys, Ωs_spin_sys;
     α_relative_threshold = α_relative_threshold,
     Δc_partition_radius = Δc_partition_radius)
@@ -303,7 +303,7 @@ function setupcompoundproxy(name, base_path, Δcs_max::T, hz2ppmfunc, ppm2hzfunc
     # f = uu->evalcLcompoundviapartitions(uu, d,
     # αs, Ωs, κs_λ, κs_β, λ0, Δc_m_compound, part_inds_compound)
 
-    return qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound, Δc_avg, N_spins_compound,
+    return qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound, Δc_bar, N_spins_compound,
     αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
     λ0, fs, SW, Δcs_max, ν_0ppm
 end

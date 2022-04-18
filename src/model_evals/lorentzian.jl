@@ -10,7 +10,7 @@ function evalcompound(u_rad, A::CompoundFIDType{T,SST})::Complex{T} where {T <: 
     # A.λ0, A.Δc_m_compound, A.part_inds_compound)
 
     out_sys = evalcLcompoundviapartitions(u_rad, A.αs, A.Ωs, A.ss_params,
-    A.λ0, A.Δc_avg, A.part_inds_compound)
+    A.λ0, A.Δc_bar, A.part_inds_compound)
 
     out_singlets = evalsinglets(u_rad, A.d_singlets, A.αs_singlets, A.Ωs_singlets,
     A.β_singlets, A.λ0, A.κs_λ_singlets)

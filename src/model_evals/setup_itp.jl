@@ -47,7 +47,7 @@ end
 function setupcompoundpartitionitp(d_max::T,
     x::SST,
     #Δc_m_compound::Vector{Vector{Vector{T}}},
-    Δc_avg::Vector{Vector{Vector{T}}},
+    Δc_bar::Vector{Vector{Vector{T}}},
     part_inds_compound::Vector{Vector{Vector{Int}}},
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     λ0::T, u_min::T, u_max::T;
@@ -58,14 +58,14 @@ function setupcompoundpartitionitp(d_max::T,
 
     qs = Vector{Vector{Function}}(undef, length(αs))
     gs = Vector{Vector{Function}}(undef, length(αs)) # no phase.
-    #Δc_avg = Vector{Vector{Vector{T}}}(undef, length(αs))
+    #Δc_bar = Vector{Vector{Vector{T}}}(undef, length(αs))
 
     for i = 1:length(αs) # over elements in a spin group.
 
         N_partition_elements = length(part_inds_compound[i])
         qs[i] = Vector{Function}(undef, N_partition_elements)
         gs[i] = Vector{Function}(undef, N_partition_elements)
-        #Δc_avg[i] = Vector{Vector{T}}(undef, N_partition_elements)
+        #Δc_bar[i] = Vector{Vector{T}}(undef, N_partition_elements)
 
         for k = 1:N_partition_elements
             #println("i,k", (i,k))
@@ -77,16 +77,16 @@ function setupcompoundpartitionitp(d_max::T,
             d_max, λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
             Δr = Δr, Δκ_λ = Δκ_λ)
 
-            #Δc_avg[i][k] = Statistics.mean( Δc_m_compound[i][inds] )
+            #Δc_bar[i][k] = Statistics.mean( Δc_m_compound[i][inds] )
 
             # # weighted mean.
             # tmp = Δc_m_compound[i][inds]
-            # Δc_avg[i][k] = sum(tmp[l] .* α[l]) / sum(α)
+            # Δc_bar[i][k] = sum(tmp[l] .* α[l]) / sum(α)
 
 
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, c)) # unpackaged.
-            #qs[i][k] = (rr, ξξ, bb)->evalq(real_sitp, imag_sitp, rr, ξξ, bb, Δc_avg[i][k]) # packaged.
-            qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, x.κs_β[i], Δc_avg[i][k])
+            #qs[i][k] = (rr, ξξ, bb)->evalq(real_sitp, imag_sitp, rr, ξξ, bb, Δc_bar[i][k]) # packaged.
+            qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, x.κs_β[i], Δc_bar[i][k])
 
             # x_buffer = Vector{T}(undef, 1)
             # s_x_buffer = Vector{T}(undef, 1)
@@ -94,7 +94,7 @@ function setupcompoundpartitionitp(d_max::T,
             # a_buffer = Vector{T}(undef, 1)
             # b_buffer = Vector{T}(undef, 1)
             # qs[i][k] = (rr, ξξ)->evalq1!(x_buffer, s_x_buffer, c_x_buffer, a_buffer, b_buffer,
-            #     real_sitp, imag_sitp, rr, ξξ, x.κs_β[i], Δc_avg[i][k])
+            #     real_sitp, imag_sitp, rr, ξξ, x.κs_β[i], Δc_bar[i][k])
 
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*dot(bb, Δc_m_compound[i][k]))
             #qs[i][k] = (rr, ξξ, bb)->(real_sitp(rr,ξξ)+im*imag_sitp(rr,ξξ))*exp(im*bb)
@@ -109,7 +109,7 @@ function setupcompoundpartitionitp(d_max::T,
         end
     end
 
-    return qs, gs#, Δc_avg
+    return qs, gs#, Δc_bar
 end
 
 function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} where T <: Real
