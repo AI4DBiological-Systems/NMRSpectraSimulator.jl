@@ -1,7 +1,9 @@
-``` julia
-"""
-test function.
-"""
+# place
+
+
+holder
+
+```julia
 function myfunc(x)
     return x + 1.23
 end
@@ -19,4 +21,12 @@ println(@isdefined myfunc)
 println(@isdefined a)
 println(@isdefined myfunc2)
 
+```
+
+```julia
+b = 7
+```
+
+```julia
+println(@isdefined b)
 ```

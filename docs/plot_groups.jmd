@@ -149,14 +149,7 @@ sanity check. The individual resonance group evaluations should sum up to equal 
 ```
 
 Put the plotting routine in a function. Has options for real, imaginary, and magnitude spectrum.
-``` julia
-
-```
-
-
-Plot the resonance groups.
-```julia; fig_cap="", echo=false
-
+```julia; results="hidden"
 """
 save resonance groupings of a compound.
 Choices for `f`` are: `real()`, `imag()`, or `abs()`. These corresponds to real part, imaginary part, and magnitude spectrum, respectively.
@@ -210,7 +203,11 @@ function plotgroups(title_string::String,
 
     return plot_obj, q_U, qs_U, q_singlets_U
 end
+```
 
+
+Plot the resonance groups.
+```julia; fig_cap="", echo=false
 
 #canvas_size = (1600, 900)
 canvas_size = (1000, 400)
