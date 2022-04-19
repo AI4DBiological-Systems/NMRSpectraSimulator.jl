@@ -1,0 +1,22 @@
+``` julia
+"""
+test function.
+"""
+function myfunc(x)
+    return x + 1.23
+end
+
+a = 8
+```
+
+```julia
+
+function myfunc2(x)
+    return x + 2.23
+end
+
+println(@isdefined myfunc)
+println(@isdefined a)
+println(@isdefined myfunc2)
+
+```

@@ -6,8 +6,8 @@
 
 
 using LinearAlgebra, FFTW
-import BSON, Statistics, Random
-
+import BSON
+#import Statistics
 
 #import NMRSpectraSimulator
 
@@ -22,7 +22,7 @@ import PlotlyJS
 import Plots
 Plots.plotly()
 
-import Destruct
+#import Destruct
 
 #include("./helpers/final_helpers.jl")
 #include("./helpers/resonance_helpers.jl")
@@ -32,6 +32,7 @@ import Destruct
 #fig_num = 1
 #PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "serif"])
 
+import Random
 Random.seed!(25)
 
 """
@@ -139,7 +140,8 @@ only plots the first compound in molecule_names.
 """
 function plotgroupsfullscript(plot_title, molecule_names,
    base_path_JLD, load_path, save_folder, tol_coherence, α_relative_threshold,
-   Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub)
+   Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+   display_flag = false)
         
     isdir(save_folder) || mkpath(save_folder)
 
@@ -196,29 +198,14 @@ function plotgroupsfullscript(plot_title, molecule_names,
         Δr = 1.0,
         Δκ_λ = 0.05)
 
-
-    qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k = 1:length(A.qs[i]) ) for i = 1:length(A.qs) )
-
-
-
-
-    #### I am here. display Δc and part_inds, and Δc_bar, for each spin group.
-
-    #### then plot each group on the same plot. Singlets are ignored.
-
-    #qs = uu->NMRSpectraSimulator.evalitpproxysys(A.qs, uu, A.ss_params)
-
+    # create the functions for each resonance group.
     qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k = 1:length(A.qs[i]) ) for i = 1:length(A.qs) )
     q_singlets = ωω->NMRSpectraSimulator.evalsinglets(ωω, A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets)
 
-    f = uu->NMRSpectraSimulator.evalmixture(uu, As)
-
-    ## parameters that affect qs.
-    # A.ss_params.d, A.ss_params.κs_λ, A.ss_params.κs_β
-    # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
+    # create the function for the entire compound.
     q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, As[1:1])
 
-    f_U = f.(U_rad)
+    # evaluate at the plotting positions.
     q_U = q.(U_rad)
 
     qs_U = collect( collect( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
@@ -233,27 +220,34 @@ function plotgroupsfullscript(plot_title, molecule_names,
 
     #println("sanity check. This should be numerically zero: ", discrepancy)
     @assert discrepancy < 1e-14
-    println()
 
 
-
-
+    # plot.
     canvas_size = (1600, 900)
 
     plots_save_path = joinpath(save_folder, "groups_real.html")
     title_string = "$(plot_title), real"
     plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, real; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
+    if display_flag
+        display(plot_obj)
+    end
 
     plots_save_path = joinpath(save_folder, "groups_imag.html")
     title_string = "$(plot_title), imag"
     plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, imag; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
+    if display_flag
+        display(plot_obj)
+    end
 
     plots_save_path = joinpath(save_folder, "groups_modulus.html")
     title_string = "$(plot_title), modulus"
     plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, abs; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
+    if display_flag
+        display(plot_obj)
+    end
 end
 
 #assert 1==2
@@ -264,7 +258,8 @@ I.e., a folder containing an experiment of L-Serine and L-Histidine should have 
 """
 function batchplotgroups(plot_title, root_path,
     base_path_JLD, tol_coherence,
-    α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub)
+    α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+    display_flag = false)
 
     # get a list of experiment paths and compounds names. Assume the folder name of the experiment contains the compound.
     tmp = readdir(root_path, join = true)
@@ -293,7 +288,8 @@ function batchplotgroups(plot_title, root_path,
         if typeof(k) != Nothing
             plotgroupsfullscript(plot_title, [compound_name;],
                 base_path_JLD, load_path, save_folder, tol_coherence, α_relative_threshold,
-                Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub)
+                Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+                display_flag = display_flag)
         else
             println("Compound not in the local GISSMO library. Skip.")
         end
@@ -305,6 +301,8 @@ end
 import GISSMOReader
 
 root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
+root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-2mM"
+root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-700-20mM"
 batchplotgroups(plot_title, root_folder,
     base_path_JLD, tol_coherence,
     α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub)
