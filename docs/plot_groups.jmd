@@ -155,12 +155,13 @@ save resonance groupings of a compound.
 Choices for `f`` are: `real()`, `imag()`, or `abs()`. These corresponds to real part, imaginary part, and magnitude spectrum, respectively.
 """
 function plotgroups(title_string::String,
-    P::LinRange{T},
+    P,
     U,
     q,
     qs,
     q_singlets,
-    f::Function;
+    f::Function,
+    return_val_type::T;
     canvas_size::Tuple{Int,Int} = (1000, 400)) where T
 
     U_rad = U .* (2*π)
@@ -200,7 +201,12 @@ function plotgroups(title_string::String,
         linestyle = :dot,
         xflip = true,
         linewidth = 4)
-
+    #
+    Plots.plot!(plot_obj, P, f.(q_U),
+    markershape = :circle,
+    seriestype = :scatter,
+    xflip = true)
+    
     return plot_obj, q_U, qs_U, q_singlets_U
 end
 ```
@@ -209,25 +215,33 @@ end
 Plot the resonance groups.
 ```julia; fig_cap="", echo=false
 
-#canvas_size = (1600, 900)
+# reduce the plotting positions for low signal regions. Otherwise the plot store size will be too large, and the time to load the plot will be long.
+display_reduction_factor = 100
+display_threshold_factor =  α_relative_threshold/10
+
+inds, _ = NMRSpectraSimulator.prunelowsignalentries(q_U, display_threshold_factor, display_reduction_factor)
+P_display = P[inds]
+U_display = U[inds]
+
+# plot.
 canvas_size = (1000, 400)
 
 plots_save_path = joinpath(save_folder, "groups_real.html")
 title_string = "$(plot_title), real"
-plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, real; canvas_size = canvas_size)
-Plots.savefig(plot_obj, plots_save_path)
+plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
+#Plots.savefig(plot_obj, plots_save_path)
 display(plot_obj)
 
 plots_save_path = joinpath(save_folder, "groups_imag.html")
 title_string = "$(plot_title), imag"
-plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, imag; canvas_size = canvas_size)
-Plots.savefig(plot_obj, plots_save_path)
+plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, imag, P[1]; canvas_size = canvas_size)
+#Plots.savefig(plot_obj, plots_save_path)
 display(plot_obj)
 
 plots_save_path = joinpath(save_folder, "groups_modulus.html")
 title_string = "$(plot_title), modulus"
-plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, abs; canvas_size = canvas_size)
-Plots.savefig(plot_obj, plots_save_path)
+plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, abs, P[1]; canvas_size = canvas_size)
+#Plots.savefig(plot_obj, plots_save_path)
 display(plot_obj)
 ```
 

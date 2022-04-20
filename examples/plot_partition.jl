@@ -40,12 +40,13 @@ save resonance groupings of a compound.
 Choices for `f`` are: `real()`, `imag()`, or `abs()`. These corresponds to real part, imaginary part, and magnitude spectrum, respectively.
 """
 function plotgroups(title_string::String,
-    P::LinRange{T},
+    P,
     U,
     q,
     qs,
     q_singlets,
-    f::Function;
+    f::Function,
+    return_val_type::T;
     canvas_size::Tuple{Int,Int} = (1000, 400)) where T
 
     U_rad = U .* (2*π)
@@ -85,7 +86,12 @@ function plotgroups(title_string::String,
         linestyle = :dot,
         xflip = true,
         linewidth = 4)
-
+    #
+    Plots.plot!(plot_obj, P, f.(q_U),
+    markershape = :circle,
+    seriestype = :scatter,
+    xflip = true)
+    
     return plot_obj, q_U, qs_U, q_singlets_U
 end
 
@@ -139,13 +145,17 @@ dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0) # level 2 model.
 only plots the first compound in molecule_names.
 """
 function plotgroupsfullscript(plot_title, molecule_names,
-   base_path_JLD, load_path, save_folder, tol_coherence, α_relative_threshold,
-   Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
-   display_flag = false)
-        
+    base_path_JLD, project_path, tol_coherence, α_relative_threshold,
+    Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+    display_flag = false,
+    prune_low_signal_for_display_flag::Bool = false,
+    display_reduction_factor = 100,
+    display_threshold_factor =  α_relative_threshold/10,
+    canvas_size = (1600, 900))
+    
+    load_path = joinpath(project_path, "experiment.bson")
+    save_folder = joinpath(project_path, "plots")
     isdir(save_folder) || mkpath(save_folder)
-
-
 
     ### load block.
     dic = BSON.load(load_path)
@@ -198,6 +208,10 @@ function plotgroupsfullscript(plot_title, molecule_names,
         Δr = 1.0,
         Δκ_λ = 0.05)
 
+    # store fitted surrogate for future use.
+    save_simulation_path = joinpath(project_path, "simulation.bson")
+    BSON.bson(save_simulation_path, mixture_params = mixture_params)
+
     # create the functions for each resonance group.
     qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k = 1:length(A.qs[i]) ) for i = 1:length(A.qs) )
     q_singlets = ωω->NMRSpectraSimulator.evalsinglets(ωω, A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets)
@@ -223,19 +237,33 @@ function plotgroupsfullscript(plot_title, molecule_names,
 
 
     # plot.
-    canvas_size = (1600, 900)
+    P_display = P
+    U_display = U
+    if prune_low_signal_for_display_flag
+
+        inds, _ = NMRSpectraSimulator.prunelowsignalentries(q_U, display_threshold_factor, display_reduction_factor)
+        P_display = P[inds]
+        U_display = U[inds]
+    end
+
+    println("length(P) = ", length(P))
+    println("length(P_display) = ", length(P_display))
+    
 
     plots_save_path = joinpath(save_folder, "groups_real.html")
     title_string = "$(plot_title), real"
-    plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, real; canvas_size = canvas_size)
+    plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
     if display_flag
         display(plot_obj)
     end
+    println("length(q_U) = ", length(q_U))
+    @assert 1==44
+
 
     plots_save_path = joinpath(save_folder, "groups_imag.html")
     title_string = "$(plot_title), imag"
-    plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, imag; canvas_size = canvas_size)
+    plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, imag, P[1]; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
     if display_flag
         display(plot_obj)
@@ -243,7 +271,7 @@ function plotgroupsfullscript(plot_title, molecule_names,
 
     plots_save_path = joinpath(save_folder, "groups_modulus.html")
     title_string = "$(plot_title), modulus"
-    plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P, U, q, qs, q_singlets, abs; canvas_size = canvas_size)
+    plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, abs, P[1]; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
     if display_flag
         display(plot_obj)
@@ -259,7 +287,11 @@ I.e., a folder containing an experiment of L-Serine and L-Histidine should have 
 function batchplotgroups(plot_title, root_path,
     base_path_JLD, tol_coherence,
     α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
-    display_flag = false)
+    display_flag = false,
+    prune_low_signal_for_display_flag::Bool = false,
+    display_reduction_factor = 100,
+    display_threshold_factor =  α_relative_threshold/10,
+    canvas_size = (1600, 900))
 
     # get a list of experiment paths and compounds names. Assume the folder name of the experiment contains the compound.
     tmp = readdir(root_path, join = true)
@@ -274,8 +306,6 @@ function batchplotgroups(plot_title, root_path,
         project_path = project_paths[i]
         compound_name = experiment_names[i]
 
-        load_path = joinpath(project_path, "experiment.bson")
-        save_folder = joinpath(project_path, "plots")
         println("Now on ", project_path)
 
         # make sure this compound is in our library.
@@ -287,9 +317,13 @@ function batchplotgroups(plot_title, root_path,
         # decide if we should simulate and plot.
         if typeof(k) != Nothing
             plotgroupsfullscript(plot_title, [compound_name;],
-                base_path_JLD, load_path, save_folder, tol_coherence, α_relative_threshold,
+                base_path_JLD, project_path, tol_coherence, α_relative_threshold,
                 Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
-                display_flag = display_flag)
+                display_flag = display_flag,
+                prune_low_signal_for_display_flag = prune_low_signal_for_display_flag,
+                display_reduction_factor = display_reduction_factor,
+                display_threshold_factor = display_threshold_factor,
+                canvas_size = canvas_size)
         else
             println("Compound not in the local GISSMO library. Skip.")
         end
@@ -300,11 +334,18 @@ end
 
 import GISSMOReader
 
+
+
 root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
 root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-2mM"
 root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-700-20mM"
 batchplotgroups(plot_title, root_folder,
     base_path_JLD, tol_coherence,
-    α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub)
+    α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+    display_flag = false,
+    prune_low_signal_for_display_flag = true,
+    display_reduction_factor = 500,
+    display_threshold_factor =  α_relative_threshold/10,
+    canvas_size = (1600, 900))
 
 ####

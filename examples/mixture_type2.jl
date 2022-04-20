@@ -51,7 +51,7 @@ SW = 20.0041938620844
 # fs = 9615.38461538462
 
 # path to the GISSMO Julia storage folder.
-base_path_JLD = "/home/roy/Documents/repo/NMRData/src/input/molecules"
+base_path_JLD = "/home/roy/Documents/repo/NMRData/input/molecules"
 
 ### end inputs.
 

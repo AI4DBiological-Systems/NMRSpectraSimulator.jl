@@ -52,7 +52,7 @@ SW = 20.0041938620844
 # fs = 9615.38461538462
 
 # path to the GISSMO Julia storage folder.
-base_path_JLD = "/home/roy/Documents/repo/NMRData/src/input/molecules"
+base_path_JLD = "/home/roy/Documents/repo/NMRData/input/molecules"
 
 ### end inputs.
 
@@ -120,12 +120,24 @@ println("relative discrepancy = ", norm(discrepancy)/norm(f_U))
 println("max discrepancy: ", max_val)
 println()
 
+## remove areas with low signal from plotting to reduce plot size.
+reduction_factor = 100
+threshold_factor =  α_relative_threshold/10
+inds, keep_inds, inds_for_reducing = NMRSpectraSimulator.prunelowsignalentries(q_U, threshold_factor, reduction_factor)
+
+q_U_display = q_U[inds]
+f_U_display = f_U[inds]
+P_display = P[inds]
+
 ## visualize.
 PyPlot.figure(fig_num)
 fig_num += 1
 
-PyPlot.plot(P, real.(f_U), label = "f")
-PyPlot.plot(P, real.(q_U), label = "q")
+# PyPlot.plot(P, real.(f_U), label = "f")
+# PyPlot.plot(P, real.(q_U), label = "q")
+PyPlot.plot(P_display, real.(f_U_display), label = "f")
+PyPlot.plot(P_display, real.(q_U_display), label = "q")
+PyPlot.plot(P_display, real.(q_U_display), "x")
 
 PyPlot.legend()
 PyPlot.xlabel("ppm")
@@ -135,13 +147,13 @@ PyPlot.title("f vs q")
 
 ## visualize. zoom in.
 
-inds = findall(xx->(2.5<xx<3.9), P)
+inds = findall(xx->(2.5<xx<3.9), P_display)
 
 PyPlot.figure(fig_num)
 fig_num += 1
 
-PyPlot.plot(P[inds], real.(f_U[inds]), label = "f")
-PyPlot.plot(P[inds], real.(q_U[inds]), label = "q")
+PyPlot.plot(P_display[inds], real.(f_U_display[inds]), label = "f")
+PyPlot.plot(P_display[inds], real.(q_U_display[inds]), label = "q")
 
 PyPlot.legend()
 PyPlot.xlabel("ppm")

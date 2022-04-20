@@ -111,3 +111,27 @@ function convertcompactdomain(x::Vector{T}, a::T, b::T, c::T, d::T)::Vector{T} w
     return collect( convertcompactdomain(x[i], a, b, c, d) for i = 1:length(x) )
 end
 
+
+"""
+prunelowsignalentries(x, threshold_factor::T, reduction_factor::Int)::Vector{Int} where T
+
+keep the high signal portion and the reduced low signal portion.
+keep_threshold = maximum(abs_x) * threshold_factor.
+"""
+function prunelowsignalentries(x, threshold_factor::T, reduction_factor::Int) where T
+    
+    abs_x = abs.(x)
+
+    # find indices that have a low signal.
+    keep_threshold = maximum(abs_x) * threshold_factor
+    inds_for_reducing = findall(xx->xx<keep_threshold, abs_x)
+    reduced_inds = inds_for_reducing[1:reduction_factor:length(inds_for_reducing)]
+
+    # find indices that have a high signal.
+    keep_inds = findall(xx->xx>keep_threshold, abs_x)
+
+    # keep the high signal portion and the reduced low signal portion.
+    inds = sort([keep_inds; reduced_inds])
+
+    return inds, keep_inds, inds_for_reducing
+end
