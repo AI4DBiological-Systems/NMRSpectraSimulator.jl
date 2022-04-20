@@ -202,10 +202,10 @@ function plotgroups(title_string::String,
         xflip = true,
         linewidth = 4)
     #
-    Plots.plot!(plot_obj, P, f.(q_U),
-    markershape = :circle,
-    seriestype = :scatter,
-    xflip = true)
+    #Plots.plot!(plot_obj, P, f.(q_U),
+    #markershape = :circle,
+    #seriestype = :scatter,
+    #xflip = true)
     
     return plot_obj, q_U, qs_U, q_singlets_U
 end
