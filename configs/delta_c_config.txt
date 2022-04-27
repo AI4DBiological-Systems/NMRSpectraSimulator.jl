@@ -1,0 +1,573 @@
+DSS
+Group 1
+cs 0.6256: 0.05, 1
+cs 0.6256: 0.05, 2
+cs 1.7569: 0.05, 3
+cs 1.7569: 0.05, 4
+cs 2.9072: 0.05, 5
+cs 2.9072: 0.05, 6
+end group
+Group 2
+cs 0.0: 0.1, 1
+end group
+end compound
+
+L-Tyrosine
+Group 1
+cs 0.05
+
+end group
+Group 2
+cs 2.6903: 0.05, 1
+cs 2.85406: 0.05, 2
+cs 3.41919: 0.05, 3
+end group
+end compound
+
+L-Leucine
+Group 1
+cs 0.9432: 0.05, 1
+cs 0.9432: 0.05, 2
+cs 0.9432: 0.05, 3
+cs 1.6922: 0.05, 4
+cs 0.954: 0.05, 5
+cs 0.954: 0.05, 6
+cs 0.954: 0.05, 7
+cs 1.7297: 0.05, 8
+cs 1.6756: 0.05, 9
+cs 3.7216: 0.05, 10
+end group
+end compound
+
+Glycine
+Group 1
+cs 3.5444: 0.05, 1
+end group
+end compound
+
+L-Isoleucine
+Group 1
+cs 0.92729: 0.05, 1
+cs 0.92729: 0.05, 2
+cs 1.45762: 0.05, 3
+cs 1.2499: 0.05, 4
+cs 0.92729: 0.05, 5
+cs 1.9705: 0.05, 6
+cs 0.9985: 0.05, 7
+cs 0.9985: 0.05, 8
+cs 0.9985: 0.05, 9
+cs 3.65753: 0.05, 10
+end group
+end compound
+
+L-Valine
+Group 1
+cs 1.03301: 0.05, 1
+cs 1.03301: 0.05, 2
+cs 2.26632: 0.05, 3
+cs 1.03301: 0.05, 4
+cs 0.97984: 0.05, 5
+cs 0.97984: 0.05, 6
+cs 0.97984: 0.05, 7
+cs 3.59926: 0.05, 8
+end group
+end compound
+
+L-Tryptophan
+Group 1
+cs 7.27252: 0.05, 1
+cs 7.19003: 0.05, 2
+cs 7.52821: 0.05, 3
+cs 7.72062: 0.05, 4
+end group
+Group 2
+cs 3.29379: 0.05, 1
+cs 3.46987: 0.05, 2
+cs 4.0355: 0.05, 3
+end group
+Group 3
+cs 7.30355: 0.05, 1
+end group
+end compound
+
+L-Threonine
+Group 1
+cs 1.31819: 0.05, 1
+cs 1.31819: 0.05, 2
+cs 4.24186: 0.05, 3
+cs 1.31819: 0.05, 4
+cs 3.5731: 0.05, 5
+end group
+end compound
+
+L-Serine
+Group 1
+cs 3.97384: 0.05, 1
+cs 3.93701: 0.05, 2
+cs 3.83016: 0.05, 3
+end group
+end compound
+
+L-Phenylalanine
+Group 1
+cs 7.36331: 0.05, 1
+cs 7.41307: 0.05, 2
+cs 7.41307: 0.05, 3
+cs 7.31495: 0.05, 4
+cs 7.31495: 0.05, 5
+end group
+Group 2
+cs 3.11747: 0.05, 1
+cs 3.26952: 0.05, 2
+cs 3.97801: 0.05, 3
+end group
+end compound
+
+L-Methionine
+Group 1
+cs 2.11497: 0.05, 1
+cs 2.18772: 0.05, 2
+cs 2.62901: 0.05, 3
+cs 2.62901: 0.05, 4
+cs 3.84954: 0.05, 5
+end group
+Group 2
+cs 2.1212: 0.05, 1
+end group
+end compound
+
+L-Glutamine
+Group 1
+cs 2.45435: 0.05, 1
+cs 2.42567: 0.05, 2
+cs 2.13407: 0.05, 3
+cs 2.11841: 0.05, 4
+cs 3.75998: 0.05, 5
+end group
+end compound
+
+L-(+) Lactic acid
+Group 1
+cs 1.31779: 0.05, 1
+cs 1.31779: 0.05, 2
+cs 1.31779: 0.05, 3
+cs 4.10097: 0.05, 4
+end group
+end compound
+
+D-(+)-Glucose
+Group 1
+cs 4.63595: 0.05, 1
+cs 3.23401: 0.05, 2
+cs 3.47715: 0.05, 3
+cs 3.88604: 0.05, 4
+cs 3.71215: 0.05, 5
+cs 3.456: 0.05, 6
+cs 3.39132: 0.05, 7
+end group
+Group 2
+cs 3.75555: 0.05, 1
+cs 3.82861: 0.05, 2
+cs 3.82401: 0.05, 3
+cs 3.3998: 0.05, 4
+cs 3.7032: 0.05, 5
+cs 3.5235: 0.05, 6
+cs 5.2223: 0.05, 7
+end group
+end compound
+
+Caffeine
+Group 1
+cs 7.8756: 0.05, 1
+end group
+Group 2
+cs 3.8786: 0.05, 1
+end group
+Group 3
+cs 3.397: 0.05, 1
+end group
+Group 4
+cs 3.2296: 0.05, 1
+end group
+end compound
+
+L-Histidine
+Group 1
+cs 3.18747: 0.05, 1
+cs 3.26837: 0.05, 2
+cs 3.9967: 0.05, 3
+end group
+Group 2
+cs 8.02487: 0.2, 1
+end group
+Group 3
+cs 7.14078: 0.1, 1
+end group
+end compound
+
+L-Proline
+Group 1
+cs 2.01024: 0.05, 1
+cs 1.97971: 0.05, 2
+cs 2.05794: 0.05, 3
+cs 2.33833: 0.05, 4
+cs 3.3252: 0.05, 5
+cs 3.40388: 0.05, 6
+cs 4.12043: 0.05, 7
+end group
+end compound
+
+Choline
+Group 1
+cs 3.5137: 0.05, 1
+cs 3.5137: 0.05, 2
+cs 4.0533: 0.05, 3
+cs 4.0533: 0.05, 4
+end group
+Group 2
+cs 3.1944: 0.05, 1
+end group
+end compound
+
+L-Asparagine
+Group 1
+cs 2.8511: 0.05, 1
+cs 2.93627: 0.05, 2
+cs 3.98887: 0.05, 3
+end group
+end compound
+
+L-Aspartic acid
+Group 1
+cs 2.80139: 0.05, 1
+cs 2.67266: 0.05, 2
+cs 3.88603: 0.05, 3
+end group
+end compound
+
+L-Lysine
+Group 1
+cs 3.7477: 0.05, 1
+cs 1.88287: 0.05, 2
+cs 1.91198: 0.05, 3
+cs 1.50073: 0.05, 4
+cs 1.43385: 0.05, 5
+cs 1.71251: 0.05, 6
+cs 1.72263: 0.05, 7
+cs 3.01193: 0.05, 8
+cs 3.01193: 0.05, 9
+end group
+end compound
+
+L-Alanine
+Group 1
+cs 1.46617: 0.05, 1
+cs 1.46617: 0.05, 2
+cs 1.46617: 0.05, 3
+cs 3.7674: 0.05, 4
+end group
+end compound
+
+L-Arginine
+Group 1
+cs 1.71853: 0.05, 1
+cs 1.64654: 0.05, 2
+cs 1.90555: 0.05, 3
+cs 1.92018: 0.05, 4
+cs 3.23445: 0.05, 5
+cs 3.23446: 0.05, 6
+cs 3.76316: 0.05, 7
+end group
+end compound
+
+Folate
+Group 1
+cs 7.36778: 0.05, 1
+cs 6.16711: 0.05, 2
+end group
+Group 2
+cs 6.16711: 0.05, 1
+cs 7.36778: 0.05, 2
+end group
+Group 3
+cs 4.27485: 0.05, 1
+cs 2.04882: 0.05, 2
+cs 2.15831: 0.05, 3
+cs 2.34601: 0.05, 4
+cs 2.32202: 0.05, 5
+end group
+Group 4
+cs 8.3716: 0.05, 1
+end group
+Group 5
+cs 3.94107: 0.05, 1
+end group
+end compound
+
+L-Cysteine
+Group 1
+cs 3.07809: 0.05, 1
+cs 3.01407: 0.05, 2
+cs 3.95589: 0.05, 3
+end group
+end compound
+
+Putrescine
+Group 1
+cs 1.76133: 0.05, 1
+cs 1.76133: 0.05, 2
+cs 1.76133: 0.05, 3
+cs 1.76133: 0.05, 4
+cs 3.04581: 0.05, 5
+cs 3.04363: 0.05, 6
+cs 3.04472: 0.05, 7
+cs 3.04442: 0.05, 8
+end group
+end compound
+
+Succinic acid
+Group 1
+cs 2.391: 0.05, 1
+end group
+end compound
+
+Purine
+Group 1
+cs 8.5392: 0.05, 1
+cs 8.85038: 0.05, 2
+end group
+Group 2
+cs 9.0141: 0.05, 1
+end group
+end compound
+
+L-Glutamic acid
+Group 1
+cs 2.32886: 0.05, 1
+cs 2.34883: 0.05, 2
+cs 2.11892: 0.05, 3
+cs 2.0495: 0.05, 4
+cs 3.74769: 0.05, 5
+end group
+end compound
+
+Ethanol
+Group 1
+cs 1.1696: 0.05, 1
+cs 1.1696: 0.05, 2
+cs 1.1696: 0.05, 3
+cs 3.64079: 0.05, 4
+cs 3.64079: 0.05, 5
+end group
+end compound
+
+Epinephrine
+Group 1
+cs 3.25981: 0.05, 1
+cs 3.26821: 0.05, 2
+cs 4.9284: 0.05, 3
+end group
+Group 2
+cs 6.95262: 0.05, 1
+cs 6.85701: 0.05, 2
+cs 6.93691: 0.05, 3
+end group
+Group 3
+cs 2.75463: 0.05, 1
+end group
+end compound
+
+(-)-Norepinephrine
+Group 1
+cs 6.94344: 0.05, 1
+cs 6.86547: 0.05, 2
+cs 6.96037: 0.05, 3
+end group
+Group 2
+cs 3.25298: 0.05, 1
+cs 3.19951: 0.05, 2
+cs 4.8801: 0.05, 3
+end group
+end compound
+
+3,4-Dihydroxy-L-phenylalanine
+Group 1
+cs 6.7214: 0.05, 1
+cs 6.88666: 0.05, 2
+cs 6.81895: 0.05, 3
+end group
+Group 2
+cs 2.9866: 0.05, 1
+cs 3.14361: 0.05, 2
+cs 3.9132: 0.05, 3
+end group
+end compound
+
+Dopamine
+Group 1
+cs 6.74493: 0.05, 1
+cs 6.89976: 0.05, 2
+cs 6.85227: 0.05, 3
+end group
+Group 2
+cs 2.86813: 0.05, 1
+cs 2.86813: 0.05, 2
+cs 3.21495: 0.05, 3
+cs 3.21495: 0.05, 4
+end group
+end compound
+
+5-Hydroxy-L-tryptophan
+Group 1
+cs 6.8483: 0.05, 1
+cs 7.39114: 0.05, 2
+cs 7.1293: 0.05, 3
+cs 7.2636: 0.05, 4
+end group
+Group 2
+cs 3.22264: 0.05, 1
+cs 3.39529: 0.05, 2
+cs 4.0112: 0.05, 3
+end group
+end compound
+
+Serotonin
+Group 1
+cs 6.88478: 0.05, 1
+cs 7.42013: 0.05, 2
+cs 7.1088: 0.05, 3
+end group
+Group 2
+cs 3.3044: 0.05, 1
+cs 3.3044: 0.05, 2
+cs 3.1065: 0.05, 3
+cs 3.1065: 0.05, 4
+end group
+Group 3
+cs 7.2855: 0.05, 1
+end group
+end compound
+
+L-Kynurenine
+Group 1
+cs 6.78192: 0.05, 1
+cs 7.39948: 0.05, 2
+cs 7.8082: 0.05, 3
+cs 6.85738: 0.05, 4
+end group
+Group 2
+cs 3.6948: 0.05, 1
+cs 3.6948: 0.05, 2
+cs 4.1391: 0.05, 3
+end group
+end compound
+
+Tryptamine
+Group 1
+cs 7.22881: 0.05, 1
+cs 7.31657: 0.05, 2
+cs 7.57329: 0.05, 3
+cs 7.70626: 0.05, 4
+end group
+Group 2
+cs 3.33149: 0.05, 1
+cs 3.33149: 0.05, 2
+cs 3.1779: 0.05, 3
+cs 3.1779: 0.05, 4
+end group
+Group 3
+cs 7.3306: 0.05, 1
+end group
+end compound
+
+Creatine
+Group 1
+cs 3.02227: 0.05, 1
+end group
+Group 2
+cs 3.919: 0.05, 1
+end group
+end compound
+
+Creatinine
+Group 1
+cs 3.034: 0.05, 1
+end group
+Group 2
+cs 4.042: 0.05, 1
+end group
+end compound
+
+Myo-Inositol
+Group 1
+cs 3.26569: 0.05, 1
+cs 3.60856: 0.05, 2
+cs 3.60856: 0.05, 3
+cs 3.52271: 0.05, 4
+cs 3.52271: 0.05, 5
+cs 4.0489: 0.05, 6
+end group
+end compound
+
+Glycerol
+Group 1
+cs 3.63865: 0.05, 1
+cs 3.54779: 0.05, 2
+cs 3.77115: 0.05, 3
+cs 3.54779: 0.05, 4
+cs 3.63865: 0.05, 5
+end group
+end compound
+
+Gamma-Aminobutyric acid
+Group 1
+cs 1.89326: 0.05, 1
+cs 1.89326: 0.05, 2
+cs 2.28606: 0.05, 3
+cs 2.28606: 0.05, 4
+cs 2.99737: 0.05, 5
+cs 2.99737: 0.05, 6
+end group
+end compound
+
+3-Hydroxybutyrate
+Group 1
+cs 1.18676: 0.05, 1
+cs 1.18676: 0.05, 2
+cs 1.18676: 0.05, 3
+cs 4.13869: 0.05, 4
+cs 2.28997: 0.05, 5
+cs 2.39885: 0.05, 6
+end group
+end compound
+
+HEPES
+Group 1
+cs 2.8506: 0.05, 1
+cs 2.8506: 0.05, 2
+cs 3.1281: 0.05, 3
+cs 3.1281: 0.05, 4
+cs 3.1281: 0.05, 5
+cs 2.8506: 0.05, 6
+cs 2.8506: 0.05, 7
+cs 3.1281: 0.05, 8
+end group
+Group 2
+cs 3.05157: 0.05, 1
+cs 3.05157: 0.05, 2
+cs 3.85082: 0.05, 3
+cs 3.85082: 0.05, 4
+end group
+Group 3
+cs 2.93429: 0.05, 1
+cs 2.93429: 0.05, 2
+cs 3.14973: 0.05, 3
+cs 3.14973: 0.05, 4
+end group
+end compound
+
+D2O
+Group 1
+cs 4.8: 0.1, 1
+end group
+end compound

@@ -16,8 +16,10 @@ function setuppartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
 
     # set up bounds.
 
-    r_min = 2*π*u_min - d_max
-    r_max = 2*π*u_max + d_max
+    # r_min = 2*π*u_min - d_max
+    # r_max = 2*π*u_max + d_max
+    r_min = 2*π*(u_min - d_max)
+    r_max = 2*π*(u_max + d_max)
 
     # set up samples.
     A_r = r_min:Δr:r_max # large range.
@@ -44,7 +46,7 @@ function setuppartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     return real_setp, imag_setp
 end
 
-function setupcompoundpartitionitp(d_max::T,
+function setupcompoundpartitionitp(d_max::Vector{T},
     x::SST,
     #Δc_m_compound::Vector{Vector{Vector{T}}},
     Δc_bar::Vector{Vector{Vector{T}}},
@@ -74,7 +76,7 @@ function setupcompoundpartitionitp(d_max::T,
             α = αs[i][inds]
             Ω = Ωs[i][inds]
             real_sitp, imag_sitp = setuppartitionitp(α, Ω,
-            d_max, λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
+            d_max[i], λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
             Δr = Δr, Δκ_λ = Δκ_λ)
 
             #Δc_bar[i][k] = Statistics.mean( Δc_m_compound[i][inds] )

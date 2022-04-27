@@ -26,7 +26,7 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 
 # helper functions.
 function getΔcinfo!(part_dic, mixture_params_dic, project_name; verbose_flag = true)
-    
+
     As, _ = mixture_params_dic["$(project_name)"]
 
     A = As[1]
@@ -40,7 +40,7 @@ function getΔcinfo!(part_dic, mixture_params_dic, project_name; verbose_flag = 
     end
 
     for i = 1:length(A.Ωs)
-   
+
         inds_set = A.part_inds_compound[i]
         cs = A.Δc_m_compound[i]
         ps = collect( cs[inds_set[i]] for i = 1:length(inds_set) )
@@ -100,7 +100,7 @@ function getsimulation(projects_dir, project_name, molecule_names, tol_coherence
 
     # get a surrogate where K_{n,i} is encouraged to be no larger than `early_exit_part_size`.
     mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-        base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW,
+        H_params_path, ppm2hzfunc, fs, SW,
         λ_0ppm, ν_0ppm, dummy_SSFID;
         tol_coherence = tol_coherence,
         α_relative_threshold = α_relative_threshold,
@@ -140,7 +140,7 @@ end
 
 ##### global constants.
 projects_dir = "/home/roy/MEGAsync/outputs/NMR/experiments"
-base_path_JLD = "/home/roy/Documents/repo/NMRData//input/molecules"
+H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 cs_config_path = "/home/roy/Documents/repo/NMRData/input/reduced_cs_config.txt"
 #####
 
@@ -237,8 +237,3 @@ println()
 #             A.αs[i_select], α_tol; radius = r)
 
 # norm(A.part_inds_compound[i_select] - part_inds)
-
-
-
-
-

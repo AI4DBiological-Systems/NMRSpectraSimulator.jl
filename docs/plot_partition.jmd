@@ -1,0 +1,98 @@
+### Plot
+
+```julia;
+
+import GISSMOReader
+using LinearAlgebra, FFTW
+import BSON
+import NMRSpectraSimulator
+import OffsetArrays
+import Interpolations
+
+import PlotlyJS
+import Plots
+Plots.plotly()
+import Random
+Random.seed!(25)
+
+include("plot_partition.jl")
+
+H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
+
+
+
+### proxy-related user inputs.
+tol_coherence = 1e-2
+α_relative_threshold = 0.05
+#α_relative_threshold = 0.01
+#α_relative_threshold = 0.0
+
+#Δc_partition_radius = 0.9 #1e-1
+Δc_partition_radius = 0.17
+#Δc_partition_radius = 1e-1
+
+Δcs_max = 0.2 # for proxy.
+κ_λ_lb = 0.5
+κ_λ_ub = 2.5
+
+dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0) # level 2 model.
+
+###
+
+
+# for single experiment entry.
+plot_title_prefix = "BMRB-500-0.5mM"
+molecule_names = ["D-(+)-Glucose";]
+root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
+project_path = joinpath(root_folder, "D-(+)-Glucose")
+load_path = joinpath(project_path, "experiment.bson")
+save_folder = joinpath(project_path, "plots")
+
+# molecule_names = ["L-Isoleucine";]
+# root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-700-20mM"
+# project_path = joinpath(root_folder, "L-Isoleucine")
+
+# molecule_names = ["L-Valine";]
+# root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-700-20mM"
+# project_path = joinpath(root_folder, "L-Valine")
+
+# molecule_names = ["Glycine";]
+# root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
+# project_path = joinpath(root_folder, "Glycine")
+
+
+plotgroupsfullscript(plot_title_prefix, molecule_names,
+    H_params_path, project_path, tol_coherence, α_relative_threshold,
+    Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+    display_flag = true,
+    prune_low_signal_for_display_flag = false,
+    display_reduction_factor = 100,
+    display_threshold_factor =  α_relative_threshold/10,
+    canvas_size = (1600, 900),
+    reset_plot_dir_flag = true,
+    plot_imag_and_mag_flag = false,
+    save_plot_flag = false)
+
+```
+
+Batch version for entire folder.
+```julia
+#plot_prefix = "BMRB-500-0.5mM"
+#plot_prefix = "BMRB-500-2mM"
+#plot_prefix = "BMRB-700-20mM"
+#root_folder = joinpath("/home/roy/MEGAsync/outputs/NMR/experiments", plot_prefix)
+
+root_folder = "/home/roy/del/NMR"
+plot_prefix = "test_folder"
+
+batchplotgroups(plot_prefix, root_folder,
+    H_params_path, tol_coherence,
+    α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+    display_flag = true,
+    prune_low_signal_for_display_flag = true,
+    display_reduction_factor = 500,
+    display_threshold_factor =  α_relative_threshold/10,
+    #canvas_size = (1600, 900),
+    canvas_size = (1000, 400),
+    save_plot_flag = false);
+```

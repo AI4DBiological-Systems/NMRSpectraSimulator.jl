@@ -6,8 +6,7 @@ import .NMRSpectraSimulator
 using LinearAlgebra
 using FFTW
 import PyPlot
-#import BSON
-#import JLD
+import JSON
 
 #import Clustering
 import Statistics
@@ -52,8 +51,10 @@ SW = 20.0041938620844
 # fs = 9615.38461538462
 
 # path to the GISSMO Julia storage folder.
-base_path_JLD = "/home/roy/Documents/repo/NMRData/input/molecules"
+H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
+dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
 
+#TODO I am here. debug this script.
 ### end inputs.
 
 hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
@@ -65,7 +66,7 @@ ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 println("Timing: setupmixtureproxies()")
 dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0)
 @time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-    base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
+    H_params_path, dict_compound_to_filename, ppm2hzfunc, fs, SW, λ0,
     ν_0ppm, dummy_SSFID;
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold)

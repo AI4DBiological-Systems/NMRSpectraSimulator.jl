@@ -51,7 +51,7 @@ SW = 20.0041938620844
 # fs = 9615.38461538462
 
 # path to the GISSMO Julia storage folder.
-base_path_JLD = "/home/roy/Documents/repo/NMRData/input/molecules"
+H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 
 ### end inputs.
 
@@ -64,7 +64,7 @@ ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 println("Timing: setupmixtureproxies()")
 dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType2(0.0)
 @time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-    base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW, λ0,
+    H_params_path, ppm2hzfunc, fs, SW, λ0,
     ν_0ppm, dummy_SSFID;
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold)

@@ -39,21 +39,19 @@ function prepcouplingalgorithm(N_protons_group::Vector{Int})
 end
 
 function setupcompoundspectrum!( css_sys::Vector{Vector{T}},
-    p_cs_sys::Vector{Vector{T}},
     J_vals_sys,
-    J_IDs_sys,
+    J_inds_sys,
     intermediates_sys,
-    cs_LUT,
     ppm2hzfunc,
-    cs_singlets_compact,
+    cs_singlets,
     N_spins_singlet::Vector{Int},
     fs::T,
     SW::T;
     tol_coherence = 1e-2) where T <: Real
 
     #
-    N_sys = length(p_cs_sys)
-    N_singlets = length(cs_singlets_compact)
+    N_sys = length(css_sys)
+    N_singlets = length(cs_singlets)
 
     N_groups = N_sys + N_singlets
 
@@ -75,10 +73,10 @@ function setupcompoundspectrum!( css_sys::Vector{Vector{T}},
     for i = 1:N_sys
 
         αs[i], Ωs[i], coherence_mat_sys[i], eig_vals_sys[i], Q_sys[i], coherence_state_pairs_sys[i],
-        H_sys[i], H1, H2, M_sys[i] = evalSCalgorithm!(p_cs_sys[i], css_sys[i],
-        J_vals_sys[i], J_IDs_sys[i],
+        H_sys[i], H1, H2, M_sys[i] = evalSCalgorithm!(css_sys[i],
+        J_vals_sys[i], J_inds_sys[i],
         intermediates_sys[i],
-        cs_LUT[i], ppm2hzfunc;
+        ppm2hzfunc;
         tol_coherence = tol_coherence)
 
         # normalize intensity according to number of spins.
@@ -96,7 +94,7 @@ function setupcompoundspectrum!( css_sys::Vector{Vector{T}},
     # singlets. evalRayleighproxy!() updates singlets for ΩS.
     for i = 1:N_singlets
         αs[i+N_sys] = [ N_spins_singlet[i] ]
-        Ωs[i+N_sys] = [ ppm2hzfunc.(cs_singlets_compact[i]) .* (2*π) ]
+        Ωs[i+N_sys] = [ ppm2hzfunc.(cs_singlets[i]) .* (2*π) ]
     end
 
     return αs, Ωs, coherence_mat_sys, eig_vals_sys, Q_sys,
@@ -280,22 +278,15 @@ end
 # - It is molecule and spin group specific.
 # uses p_cs to modify cs.
 # TODO: add ! to function name since this mutates cs.
-function evalSCalgorithm!(   p_cs::Vector{T},
-                            cs::Vector{T},
+function evalSCalgorithm!(  cs::Vector{T},
                             J_vals::Vector{T},
                             J_inds::Vector{Tuple{Int,Int}},
                             intermediates,
-                            cs_LUT::Vector{Vector{Int}},
                             ppm2hzfunc;
                             tol_coherence::T = 1e-3) where T <: Real
 
     # set up.
-    #println("cs = ", cs)
-    pcstocs!(cs, p_cs, cs_LUT)
-    #println("length(p_cs) = ", length(p_cs))
-    #println("length(cs) = ", length(cs))
-    #println("cs = ", cs)
-    #println()
+    #pcstocs!(cs, p_cs, cs_LUT)
 
     Id, Ix, Iy_no_im, Iz, Ip, Im, Iy, Im_full, Iz_full, Ix_full,
     Iys_no_im_full = intermediates # see prepcouplingalgorithm(Int) for details.

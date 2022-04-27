@@ -71,6 +71,38 @@ mutable struct κCompoundFIDType{T,SST}
     core::CompoundFIDType{T,SST}
 end
 
+
+"""
+Remove gs and Δc_m_compound to reduce the memory footprint of Vector{CompoundFIDType} types.
+"""
+function removeauxinfo!(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
+    
+    for n = 1:length(As)
+        A = As[n]
+        for i = 1:length(A.Δc_m_compound)
+            resize!(A.Δc_m_compound[i], 0)
+        end
+
+        for i = 1:length(A.gs)
+            resize!(A.gs[i], 0)
+        end
+    end
+
+    return nothing
+end
+
+function varinfocompound(A::CompoundFIDType{T,SST}) where {T,SST}
+        
+    property_names = propertynames(A)
+    for j = 1:length(property_names)
+        display(property_names[j])
+        asdf = getfield(A, property_names[j]);
+        
+        info_string = varinfo(r"asdf")
+        display(info_string)
+    end
+end
+
 function κCompoundFIDType(core::CompoundFIDType{T,SST}) where {T,SST}
 
     N_spins = length(core.part_inds_compound)

@@ -35,7 +35,7 @@ plot_title = "resonance groupings"
 molecule_names = ["L-Histidine";]
 
 # path to a subfolder of the NMRData repository on your local machine.
-base_path_JLD = "/home/roy/Documents/repo/NMRData//input/molecules"
+H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 
 # where the bson file is located.
 root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
@@ -82,7 +82,7 @@ Set up the simulation.
 #println("Timing: setupmixtureproxies()")
 #@time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
 mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-    base_path_JLD, Δcs_max_mixture, hz2ppmfunc, ppm2hzfunc, fs, SW,
+    H_params_path, ppm2hzfunc, fs, SW,
     λ_0ppm, ν_0ppm, dummy_SSFID;
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold,
@@ -178,7 +178,7 @@ function plotgroups(title_string::String,
         linewidth = 4,
         xflip = true,
         size = canvas_size)
-    
+
     qs_U = Vector{Vector{Vector{Complex{T}}}}(undef, length(qs))
     for i = 1:length(qs)
 
@@ -206,7 +206,7 @@ function plotgroups(title_string::String,
     #markershape = :circle,
     #seriestype = :scatter,
     #xflip = true)
-    
+
     return plot_obj, q_U, qs_U, q_singlets_U
 end
 ```
@@ -229,19 +229,7 @@ canvas_size = (1000, 400)
 plots_save_path = joinpath(save_folder, "groups_real.html")
 title_string = "$(plot_title), real"
 plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
-#Plots.savefig(plot_obj, plots_save_path)
-display(plot_obj)
-
-plots_save_path = joinpath(save_folder, "groups_imag.html")
-title_string = "$(plot_title), imag"
-plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, imag, P[1]; canvas_size = canvas_size)
-#Plots.savefig(plot_obj, plots_save_path)
-display(plot_obj)
-
-plots_save_path = joinpath(save_folder, "groups_modulus.html")
-title_string = "$(plot_title), modulus"
-plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, abs, P[1]; canvas_size = canvas_size)
-#Plots.savefig(plot_obj, plots_save_path)
+Plots.savefig(plot_obj, plots_save_path)
 display(plot_obj)
 ```
 

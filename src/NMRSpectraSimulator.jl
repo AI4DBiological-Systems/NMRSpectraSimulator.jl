@@ -2,7 +2,7 @@ module NMRSpectraSimulator
 
 using Distributed, LinearAlgebra, FFTW, SharedArrays, OffsetArrays, Statistics
 
-import Kronecker, Interpolations, NearestNeighbors
+import Kronecker, Interpolations, NearestNeighbors, JSON, Graphs
 # import FiniteDiff, Optim, NLopt, Random, Unicode, FileIO, DelimitedFiles
 # import Printf, PyCall, BSON, JLD, , BenchmarkTools, , HTTP, JSON3, Dates
 
@@ -29,6 +29,8 @@ include("../src/model_evals/lorentzian_z.jl")
 
 include("../src/model_evals/setup_itp.jl")
 include("../src/model_evals/itp_evals.jl")
+
+include("../src/conversions/IO_csJ.jl")
 
 
 #include("../src/library/database_helpers.jl")
