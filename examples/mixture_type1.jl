@@ -21,24 +21,20 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 
 ### user inputs.
 
+# TODO put these into config file.
 tol_coherence = 1e-2
 α_relative_threshold = 0.05
 λ0 = 3.4
-Δcs_max = 0.2
-κ_λ_lb = 0.5
-κ_λ_ub = 2.5
+
+Δr_default = 1.0
+Δκ_λ_default = 0.05
+Δc_max_scalar_default = 0.2
+κ_λ_lb_default = 0.5
+κ_λ_ub_default = 2.5
 
 
 molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
-
-# # ### TODO I am here. new script, loop through all, simulate one at a time, simulate, save as html proxy. save discrepancy of shift, lambda, kappa tests.
-# # # get the all GISSMO entries.
-# import GISSMOReader
-# tmp = GISSMOReader.getGISSMOentriesall()
-# GISSMO_entries = GISSMOReader.extractfields(tmp, "entry")
-# molecule_names = GISSMOReader.extractfields(tmp, "molecule_name")
-
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
@@ -54,49 +50,46 @@ SW = 20.0041938620844
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
 
-#TODO I am here. debug this script.
 ### end inputs.
 
 hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
-
-Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names))
-
 println("Timing: setupmixtureproxies()")
-dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0)
-@time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-    H_params_path, dict_compound_to_filename, ppm2hzfunc, fs, SW, λ0,
-    ν_0ppm, dummy_SSFID;
+
+@time mixture_params = NMRSpectraSimulator.setupmixtureSH(molecule_names,
+    H_params_path, dict_compound_to_filename, fs, SW,
+    ν_0ppm;
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold)
 As = mixture_params
 
 
-#@assert 1==43
-
+dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0)
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
 
-NMRSpectraSimulator.fitproxies!(As;
-    κ_λ_lb = κ_λ_lb,
-    κ_λ_ub = κ_λ_ub,
+Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
+    names = molecule_names,
+    Δc_max_scalar_default = Δc_max_scalar_default,
+    κ_λ_lb_default = κ_λ_lb_default,
+    κ_λ_ub_default = κ_λ_ub_default,
     u_min = u_min,
     u_max = u_max,
-    Δr = 1.0,
-    Δκ_λ = 0.05)
+    Δr_default = Δr_default,
+    Δκ_λ_default = Δκ_λ_default)
 
 
 ### plot.
 
 # purposely distort the spectra by assigning random values to model parameters.
-Ag = As[1]
-Ag.ss_params.d = rand(length(Ag.ss_params.d))
-Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
-Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
+B = Bs[1]
+B.ss_params.d[:] = rand(length(B.ss_params.d))
+B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
+B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
 
 
-f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
+f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params, Bs)
 
 # test params.
 #ΩS_ppm = collect( hz2ppmfunc.( NMRSpectraSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in mixture_params )
@@ -110,10 +103,11 @@ U_rad = U .* (2*π)
 ## parameters that affect qs.
 # A.d, A.κs_λ, A.κs_β
 # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
-q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params)
+q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params, Bs)
 
 f_U = f.(U_rad)
 q_U = q.(U_rad)
+
 
 discrepancy = abs.(f_U-q_U)
 max_val, ind = findmax(discrepancy)
@@ -121,14 +115,18 @@ println("relative discrepancy = ", norm(discrepancy)/norm(f_U))
 println("max discrepancy: ", max_val)
 println()
 
-## remove areas with low signal from plotting to reduce plot size.
-reduction_factor = 100
-threshold_factor =  α_relative_threshold/10
-inds, keep_inds, inds_for_reducing = NMRSpectraSimulator.prunelowsignalentries(q_U, threshold_factor, reduction_factor)
+# ## remove areas with low signal from plotting to reduce plot size.
+# reduction_factor = 100
+# threshold_factor =  α_relative_threshold/10
+# inds, keep_inds, inds_for_reducing = NMRSpectraSimulator.prunelowsignalentries(q_U, threshold_factor, reduction_factor)
+#
+# q_U_display = q_U[inds]
+# f_U_display = f_U[inds]
+# P_display = P[inds]
 
-q_U_display = q_U[inds]
-f_U_display = f_U[inds]
-P_display = P[inds]
+q_U_display = q_U
+f_U_display = f_U
+P_display = P
 
 ## visualize.
 PyPlot.figure(fig_num)
@@ -162,19 +160,19 @@ PyPlot.ylabel("real")
 PyPlot.title("f vs q")
 
 
-using BenchmarkTools
-
-m = 1
-A = As[1];
-
-println("qs[i][k], gs eval:")
-r0 = 2*π*U[m] - A.ss_params.d[1]
-@btime A.qs[1][1](r0, 1.0)
-@btime A.gs[1][1](r0, 1.0)
-
-println("q eval.")
-@btime q.(U_rad[m]);
-
-println("q_U eval")
-@btime q.(U_rad);
-println()
+# using BenchmarkTools
+#
+# m = 1
+# A = As[1];
+#
+# println("qs[i][k], gs eval:")
+# r0 = 2*π*U[m] - A.ss_params.d[1]
+# @btime A.qs[1][1](r0, 1.0)
+# @btime A.gs[1][1](r0, 1.0)
+#
+# println("q eval.")
+# @btime q.(U_rad[m]);
+#
+# println("q_U eval")
+# @btime q.(U_rad);
+# println()

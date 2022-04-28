@@ -49,6 +49,7 @@ function setupcompoundspectrum!( css_sys::Vector{Vector{T}},
     SW::T;
     tol_coherence = 1e-2) where T <: Real
 
+    @assert length(J_vals_sys) == length(J_inds_sys) == length(css_sys)
     #
     N_sys = length(css_sys)
     N_singlets = length(cs_singlets)

@@ -658,7 +658,7 @@ div.title {text-align: center;}
           
         </div>
 
-        <p>&quot;&quot;&quot; title: NMRSpectraSimulator.jl Documentation author Roy Wang date: 2022-03-23 &quot;&quot;&quot;</p>
+        <p>&quot;&quot;&quot; title: NMRSpectraSimulator.jl Documentation author Roy Wang date: 2022-04-28 &quot;&quot;&quot;</p>
 <h2>Library description</h2>
 <p>Given a list of user-specified compounds and parameters, this library provides the simulated resonance components of our proposed modified FFID model and its surrogate. Details on the model and parameters are forthcoming in an upcoming publication, but a brief overview is presented in the Background section below.</p>
 <h2>Background: Signal Model</h2>
@@ -702,11 +702,11 @@ z_{n,i,k}:=\kappa_{\alpha,n,i,k}e^{\iota\left\langle \kappa_{\beta,n,i},\Delta\b
 <h2>Getting Started</h2>
 <p>Add &#40;currently&#41; unregistered public Julia package for dependency before installing NMRSpectraSimulator.jl</p>
 <pre><code>import Pkg
-Pkg.add&#40;path&#61;&quot;https://github.com/AI4DBiological-Systems/GISSMOReader.jl&quot;&#41;
 Pkg.add&#40;path&#61;&quot;https://github.com/AI4DBiological-Systems/NMRSpectraSimulator.jl&quot;&#41;
 Pkg.add&#40;&quot;FFTW&quot;&#41;
 Pkg.add&#40;&quot;PlotlyJS&quot;&#41;
-Pkg.add&#40;&quot;Plots&quot;&#41;</code></pre>
+Pkg.add&#40;&quot;Plots&quot;&#41;
+Pkg.add&#40;&quot;JSON&quot;&#41;</code></pre>
 <h2>Tutorials</h2>
 <p>See the <a href="simulation_tutorial.html">simulation tutorial</a> for how to simulate the α and Ω FID parameters given spectral width &#40;SW&#41;, sampling frequency &#40;fs&#41;, and frequency of the 0 ppm resonance ν<em>0ppm that would have been recorded by the spetrometer. Note ν</em>0ppm is not in the MHz range. It is usually in the KHz range, between 0 Hz and fs Hz. Some other tuning parameters related to the spin Hamiltonian computation is also required from the user.</p>
 <p>See the <a href="plot_groups.html">resonance groups plotting tutorial</a> for a visualization of the resonance groups &#40;the <span class="math">$k \in K_{n,i}$</span>&#41; for some compounds, using realistic spectrometer parameters taken from BMRB compound standard experiments.</p>
@@ -716,7 +716,7 @@ Pkg.add&#40;&quot;Plots&quot;&#41;</code></pre>
         <div class="footer">
           <p>
             Published from <a href="index.jmd">index.jmd</a>
-            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-04-19.
+            using <a href="http://github.com/JunoLab/Weave.jl">Weave.jl</a> v0.10.10 on 2022-04-28.
           </p>
         </div>
       </div>

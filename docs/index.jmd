@@ -1,7 +1,7 @@
 """
 title: NMRSpectraSimulator.jl Documentation
 author Roy Wang
-date: 2022-03-23
+date: 2022-04-28
 """
 
 ## Library description
@@ -101,11 +101,11 @@ is used instead of individual $\Delta c_{n,i,k,l}$'s so that the local surrogate
 Add (currently) unregistered public Julia package for dependency before installing NMRSpectraSimulator.jl
 ```
 import Pkg
-Pkg.add(path="https://github.com/AI4DBiological-Systems/GISSMOReader.jl")
 Pkg.add(path="https://github.com/AI4DBiological-Systems/NMRSpectraSimulator.jl")
 Pkg.add("FFTW")
 Pkg.add("PlotlyJS")
 Pkg.add("Plots")
+Pkg.add("JSON")
 ```
 
 

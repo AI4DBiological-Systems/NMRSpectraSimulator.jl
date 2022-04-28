@@ -16,7 +16,8 @@ include("./helpers/operators.jl")
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
 
-name = "L-Histidine"
+#name = "L-Histidine"
+name = "D-(+)-Glucose"
 
 unique_cs_tol = 1e-6
 zero_tol_sigdigits = 6
@@ -31,7 +32,7 @@ H_IDs, H_css, J_IDs, J_vals = NMRSpectraSimulator.loadcouplinginfojson(load_path
 #J_inds = convertJIDstoJinds(J_IDs, H_IDs)
 #g = constructspinsystemsgraphforcompound(length(H_IDs), J_inds)
 
-J_inds_sys2, J_IDs_sys2, J_vals_sys2, H_inds_sys2,
+J_inds_sys2, J_inds_sys_local2, J_IDs_sys2, J_vals_sys2, H_inds_sys2,
     cs_sys2, H_inds_singlets2, cs_singlets2, H_inds, J_inds,
     g = NMRSpectraSimulator.setupcsJ(H_IDs, H_css, J_IDs, J_vals)
 
@@ -53,6 +54,9 @@ T = Float64
 i = 1
 
 
+
+
+end
 
 
 

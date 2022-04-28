@@ -8,12 +8,14 @@ import Kronecker, Interpolations, NearestNeighbors, JSON, Graphs
 
 # Julia quirk: must manually install unregistered packages (like GISSMOReader) on local machine before installing this NMRSpectraSimulator package.
 #Pkg.add("https://github.com/AI4DBiological-Systems/GISSMOReader")
-import GISSMOReader # https://github.com/AI4DBiological-Systems/GISSMOReader.jl
+#import GISSMOReader # https://github.com/AI4DBiological-Systems/GISSMOReader.jl
 
 include("../src/types.jl")
+include("../src/types2.jl")
+
 include("../src/utils.jl")
 
-include("../src/SH/SH_front_end.jl")
+#include("../src/SH/SH_front_end.jl")
 #include("../src/SH/molecule.jl")
 include("../src/SH/SH.jl")
 include("../src/SH/Hamiltonian.jl")

@@ -127,6 +127,41 @@ function setupcsJ(H_IDs, H_css::Vector{T}, J_IDs, J_vals;
         end
     end
 
-    return J_inds_sys, J_IDs_sys, J_vals_sys, H_inds_sys,
+    J_inds_sys_local = convertJindsglobaltolocal(H_inds_sys, J_inds_sys)
+
+    # check.
+    for i = 1:length(J_inds_sys)
+        @assert length(J_inds_sys[i]) == length(J_inds_sys_local[i]) == length(J_IDs_sys[i]) == length(J_vals_sys[i])
+        @assert length(H_inds_sys[i]) == length(cs_sys[i])
+    end
+
+    @assert length(H_inds_singlets) == length(cs_singlets)
+
+    return J_inds_sys, J_inds_sys_local, J_IDs_sys, J_vals_sys, H_inds_sys,
         cs_sys, H_inds_singlets, cs_singlets, H_inds, J_inds, g
+end
+
+"""
+Local: Each spin system will have its own spin nucleui numbering that starts at 1.
+Global: The spins systems will together have one single spin nucleui numbering that starts at 1.
+"""
+function convertJindsglobaltolocal(H_inds_sys::Vector{Vector{Int}},
+    J_inds_sys::Vector{Vector{Tuple{Int,Int}}})
+
+    @assert length(H_inds_sys) == length(J_inds_sys)
+    N_systems = length(H_inds_sys)
+
+    J_inds_sys_local = Vector{Vector{Tuple{Int,Int}}}(undef, N_systems)
+
+    for i = 1:N_systems
+
+        x = H_inds_sys[i]
+        J = J_inds_sys[i]
+
+        conversion_dict = Dict(x .=> collect(1:length(x)))
+
+        J_inds_sys_local[i] = collect( (conversion_dict[J[k][1]], conversion_dict[J[k][2]]) for k = 1:length(J) )
+    end
+
+    return J_inds_sys_local
 end

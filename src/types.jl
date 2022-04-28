@@ -61,7 +61,6 @@ mutable struct CompoundFIDType{T,SST}
     λ0::T
     fs::T
     SW::T
-    Δcs_max::T
     ν_0ppm::T
 end
 
@@ -76,7 +75,7 @@ end
 Remove gs and Δc_m_compound to reduce the memory footprint of Vector{CompoundFIDType} types.
 """
 function removeauxinfo!(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
-    
+
     for n = 1:length(As)
         A = As[n]
         for i = 1:length(A.Δc_m_compound)
@@ -92,12 +91,12 @@ function removeauxinfo!(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
 end
 
 function varinfocompound(A::CompoundFIDType{T,SST}) where {T,SST}
-        
+
     property_names = propertynames(A)
     for j = 1:length(property_names)
         display(property_names[j])
         asdf = getfield(A, property_names[j]);
-        
+
         info_string = varinfo(r"asdf")
         display(info_string)
     end

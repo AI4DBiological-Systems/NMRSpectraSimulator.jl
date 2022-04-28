@@ -1,7 +1,7 @@
 ################### spin system.
 
 function evalitpproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysFIDType1{T})::Complex{T} where T
+    u_rad::T, x::SpinSysParamsType1{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -27,7 +27,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalitpproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysFIDType2{T})::Complex{T} where T
+    u_rad::T, x::SpinSysParamsType2{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -52,7 +52,7 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysFIDType1{T})::Complex{T} where T
+    u_rad::T, x::SpinSysParamsType1{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -76,11 +76,10 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 end
 
 function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysFIDType2{T})::Complex{T} where T
+    u_rad::T, x::SpinSysParamsType2{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
-    #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
 
@@ -138,7 +137,8 @@ end
 
 ###################### front end.
 # with proxy.
-function evalitpproxymixture(u_rad, As::Vector{CompoundFIDType{T,SST}};
+function evalitpproxymixture(u_rad, As::Vector{SHType{T}},
+    Bs::Vector{FIDModelType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real,SST}
 
     #u_rad = 2*π*u
@@ -146,28 +146,28 @@ function evalitpproxymixture(u_rad, As::Vector{CompoundFIDType{T,SST}};
     out = zero(Complex{T})
 
     for n = 1:length(As)
-        out += w[n]*evalitpproxycompound(u_rad, As[n])
+        out += w[n]*evalitpproxycompound(u_rad, As[n], Bs[n])
     end
 
     return out
 end
 
 # with proxy.
-function evalitpproxycompound(u_rad, A::CompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalitpproxycompound(u_rad, A::SHType{T}, B::FIDModelType{T,SST})::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
 
-    out_sys = evalitpproxysys(A.qs, u_rad, A.ss_params)
+    out_sys = evalitpproxysys(B.qs, u_rad, B.ss_params)
 
-    out_singlets = evalsinglets(u_rad, A.d_singlets, A.αs_singlets, A.Ωs_singlets,
-    A.β_singlets, A.λ0, A.κs_λ_singlets)
+    out_singlets = evalsinglets(u_rad, B.d_singlets, A.αs_singlets, A.Ωs_singlets,
+    B.β_singlets, B.λ0, B.κs_λ_singlets)
 
     return out_sys + out_singlets
 end
 
 
 # with κ-proxy. refactor/remove this later.
-function evalitpproxymixture(u_rad, Es::Vector{κCompoundFIDType{T,SST}};
+function evalitpproxymixture(u_rad, Es::Vector{καFIDModelType{T,SST}};
     w::Vector{T} = ones(T, length(Es)))::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
@@ -182,7 +182,7 @@ function evalitpproxymixture(u_rad, Es::Vector{κCompoundFIDType{T,SST}};
 end
 
 # with κ-proxy.
-function evalitpproxycompound(u_rad, A::κCompoundFIDType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalitpproxycompound(u_rad, A::καFIDModelType{T,SST})::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
 

@@ -4,7 +4,7 @@ getΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
 
 returns ΩS::Vector{Vector{Vector{T}}}
 """
-function getΩS(As::Vector{CompoundFIDType{T,SST}}) where {T,SST}
+function getΩS(As::Vector{SHType{T}}) where T
 
     ΩS = Vector{Vector{Vector{T}}}(undef, 0)
     j = 0
@@ -120,7 +120,7 @@ keep the high signal portion and the reduced low signal portion.
 keep_threshold = maximum(abs_x) * threshold_factor.
 """
 function prunelowsignalentries(x, threshold_factor::T, reduction_factor::Int) where T
-    
+
     abs_x = abs.(x)
 
     # find indices that have a low signal.

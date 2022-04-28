@@ -136,37 +136,96 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
 end
 
 
-function fitproxies!(As::Vector{CompoundFIDType{T,SST}};
-    κ_λ_lb = 0.5,
-    κ_λ_ub = 2.5,
+function fitproxies(As::Vector{SHType{T}},
+    dummy_SSFID::SST,
+    λ0::T;
+    names::Vector{String} = [],
+    config_path::String = "",
+    Δc_max_scalar_default = 0.2,
+    κ_λ_lb_default = 0.5,
+    κ_λ_ub_default = 2.5,
     u_min = Inf,
     u_max = Inf,
-    Δr = 1.0,
-    Δκ_λ = 0.05) where {T,SST}
+    Δr_default = 1.0,
+    Δκ_λ_default = 0.05) where {T,SST}
 
-    for n = 1:length(As)
-        fitproxy!(As[n];
-        κ_λ_lb = κ_λ_lb,
-        κ_λ_ub = κ_λ_ub,
-        u_min = u_min,
-        u_max =u_max,
-        Δr = Δr,
-        Δκ_λ = Δκ_λ)
+    config_dict = Dict()
+    if ispath(config_path)
+
+        # TODO add error-handling if name is not found in the dictionary or filename does not exist.
+        config_dict = JSON.parsefile(config_path)
     end
 
-    return nothing
+    cores = Vector{FIDModelType{T,SST}}(undef, length(As))
+
+    for n = 1:length(As)
+        A = As[n]
+
+        # fit surrogate, save into `core`.
+        cores[n] = fitproxy(dummy_SSFID, A, λ0, config_dict;
+        Δc_max_scalar_default = Δc_max_scalar_default,
+        κ_λ_lb_default = κ_λ_lb_default,
+        κ_λ_ub_default = κ_λ_ub_default,
+        u_min = u_min,
+        u_max = u_max,
+        Δr_default = Δr_default,
+        Δκ_λ_default = Δκ_λ_default)
+    end
+
+    return cores
 end
 
-function fitproxy!(A::CompoundFIDType{T,SST};
-    κ_λ_lb = 0.5,
-    κ_λ_ub = 2.5,
+
+function fitproxy(dummy_SSFID::SST,
+    A::SHType{T},
+    λ0::T,
+    config_dict;
+    Δc_max_scalar_default = 0.2,
+    κ_λ_lb_default = 0.5,
+    κ_λ_ub_default = 2.5,
     u_min = Inf,
     u_max = Inf,
-    Δr = 1.0,
-    Δκ_λ = 0.05) where {T,SST}
+    Δr_default = 1.0,
+    Δκ_λ_default = 0.05)::FIDModelType{T,SST} where {T,SST}
 
     hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
     ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
+
+    # allocate `core` data structure.
+    N_singlets = length(A.αs_singlets)
+    κs_λ_singlets = ones(T, N_singlets)
+    κs_β_singlets = zeros(T, N_singlets)
+    d_singlets = zeros(T, N_singlets)
+
+    N_β_vars_sys = A.N_spins_sys
+
+    # proxy placeholder.
+    #qs = Vector{Vector{Function}}(undef, length(N_spins_sys))
+
+    SSFID_obj = setupSSFIDparams(dummy_SSFID, A.part_inds_compound, N_β_vars_sys)
+
+
+    # prepare configuration parameters.
+    κ_λ_lb = κ_λ_lb_default
+    κ_λ_ub = κ_λ_ub_default
+    Δκ_λ = Δκ_λ_default
+    Δc_max = collect( Δc_max_scalar_default for i = 1:length(A.N_spins_sys))
+    Δr = Δr_default
+
+    d_max = ppm2hzfunc.(Δc_max) .- ppm2hzfunc(zero(T))
+
+    if !isempty(config_dict)
+        dict = config_dict[names[n]] # TODO graceful error-handle.
+
+        κ_λ_lb = dict["κ_λ_lb"]
+        κ_λ_ub = dict["κ_λ_ub"]
+        Δκ_λ = dict["Δκ_λ"]
+        Δc_max = dict["Δc_max"]
+        Δr = dict["Δr"]
+
+        @assert length(Δcs_max) == length(A.N_spins_sys) # TODO graceful error-handle.
+        d_max = collect( ppm2hzfunc(Δcs_max[i])-ppm2hzfunc(0.0) for i = 1:length(Δcs_max) )
+    end
 
     # threshold and partition the resonance components.
     if !isfinite(u_min) || !isfinite(u_max)
@@ -177,70 +236,73 @@ function fitproxy!(A::CompoundFIDType{T,SST};
         u_max = ppm2hzfunc(max_ppm)
     end
 
-    d_max = collect( ppm2hzfunc(A.Δcs_max[i])-ppm2hzfunc(0.0) for i = 1:length(A.Δcs_max) )
-
-    A.qs, A.gs = setupcompoundpartitionitp(d_max,
-        A.ss_params,
-        #A.Δc_m_compound,
+    qs = setupcompoundpartitionitp(d_max,
+        SSFID_obj.κs_β,
         A.Δc_bar,
         A.part_inds_compound,
         A.αs, A.Ωs,
-        A.λ0, u_min, u_max;
+        λ0, u_min, u_max;
         κ_λ_lb = κ_λ_lb,
         κ_λ_ub = κ_λ_ub,
         Δr = Δr,
         Δκ_λ = Δκ_λ)
 
-    return nothing
+    core = FIDModelType(qs, SSFID_obj, κs_λ_singlets, κs_β_singlets, d_singlets,
+        Δc_max, λ0)
+
+    return core
 end
 
-function setupmixtureproxies(target_names::Vector{String},
+function setupmixtureSH(target_names::Vector{String},
     H_params_path::String,
     dict_compound_to_filename,
-    ppm2hzfunc, fs, SW, λ0,
-    ν_0ppm::T,
-    dummy_SSFID::SST;
+    fs::T, SW::T, ν_0ppm::T;
+    config_path = "",
     tol_coherence = 1e-2,
     α_relative_threshold = 0.05,
     Δc_partition_radius = 1e-1) where {T <: Real, SST}
 
+    ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
+
     N_compounds = length(target_names)
-    As = Vector{CompoundFIDType{T,SST}}(undef, N_compounds)
+    As = Vector{SHType{T}}(undef, N_compounds)
 
     for n = 1:N_compounds
 
-        qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound, Δc_bar, N_spins_compound,
-            αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
-            λ0, fs, SW, ν_0ppm = setupcompoundproxy(target_names[n],
-            H_params_path, dict_compound_to_filename, ppm2hzfunc, fs, SW, λ0, ν_0ppm;
+        αs, Ωs, part_inds_compound, Δc_m_compound, Δc_bar, N_spins_sys,
+            αs_singlets, Ωs_singlets = setupcompoundSH(target_names[n],
+            H_params_path, dict_compound_to_filename, ppm2hzfunc,
+            fs, SW, ν_0ppm;
+            config_path = config_path,
             tol_coherence = tol_coherence,
             α_relative_threshold = α_relative_threshold,
             Δc_partition_radius = Δc_partition_radius)
 
-        SSFID_obj = setupSSFIDparams(dummy_SSFID, part_inds_compound, N_spins_compound)
-
-        As[n] = CompoundFIDType(qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound,
-        Δc_bar, SSFID_obj,
-        αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
-        λ0, fs, SW, ν_0ppm)
+        As[n] = SHType(αs, Ωs, Δc_m_compound, part_inds_compound,
+            Δc_bar, N_spins_sys, αs_singlets, Ωs_singlets, fs, SW, ν_0ppm)
     end
 
     return As
 end
 
-function setupcompoundproxy(name, base_path, dict_compound_to_filename,
+
+
+
+function setupcompoundSH(name, base_path, dict_compound_to_filename,
     ppm2hzfunc,
-    fs::T, SW::T, λ0::T, ν_0ppm::T;
+    fs::T, SW::T, ν_0ppm::T;
     config_path::String = "",
     tol_coherence = 1e-2,
     α_relative_threshold = 0.05,
     Δc_partition_radius = 1e-1) where T <: Real
 
-    # fetch GISSMO entry. TODO add error-handling if name is not found in the dictionary, or filename does not exist.
+    # TODO add error-handling if name is not found in the dictionary, or filename does not exist.
     load_path = joinpath(base_path, dict_compound_to_filename[name]["file name"])
     H_IDs, H_css, J_IDs, J_vals = loadcouplinginfojson(load_path)
 
     if ispath(config_path)
+
+        # TODO add error-handling if name is not found in the dictionary or filename does not exist.
         db_dict = JSON.parsefile(config_path)
         dict = db_dict[name]
 
@@ -254,21 +316,24 @@ function setupcompoundproxy(name, base_path, dict_compound_to_filename,
     # p_cs_sys, css_sys, cs_singlets, J_vals_sys, J_IDs_sys, intermediates_sys,
     # cs_LUT, cs_singlets_compact, N_spins_singlet, css, p_compound,
     # cs_compound = fetchSHparameters(H_IDs, H_css, J_IDs, J_vals)
-    J_inds_sys, J_IDs_sys, J_vals_sys, H_inds_sys,
+    J_inds_sys, J_inds_sys_local, J_IDs_sys, J_vals_sys, H_inds_sys,
         cs_sys, H_inds_singlets, cs_singlets, H_inds, J_inds,
         g = NMRSpectraSimulator.setupcsJ(H_IDs, H_css, J_IDs, J_vals)
+
     N_spins_singlet = length.(H_inds_singlets)
+
+    N_spins_sys = collect( length(cs_sys[m]) for m = 1:length(cs_sys) )
+    intermediates_sys = prepcouplingalgorithm(N_spins_sys)
+
     # css_sys becomes cs_sys
     # cs_singlets_compact becomes cs_singlets.
 
     αs_inp, Ωs_inp, coherence_mat_sys, eig_vals_sys, Q_sys,
     coherence_state_pairs_sys, H_sys, states_sys, ms_sys,
     M_sys = setupcompoundspectrum!(cs_sys,
-        J_vals_sys, J_inds_sys, intermediates_sys,
+        J_vals_sys, J_inds_sys_local, intermediates_sys,
         ppm2hzfunc, cs_singlets, N_spins_singlet, fs, SW;
         tol_coherence = tol_coherence)
-
-
 
     k = findfirst(xx->length(xx)==1, αs_inp)
     αs_spin_sys = copy(αs_inp)
@@ -289,38 +354,28 @@ function setupcompoundproxy(name, base_path, dict_compound_to_filename,
     α_relative_threshold = α_relative_threshold,
     Δc_partition_radius = Δc_partition_radius)
 
-    # proxy placeholder.
-    qs = Vector{Vector{Function}}(undef, 0)
-    gs = Vector{Vector{Function}}(undef, 0)
-
     # spectra eval func for spin systems.
     N_spins_sys = collect( length(cs_sys[i]) for i = 1:length(cs_sys))
-
-    N_singlets = length(αs_singlets)
-    κs_λ_singlets = ones(T, N_singlets)
-    κs_β_singlets = zeros(T, N_singlets)
-    d_singlets = zeros(T, N_singlets)
 
     # f = uu->evalcLcompoundviapartitions(uu, d,
     # αs, Ωs, κs_λ, κs_β, λ0, Δc_m_compound, part_inds_compound)
 
-    return qs, gs, αs, Ωs, part_inds_compound, Δc_m_compound, Δc_bar, N_spins_sys,
-    αs_singlets, Ωs_singlets, κs_λ_singlets, κs_β_singlets, d_singlets,
-    λ0, fs, SW, ν_0ppm
+    return αs, Ωs, part_inds_compound, Δc_m_compound, Δc_bar, N_spins_sys,
+    αs_singlets, Ωs_singlets
 end
 
-function setupSSFIDparams(dummy_SSFID::SpinSysFIDType1{T}, part_inds_compound, N_spins_compound)::SpinSysFIDType1{T} where T
+function setupSSFIDparams(dummy_SSFID::SpinSysParamsType1{T}, part_inds_compound, N_β_vars_sys)::SpinSysParamsType1{T} where T
     L = length(part_inds_compound)
 
     κs_λ = ones(T, L)
-    κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
+    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
     #d = rand(length(αs))
     d = zeros(T, L)
 
     return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
 end
 
-function setupSSFIDparams(dummy_SSFID::SpinSysFIDType2{T}, part_inds_compound::Vector{Vector{Vector{Int}}}, N_spins_compound)::SpinSysFIDType2{T} where T
+function setupSSFIDparams(dummy_SSFID::SpinSysParamsType2{T}, part_inds_compound::Vector{Vector{Vector{Int}}}, N_β_vars_sys)::SpinSysParamsType2{T} where T
 
     N_sys = length(part_inds_compound)
     κs_λ = Vector{Vector{T}}(undef, N_sys)
@@ -333,7 +388,7 @@ function setupSSFIDparams(dummy_SSFID::SpinSysFIDType2{T}, part_inds_compound::V
         d[i] = zeros(T, N_partition_elements)
     end
 
-    κs_β = collect( zeros(T, N_spins_compound[i]) for i = 1:length(N_spins_compound))
+    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
 
     return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
 end
