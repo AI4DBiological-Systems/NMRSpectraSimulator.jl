@@ -161,7 +161,7 @@ tol_coherence = 1e-2
 κ_λ_lb = 0.5
 κ_λ_ub = 2.5
 
-dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0) # level 2 model.
+dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0) # level 2 model.
 ##### end inputs for surrogate.
 
 

@@ -20,6 +20,7 @@ import OffsetArrays
 import Interpolations
 
 import BSON
+import JSON
 
 import Random
 Random.seed!(25)
@@ -34,8 +35,9 @@ plot_title = "resonance groupings"
 # Limit to only one compound in this tutorial since we just want to visualize the different resonance groups for one compound.
 molecule_names = ["L-Histidine";]
 
-# path to a subfolder of the NMRData repository on your local machine.
+# get mapping from molecule names to their spin system info json files.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
+dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
 
 # where the bson file is located.
 root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
@@ -49,13 +51,19 @@ save_folder = joinpath(project_path, "plots")
 tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
 α_relative_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
 Δc_partition_radius = 0.17 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
+SH_config_path = ""
 
 # surrogate-related.
-Δcs_max = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
-κ_λ_lb = 0.5 # interpolation lower limit for κ_λ.
-κ_λ_ub = 2.5 # interpolation upper limit for κ_λ.
+# default values. The alternative is to load from a config file.
+Δr_default = 1.0 # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
+Δκ_λ_default = 0.05 # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
+Δc_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
+κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
+κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
+λ0 = 3.4
+surrogate_config_path = ""
 
-dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0) # level 2 model.
+dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0) # level 2 model.
 
 ##### end user inputs.
 ```
@@ -76,18 +84,16 @@ ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 Set up the simulation.
 ```julia; results="hidden"
-Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names))
-
 # get a surrogate where K_{n,i} is encouraged to be no larger than `early_exit_part_size`.
 #println("Timing: setupmixtureproxies()")
 #@time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-    H_params_path, ppm2hzfunc, fs, SW,
-    λ_0ppm, ν_0ppm, dummy_SSFID;
+mixture_params = NMRSpectraSimulator.setupmixtureSH(molecule_names,
+    H_params_path, dict_compound_to_filename, fs, SW,
+    ν_0ppm;
+    config_path = SH_config_path,
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold,
     Δc_partition_radius = Δc_partition_radius)
-
 As = mixture_params
 
 # We only work with a single compound in this tutorial. Assign a new object for this compound to reduce clutter.
@@ -110,25 +116,28 @@ U = ppm2hzfunc.(P)
 U_rad = U .* (2*π)
 
 # fit the surrogate.
-NMRSpectraSimulator.fitproxies!(As;
-    κ_λ_lb = κ_λ_lb,
-    κ_λ_ub = κ_λ_ub,
+Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
+    names = molecule_names,
+    config_path = surrogate_config_path,
+    Δc_max_scalar_default = Δc_max_scalar_default,
+    κ_λ_lb_default = κ_λ_lb_default,
+    κ_λ_ub_default = κ_λ_ub_default,
     u_min = u_min,
     u_max = u_max,
-    Δr = 1.0, # the samples used to build the surrogate is taken every 1 radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
-    Δκ_λ = 0.05) # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
-
+    Δr_default = Δr_default,
+    Δκ_λ_default = Δκ_λ_default)
+B = Bs[1] # looking at the first (and only) molecule in this example script.
 ```
 
 
 ```julia; results="hidden"
 
 # create the functions for each resonance group.
-qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k = 1:length(A.qs[i]) ) for i = 1:length(A.qs) )
-q_singlets = ωω->NMRSpectraSimulator.evalsinglets(ωω, A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets)
+qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k = 1:length(B.qs[i]) ) for i = 1:length(B.qs) )
+q_singlets = ωω->NMRSpectraSimulator.evalsinglets(ωω, B.d_singlets, A.αs_singlets, A.Ωs_singlets, B.β_singlets, B.λ0, B.κs_λ_singlets)
 
 # create the function for the entire compound.
-q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, As[1:1])
+q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, As[1:1], Bs[1:1])
 
 # evaluate at the plotting positions.
 q_U = q.(U_rad)
@@ -139,13 +148,13 @@ q_singlets_U = q_singlets.(U_rad)
 
 sanity check. The individual resonance group evaluations should sum up to equal the evaluation from the surrogate of the entire compound.
 ```julia
-    # sanity check.
-    q_check_U = q_singlets_U
-    if !isempty(qs) # some compounds only have singlets.
-        q_check_U += sum( sum( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
-    end
-    discrepancy = norm(q_check_U- q_U)
-    println("sanity check. This should be numerically zero: ", discrepancy)
+# sanity check.
+q_check_U = q_singlets_U
+if !isempty(qs) # some compounds only have singlets.
+    q_check_U += sum( sum( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
+end
+discrepancy = norm(q_check_U- q_U)
+println("sanity check. This should be numerically zero: ", discrepancy)
 ```
 
 Put the plotting routine in a function. Has options for real, imaginary, and magnitude spectrum.

@@ -48,9 +48,10 @@ SH_config_path = ""
 Δc_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
 κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
 κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
+λ0 = 3.4
 surrogate_config_path = ""
 
-dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0) # level 2 model.
+dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0) # level 2 model.
 
 ##### end user inputs.
 

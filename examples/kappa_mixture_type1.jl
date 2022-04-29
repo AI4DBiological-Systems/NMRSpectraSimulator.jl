@@ -52,7 +52,7 @@ ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names))
 
-dummy_SSFID = NMRSpectraSimulator.SpinSysFIDType1(0.0)
+dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0)
 mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
     H_params_path, ppm2hzfunc, fs, SW, λ0,
     ν_0ppm, dummy_SSFID;
