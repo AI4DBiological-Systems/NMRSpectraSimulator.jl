@@ -21,16 +21,16 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 
 ### user inputs.
 
-tol_coherence = 1e-2
-α_relative_threshold = 0.05
-Δc_partition_radius = 0.3
+tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
+α_relative_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
+Δc_partition_radius = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
 λ0 = 3.4
 
-Δr_default = 1.0
-Δκ_λ_default = 0.05
-Δc_max_scalar_default = 0.2
-κ_λ_lb_default = 0.5
-κ_λ_ub_default = 2.5
+Δr_default = 1.0 # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
+Δκ_λ_default = 0.05 # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
+Δc_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
+κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
+κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 
 SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
@@ -48,7 +48,7 @@ SW = 20.0041938620844
 # SW = 16.0196917451925
 # fs = 9615.38461538462
 
-# path to the GISSMO Julia storage folder.
+# path to the json file that provides the mapping from a compound name to its spin system info file name.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
 

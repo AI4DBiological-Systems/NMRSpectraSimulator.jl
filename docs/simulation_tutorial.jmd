@@ -10,6 +10,7 @@ import PlotlyJS
 using Plots; plotly()
 import Statistics
 import Random
+import JSON
 Random.seed!(25)
 ```
 
@@ -17,16 +18,28 @@ Two types of parameters: the spin-Hamiltonian simulation and spectrometer/experi
 
 Spin-related parameters for the spectrum simulation.
 
-```julia; results="hidden"
+```julia; 
+# path to the json file that provides the mapping from a compound name to its spin system info file name.
+H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
+dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
+
+
 # spin-Hamiltonian-related.
 tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
 α_relative_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
-Δc_partition_radius = 0.17 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
+Δc_partition_radius = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
 
 # surrogate-related.
-Δcs_max = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
-κ_λ_lb = 0.5 # interpolation lower limit for κ_λ.
-κ_λ_ub = 2.5 # interpolation upper limit for κ_λ.
+Δr_default = 1.0 # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
+Δκ_λ_default = 0.05 # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
+Δc_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
+κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
+κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
+
+# If the following files exist, then the default values are ignored.
+# The values specified in these files for their corresponding entries are used instead.
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
+surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
 # experiment-related parameters
 λ0 = 3.4
@@ -74,14 +87,13 @@ See [GISSMOReader.jl](https://github.com/AI4DBiological-Systems/GISSMOReader.jl)
 Setup our proposed signal model of our specified compounds, and allocate the data structure that contain the surrogate and model parameters.
 
 ```julia; results="hidden"
-Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names)) # TODO: verify if this is still used in the latest version.
-
-dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0);
-mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
-    H_params_path, ppm2hzfunc, fs, SW, λ0,
-    ν_0ppm, dummy_SSFID;
+mixture_params = NMRSpectraSimulator.setupmixtureSH(molecule_names,
+    H_params_path, dict_compound_to_filename, fs, SW,
+    ν_0ppm;
+    config_path = SH_config_path,
     tol_coherence = tol_coherence,
-    α_relative_threshold = α_relative_threshold);
+    α_relative_threshold = α_relative_threshold,
+    Δc_partition_radius = Δc_partition_radius)
 As = mixture_params
 ```
 We will describe the datatype of `As[n]` in the (forthcoming) API document.
@@ -91,28 +103,32 @@ Fit the local surrogate models to the proposed modified FFID model.
 Provide the frequency interval to build the local surrogate models. We'll just use the same interval for all the compounds.
 
 ```julia; results="hidden"
+dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0)
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
 
-NMRSpectraSimulator.fitproxies!(As;
-    κ_λ_lb = κ_λ_lb,
-    κ_λ_ub = κ_λ_ub,
+Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
+    names = molecule_names,
+    config_path = surrogate_config_path,
+    Δc_max_scalar_default = Δc_max_scalar_default,
+    κ_λ_lb_default = κ_λ_lb_default,
+    κ_λ_ub_default = κ_λ_ub_default,
     u_min = u_min,
     u_max = u_max,
-     Δr = 1.0, # the samples used to build the surrogate is taken every 1 radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
-    Δκ_λ = 0.05) # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
+    Δr_default = Δr_default,
+    Δκ_λ_default = Δκ_λ_default)
 ```
 The interpolation fitting sampling interval for the $r$ argument of the local surrogate model is given by `Δr`, and similarly for the $h$ argument and `Δκ_λ`. See the Background section for the $r$ and $h$ arguments.
 
 
 Our proposed modified FFID model for the entire mixture of compounds:
 ```julia; results = "hidden"
-f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params)
+f = uu->NMRSpectraSimulator.evalmixture(uu, mixture_params, Bs)
 ```
 
 It's surrogate:
 ```julia; results = "hidden"
-q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params)
+q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params, Bs)
 ```
 
 
@@ -192,12 +208,11 @@ display(plot_handle)
 
 Now, show the effect of parameter values on the spectra. Purposely distort the spectra by assigning random values to model parameters.
 ```julia; results="hidden"
-Ag = As[1]
-Ag.ss_params.d = rand(length(Ag.ss_params.d))
-Ag.ss_params.κs_λ = rand(length(Ag.ss_params.κs_λ)) .+ 1
-Ag.ss_params.κs_β = collect( rand(length(Ag.ss_params.κs_β[i])) .* (2*π) for i = 1:length(Ag.ss_params.κs_β) )
+B = Bs[1]
+B.ss_params.d[:] = rand(length(B.ss_params.d))
+B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
+B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
 ```
-This mutates `mixture_params`, aka `As`.
 
 
 Re-evaluate at evaluation locations, and plot. Plotting code is hidden.
