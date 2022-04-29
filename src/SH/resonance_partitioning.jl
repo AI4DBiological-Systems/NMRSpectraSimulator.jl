@@ -220,10 +220,13 @@ function fitproxy(dummy_SSFID::SST,
         κ_λ_lb = dict["κ_λ_lb"]
         κ_λ_ub = dict["κ_λ_ub"]
         Δκ_λ = dict["Δκ_λ"]
-        Δc_max = dict["Δc_max"]
+        if length(dict["Δc_max"]) == length(A.N_spins_sys)
+            Δc_max = dict["Δc_max"]
+        # else
+        #     println("Warning: problem an entry's Δc_max value in config file. Using default scalar value for Δc_max")
+        end
         Δr = dict["Δr"]
 
-        @assert length(Δcs_max) == length(A.N_spins_sys) # TODO graceful error-handle.
         d_max = collect( ppm2hzfunc(Δcs_max[i])-ppm2hzfunc(0.0) for i = 1:length(Δcs_max) )
     end
 

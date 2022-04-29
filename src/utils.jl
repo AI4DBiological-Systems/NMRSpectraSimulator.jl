@@ -51,7 +51,7 @@ end
 #### for cost function.
 
 # getPsnospininfo
-function getPsnospininfo(As::Vector{NMRSpectraSimulator.CompoundFIDType{T,SST}}, hz2ppmfunc) where {T,SST}
+function getPsnospininfo(As::Vector{NMRSpectraSimulator.SHType{T}}, hz2ppmfunc) where T
 
     ΩS_ppm = Vector{Vector{T}}(undef, length(As))
 

@@ -21,9 +21,9 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 
 ### user inputs.
 
-# TODO put these into config file.
 tol_coherence = 1e-2
 α_relative_threshold = 0.05
+Δc_partition_radius = 0.3
 λ0 = 3.4
 
 Δr_default = 1.0
@@ -32,6 +32,8 @@ tol_coherence = 1e-2
 κ_λ_lb_default = 0.5
 κ_λ_ub_default = 2.5
 
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
+surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
 molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS";]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
@@ -60,8 +62,10 @@ println("Timing: setupmixtureproxies()")
 @time mixture_params = NMRSpectraSimulator.setupmixtureSH(molecule_names,
     H_params_path, dict_compound_to_filename, fs, SW,
     ν_0ppm;
+    config_path = SH_config_path,
     tol_coherence = tol_coherence,
-    α_relative_threshold = α_relative_threshold)
+    α_relative_threshold = α_relative_threshold,
+    Δc_partition_radius = Δc_partition_radius)
 As = mixture_params
 
 
@@ -71,6 +75,7 @@ u_max = ppm2hzfunc(4.0)
 
 Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
+    config_path = surrogate_config_path,
     Δc_max_scalar_default = Δc_max_scalar_default,
     κ_λ_lb_default = κ_λ_lb_default,
     κ_λ_ub_default = κ_λ_ub_default,
