@@ -48,7 +48,7 @@ entry_label = split(entry_key, "/")[end-1]
 
 #JLD_save_folder = "/home/roy/Documents/repo/NMRData/input/compounds"
 edata_save_folder = "/home/roy/MEGAsync/data/NMR/GISSMO_edata"
-coupling_info_folder = "/home/roy/Documents/repo/GISSMOReader.jl/coupling_info"
+coupling_info_folder = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 
 # GISSMOReader.downloadGISSMOedata(molecule_name,
 #     simulation_label,

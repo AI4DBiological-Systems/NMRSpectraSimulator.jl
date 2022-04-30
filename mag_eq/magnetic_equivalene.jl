@@ -1,14 +1,12 @@
 using LinearAlgebra
 
-include("../src/GISSMOReader.jl")
-import .GISSMOReader
-
-import NMRSpectraSimulator
+include("../src/NMRSpectraSimulator.jl")
+import .NMRSpectraSimulator
 
 import Kronecker
 import Graphs
 
-include("./helpers/graphs.jl")
+
 include("./helpers/operators.jl")
 
 
@@ -54,8 +52,8 @@ H_css = [2.3; 2.3; 2.3; 4.1; 4.1]
 J_IDs = [ (1,2); (1,3); (1,4); (2,3); (2,4); (3,4)]
 J_vals = [ 3.4; 3.4; 3.4; -5.8; -5.8; -5.8]
 
-#load_path = "/home/roy/Documents/repo/GISSMOReader.jl/coupling_info/Maybridge_Ro3_Fragment_10_A08_simulation_1.json"
-load_path = "/home/roy/Documents/repo/GISSMOReader.jl/coupling_info/bmse000860_simulation_1.json"
+#load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/Maybridge_Ro3_Fragment_10_A08_simulation_1.json"
+load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000860_simulation_1.json"
 H_IDs, H_css, J_IDs, J_vals = GISSMOReader.loadcouplinginfojson(load_path)
 
 

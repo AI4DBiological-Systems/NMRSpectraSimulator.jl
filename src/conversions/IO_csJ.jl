@@ -55,7 +55,7 @@ function convertJIDstoJinds(J_IDs::Vector{Tuple{Int,Int}},
 end
 
 """
-matchJlabels(label_pair_list::Vector{Tuple{Int,Int}}, search_list::Vector{Int})::Vector{Int}
+matchJlabels((label_pair_list::Vector{Tuple{Int,Int}}, search_list::Vector{Int})::Vector{Int}
 
 Returns the indices of entries of `label_pair_list` that has both labels in the `search_list`.
 """
