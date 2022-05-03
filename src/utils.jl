@@ -243,6 +243,54 @@ function uniqueinds(a_in::Vector{T}; atol = 1e-6) where T
     return b, inds_b
 end
 
+
+"""
+getpairs(inds::Vector{T})
+
+get all exhaustive pairwise combos without symmetry of the 1D array `inds`.
+"""
+function getpairs(inds::Vector{T}) where T
+    
+    out = Vector{Tuple{T,T}}(undef, 0)
+    for i = 1:length(inds)
+        for j = i+1:length(inds)
+            push!(out, (inds[i], inds[j]))
+        end
+    end
+
+    return out
+end
+
+
+"""
+isallsame(a::Vector{T}; atol::T = 1e-6) where T
+
+returns true if the entries in `a` are all within an abolute tolerance of `atol`.
+"""
+function isallsame(a::Vector{T}; atol::T = 1e-6) where T
+    if length(findall(xx->isapprox(a[1], xx; atol = atol), a)) == length(a)
+        return true
+    end
+
+    return false
+end
+
+"""
+Returns the edges of a connected path as specified by `vertices`.
+"""
+function getconnectpath(vertices::Vector{Int})
+    N = length(vertices)
+
+    out = Vector{Tuple{Int,Int}}(undef, N-1)
+    
+    for i = 1:N-1
+        out[i] = (vertices[i], vertices[i+1])
+    end
+
+    return out
+end
+
+
 """
 removetargetintegers(C::Vector{Vector{Int}}, search_list::Vector{Int})
 

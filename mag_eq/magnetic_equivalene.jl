@@ -80,7 +80,10 @@ systems_g = Graphs.connected_components(g) # node inds for spin systems.
 C = Graphs.maximal_cliques(g)
 
 nodes = C[1]
-# I am here. partition the nodes based on J_values.
+# I am here. use getmageqinfo() to get some real database spin systems.
+# especially see if ignoring the NON-magnetic eq between nuclei 10 and 11 of valine
+# would still give a commuting [A,B] and [B,Q] operators.
+# http://gissmo.nmrfam.wisc.edu/entry/bmse000860/simulation_1
 
 # A1 = sum(w[k] .* sum(Izs[inds[k]]) for k = 1:length(w))
 # A2 =

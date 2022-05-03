@@ -33,6 +33,7 @@ include("../src/model_evals/setup_itp.jl")
 include("../src/model_evals/itp_evals.jl")
 
 include("../src/conversions/IO_csJ.jl")
+include("../src/conversions/IO_mag_eq.jl")
 
 
 #include("../src/library/database_helpers.jl")

@@ -1,3 +1,6 @@
+
+# developmental script for getmageqinfo().
+
 using LinearAlgebra
 
 
@@ -25,10 +28,11 @@ dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/inp
 unique_cs_tol = 1e-6
 
 # load.
+# # glucose
 # name = "D-(+)-Glucose"
 # load_path = joinpath(H_params_path, dict_compound_to_filename[name]["file name"])
 
-# #valine.
+# # valine.
 # # http://gissmo.nmrfam.wisc.edu/entry/bmse000860/simulation_1
 # load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000860_simulation_1.json"
 
@@ -110,9 +114,9 @@ println()
 
 
 mag_eq_sys_inds_local, mag_eq_sys_IDs,
-mag_eq_sys_inds_global = getmageqcompound(g, 
+mag_eq_sys_inds_global = NMRSpectraSimulator.getmageqcompound(g, 
 H_inds_sys, dict_ind_to_H_ID, dict_H_inds_to_css,
-dict_H_IDs_to_css; atol = unique_cs_tol)
+dict_H_IDs_to_css, dict_J_ID_to_val, J_IDs; atol = unique_cs_tol)
 
 println("mag_eq_sys_IDs: ")
 display(mag_eq_sys_IDs)
@@ -123,19 +127,22 @@ display(mag_eq_sys_inds_local)
 println()
 
 
-#@assert 1==2
+@assert 1==2
+
+#For debugging a specific spin system, indexed by i.
 
 C_g = Graphs.maximal_cliques(g)
 
 N_spin_systems = length(H_inds_sys)
 
-i = 2
+i = 1
 
 C = NMRSpectraSimulator.keeptargetintegers(C_g, H_inds_sys[i])
 
-mag_eq_IDs0, mag_eq_inds0 = getmageqIDs(C,
+mag_eq_IDs0, mag_eq_inds0 = NMRSpectraSimulator.getmageqIDs(C,
     dict_ind_to_H_ID,
-    dict_H_inds_to_css;
+    dict_H_inds_to_css,
+    dict_H_IDs_to_css, dict_J_ID_to_val, J_IDs;
     atol = unique_cs_tol)
 
 #
@@ -147,11 +154,11 @@ println("mag_eq_inds0: ")
 display(mag_eq_inds0)
 println()
 
-local_inds = getmageqlocalinds(H_inds_sys[i], mag_eq_inds0)
+local_inds = NMRSpectraSimulator.getmageqlocalinds(H_inds_sys[i], mag_eq_inds0)
 
 println("local_inds: ")
 display(local_inds)
 println()
 
 
-H = combinetransitiveeqgroups(mag_eq_IDs0)
+H = NMRSpectraSimulator.combinetransitiveeqgroups(mag_eq_IDs0)
