@@ -336,4 +336,22 @@ function getmageqinfo(H_IDs, H_css::Vector{T}, J_IDs, J_vals;
     mag_eq_sys_inds_global
 end
 
-    
+function getmageqinfomixture(target_names::Vector{String},
+    base_path::String,
+    dict_compound_to_filename;
+    unique_cs_atol = 1e-6)
+
+    N_compounds = length(target_names)
+    MEs = Vector{Vector{Vector{Vector{Int}}}}(undef, N_compounds)
+
+    for n = 1:N_compounds
+
+        # TODO add error-handling if name is not found in the dictionary, or filename does not exist.
+        load_path = joinpath(base_path, dict_compound_to_filename[target_names[n]]["file name"])
+        H_IDs, H_css, J_IDs, J_vals = loadcouplinginfojson(load_path)
+
+        MEs[n], _ = getmageqinfo(H_IDs, H_css, J_IDs, J_vals; unique_cs_atol = unique_cs_atol)
+    end
+
+    return MEs
+end
