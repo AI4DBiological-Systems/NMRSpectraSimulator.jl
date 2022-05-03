@@ -10,6 +10,9 @@ import Kronecker
 import Graphs
 import JSON, JSON3
 
+import Random
+Random.seed!(25)
+
 include("./helpers/operators.jl")
 include("./helpers/check_mag_eq.jl")
 
@@ -20,15 +23,44 @@ dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/inp
 #name = "L-Histidine"
 
 unique_cs_tol = 1e-6
-unique_cs_digits = 5
-zero_tol_sigdigits = 6
 
 # load.
-#name = "D-(+)-Glucose"
-#load_path = joinpath(H_params_path, dict_compound_to_filename[name]["file name"])
+# name = "D-(+)-Glucose"
+# load_path = joinpath(H_params_path, dict_compound_to_filename[name]["file name"])
 
-#load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000860_simulation_1.json" # http://gissmo.nmrfam.wisc.edu/entry/bmse000860/simulation_1
-load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000297_simulation_1.json" # http://gissmo.nmrfam.wisc.edu/entry/bmse000297/simulation_1
+# #valine.
+# # http://gissmo.nmrfam.wisc.edu/entry/bmse000860/simulation_1
+# load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000860_simulation_1.json"
+
+
+# ## 1-(3,4-Difluorophenyl)ethan-1-one
+# # http://gissmo.nmrfam.wisc.edu/entry/Maybridge_Ro3_Fragment_10_A08/simulation_1
+# load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/Maybridge_Ro3_Fragment_10_A08_simulation_1.json"
+
+## 2-(4-Chlorobenzylthio)-1,4,5,6-tetrahydropyrimidine hydrochloride
+# http://gissmo.nmrfam.wisc.edu/entry/Maybridge_Ro3_Fragment_12_G10/simulation_1
+load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/Maybridge_Ro3_Fragment_12_G10_simulation_1.json" 
+
+# ## L-Leucine.
+# # http://gissmo.nmrfam.wisc.edu/entry/bmse000042/simulation_1
+# load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000042_simulation_1.json"
+
+# ## L-isoleucine.
+# # http://gissmo.nmrfam.wisc.edu/entry/bmse000041/simulation_1
+# load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000041_simulation_1.json"
+
+# ## ethanol.
+# # http://gissmo.nmrfam.wisc.edu/entry/bmse000297/simulation_1
+# load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000297_simulation_1.json" 
+
+
+# ## D-Carnitine
+# # http://gissmo.nmrfam.wisc.edu/entry/bmse000949/simulation_1
+# load_path = "/home/roy/Documents/repo/NMRData/input/coupling_info/bmse000949_simulation_1.json"
+
+
+
+
 H_IDs, H_css, J_IDs, J_vals = NMRSpectraSimulator.loadcouplinginfojson(load_path)
 
 
@@ -56,56 +88,70 @@ dict_J_ind_to_ID = Dict(J_inds .=> J_IDs)
 systems_g = Graphs.connected_components(g) # node inds for spin systems.
 systems_g_ID = mapQtoHID(systems_g, H_IDs)
 
-C = Graphs.maximal_cliques(g)
-C_IDs = collect( collect( dict_ind_to_H_ID[C[i][j]] for j = 1:length(C[i]) ) for i = 1:length(C) )
+# for manual checking.
+H_IDs_sys = collect( collect( dict_ind_to_H_ID[H_inds_sys[i][k]] for k = 1:length(H_inds_sys[i])) for i = 1:length(H_inds_sys) )
+H_IDs_singlets = collect( collect( dict_ind_to_H_ID[H_inds_singlets[i][k]] for k = 1:length(H_inds_singlets[i])) for i = 1:length(H_inds_singlets) )
+
+println("H_IDs_sys: ")
+display(H_IDs_sys)
+println()
+
+println("cs_sys: ")
+display(cs_sys)
+println()
+
+println("H_IDs_singlets: ")
+display(H_IDs_singlets)
+println()
+
+println("cs_singlets: ")
+display(cs_singlets)
+println()
 
 
-# ###
-# T = Float64
-# i = 1
+mag_eq_sys_inds_local, mag_eq_sys_IDs,
+mag_eq_sys_inds_global = getmageqcompound(g, 
+H_inds_sys, dict_ind_to_H_ID, dict_H_inds_to_css,
+dict_H_IDs_to_css; atol = unique_cs_tol)
 
-# ### partition the nucleus by unique cs.
-# cs = collect( dict_H_inds_to_css[C[i][k]] for k = 1:length(C[i]) )
-# cs_IDs = collect( dict_ind_to_H_ID[C[i][k]] for k = 1:length(C[i]) )
+println("mag_eq_sys_IDs: ")
+display(mag_eq_sys_IDs)
+println()
 
-# unique_cs = unique(round.(cs, digits = unique_cs_digits))
-# unique_cs_inds = collect( inds = findall(xx->isapprox(unique_cs[k], xx; atol = unique_cs_tol), cs) for k = 1:length(unique_cs) )
+println("mag_eq_sys_inds_local: ")
+display(mag_eq_sys_inds_local)
+println()
 
-# ### for each partition subset that contains 2 nuclei, check condition for mag eq.
-# # I am here. function for determining whether given 2+ suspected eq nuclei and their interaction nuclei list.
-# k = 2
-# # common_cs_IDs = cs_IDs[unique_cs_inds[k]]
-# # p_IDs = getpairs(common_cs_IDs)
 
-# # ## test common J within pairs.
-# # J_p = collect( getJfromdict(p_IDs[l][1], p_IDs[l][2], dict_J_ID_to_val) for l = 1:length(p_IDs) )
-# # pass_common_J_flag = isallsame(J_p; atol = unique_cs_tol)
+#@assert 1==2
 
-# # ## test common J with other IDs.
- 
-# # # find all connections to first pair.
-# # t_IDs = getJIDstest(J_IDs, common_cs_IDs, dict_H_IDs_to_css; atol = unique_cs_tol)
+C_g = Graphs.maximal_cliques(g)
 
-# # # check J-values.
-# # J_t = collect( getJfromdict(t_IDs[l][1], t_IDs[l][2], dict_J_ID_to_val) for l = 1:length(t_IDs) )
-# # pass_test_J_flag = isallsame(J_t; atol = unique_cs_tol)
+N_spin_systems = length(H_inds_sys)
 
-# pass_flags = collect( checkmageq(unique_cs_inds[k], cs_IDs, dict_J_ID_to_val; atol = unique_cs_tol) for k = 1:length(unique_cs_inds) )
-# common_cs_IDs = collect( cs_IDs[unique_cs_inds[k]] for k = 1:length(unique_cs_inds) )
-# Q = common_cs_IDs[pass_flags]
+i = 2
 
-C_IDs_mag_eq = getmageqIDs(C,
+C = NMRSpectraSimulator.keeptargetintegers(C_g, H_inds_sys[i])
+
+mag_eq_IDs0, mag_eq_inds0 = getmageqIDs(C,
     dict_ind_to_H_ID,
     dict_H_inds_to_css;
-    cs_round_digits = unique_cs_digits,
     atol = unique_cs_tol)
 
-println("C_IDs_mag_eq: ")
-display(C_IDs_mag_eq)
+#
+println("mag_eq_IDs0: ")
+display(mag_eq_IDs0)
 println()
 
-println("C_IDs: ")
-display(C_IDs)
+println("mag_eq_inds0: ")
+display(mag_eq_inds0)
 println()
 
-# next, jsave to JSON, process every entry in coupling_info folder.
+local_inds = getmageqlocalinds(H_inds_sys[i], mag_eq_inds0)
+
+println("local_inds: ")
+display(local_inds)
+println()
+
+
+H = combinetransitiveeqgroups(mag_eq_IDs0)

@@ -74,7 +74,8 @@ function matchJlabels(label_pair_list::Vector{Tuple{Int,Int}}, search_list::Vect
 end
 
 function setupcsJ(H_IDs, H_css::Vector{T}, J_IDs, J_vals;
-    unique_cs_tol = 1e-6) where T
+    unique_cs_tol = 1e-6,
+    cs_round_digits = 5) where T
 
     H_inds = collect(1:length(H_IDs))
     J_inds = convertJIDstoJinds(J_IDs, H_IDs)
@@ -127,6 +128,10 @@ function setupcsJ(H_IDs, H_css::Vector{T}, J_IDs, J_vals;
         end
     end
 
+    # remove singlets that have duplicate chemical shifts.
+    H_inds_singlets, cs_singlets = removeredundantsinglets(H_inds_singlets, cs_singlets)
+
+    #
     J_inds_sys_local = convertJindsglobaltolocal(H_inds_sys, J_inds_sys)
 
     # check.
@@ -141,7 +146,26 @@ function setupcsJ(H_IDs, H_css::Vector{T}, J_IDs, J_vals;
         cs_sys, H_inds_singlets, cs_singlets, H_inds, J_inds, g
 end
 
+function removeredundantsinglets(H_inds::Vector{Vector{Int}}, cs_singlets::Vector{T}) where T <: Real
+
+    cs_singlets_unique, inds_unique = uniqueinds(cs_singlets)
+
+    H_inds_unique = Vector{Vector{Int}}(undef, 0)
+    for i = 1:length(inds_unique)
+
+        inds = inds_unique[i]
+        push!(H_inds_unique, combinevectors(H_inds[inds]))
+    end
+
+    return H_inds_unique, cs_singlets_unique
+end
+
 """
+convertJindsglobaltolocal(H_inds_sys::Vector{Vector{Int}},
+    J_inds_sys::Vector{Vector{Tuple{Int,Int}}})
+
+The return type is Vector{Vector{Tuple{Int,Int}}}.
+
 Local: Each spin system will have its own spin nucleui numbering that starts at 1.
 Global: The spins systems will together have one single spin nucleui numbering that starts at 1.
 """
