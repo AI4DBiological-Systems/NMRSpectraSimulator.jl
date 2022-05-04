@@ -6,16 +6,19 @@ returns ΩS::Vector{Vector{Vector{T}}}
 """
 function getΩS(As::Vector{SHType{T}}) where T
 
-    ΩS = Vector{Vector{Vector{T}}}(undef, 0)
-    j = 0
+    ΩS = Vector{Vector{Vector{T}}}(undef, length(As))
 
     for n = 1:length(As)
 
-        push!(ΩS, As[n].Ωs)
-        j += 1
+        ΩS[n] = Vector{Vector{T}}(undef, length(As[n].Ωs) + length(As[n].Ωs_singlets))
+        for i = 1:length(As[n].Ωs)
+
+            ΩS[n][i] = copy(As[n].Ωs[i])
+
+        end
 
         for i = 1:length(As[n].Ωs_singlets)
-            push!(ΩS[j], [ As[n].Ωs_singlets[i]; ])
+            ΩS[n][length(As[n].Ωs)+i] = [ As[n].Ωs_singlets[i]; ]
         end
     end
 
