@@ -115,6 +115,9 @@ U_rad = U .* (2*π)
 # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
 q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params, Bs)
 
+Es = collect( NMRSpectraSimulator.καFIDModelType(Bs[i]) for i = 1:length(Bs) )
+q = uu->NMRSpectraSimulator.evalitpproxymixture(uu, mixture_params, Es)
+
 f_U = f.(U_rad)
 q_U = q.(U_rad)
 

@@ -27,6 +27,32 @@ function evalitpproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalitpproxysys(qs::Vector{Vector{Function}},
+    u_rad::T, x::SpinSysParamsType1{T}, κs_α::Vector{Vector{T}})::Complex{T} where T
+
+    d = x.d
+    κs_λ = x.κs_λ
+    #κs_β = x.κs_β
+
+    @assert length(d) == length(qs)
+
+    out = zero(Complex{T})
+
+    for i = 1:length(qs)
+        r = u_rad - d[i]
+
+        for k = 1:length(qs[i])
+
+            out += κs_α[i][k]*qs[i][k](r, κs_λ[i])
+        end
+    end
+
+    ## slower possibly due to r = u_rad - d[i] being evaluated every time qs is called.
+    #out = sum( sum(qs[i][k](u_rad - d[i], κs_λ[i]) for k = 1:length(qs[i])) for i = 1:length(qs) )
+
+    return out
+end
+
+function evalitpproxysys(qs::Vector{Vector{Function}},
     u_rad::T, x::SpinSysParamsType2{T})::Complex{T} where T
 
     d = x.d
@@ -117,10 +143,10 @@ function evalsinglets(u_rad::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_singl
     return out
 end
 
-function evalκsinglets(u_rad::T, d::Vector{T},
+function evalsinglets(u_rad::T, d::Vector{T},
     αs_singlets::Vector{T}, Ωs_singlets,
-    βs_singlets, λ0::T, λ_multipliers::Vector{T};
-    κ_α_singlets::Vector{T} = ones(T, length(αs_singlets))) where T <: Real
+    βs_singlets, λ0::T, λ_multipliers::Vector{T},
+    κ_α_singlets::Vector{T}) where T <: Real
 
     #u_rad = 2*π*u
 
@@ -167,31 +193,30 @@ end
 
 
 # with κ-proxy. refactor/remove this later.
-function evalitpproxymixture(u_rad, Es::Vector{καFIDModelType{T,SST}};
-    w::Vector{T} = ones(T, length(Es)))::Complex{T} where {T <: Real, SST}
+function evalitpproxymixture(u_rad, As::Vector{SHType{T}},
+    Es::Vector{καFIDModelType{T,SST}};
+    w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real,SST}
 
     #u_rad = 2*π*u
 
     out = zero(Complex{T})
 
     for n = 1:length(Es)
-        out += w[n]*evalitpproxycompound(u_rad, Es[n])
+        out += w[n]*evalitpproxycompound(u_rad, As[n], Es[n])
     end
 
     return out
 end
 
 # with κ-proxy.
-function evalitpproxycompound(u_rad, A::καFIDModelType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalitpproxycompound(u_rad, A::SHType{T}, E::καFIDModelType{T,SST})::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
 
-    out_sys = evalκitpproxysys(A.κs_α, A.core.qs, u_rad, A.core.ss_params)
+    out_sys = evalitpproxysys(E.core.qs, u_rad, E.core.ss_params, E.κs_α)
 
-    out_singlets = evalκsinglets(u_rad, A.core.d_singlets,
-    A.core.αs_singlets, A.core.Ωs_singlets,
-    A.core.β_singlets, A.core.λ0, A.core.κs_λ_singlets;
-    κ_α_singlets = A.κs_α_singlets)
+    out_singlets = evalsinglets(u_rad, E.core.d_singlets, A.αs_singlets, A.Ωs_singlets,
+    E.core.β_singlets, E.core.λ0, E.core.κs_λ_singlets, E.κs_α_singlets)
 
     return out_sys + out_singlets
 end
