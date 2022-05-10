@@ -28,7 +28,7 @@ function createdefaultSHconfig(compound_names::Vector{String};
         db_dict[name] = Dict("coherence tolerance" => tol_coherence,
             "relative amplitude threshold" => α_relative_threshold,
             "maximum Δc deviation" => Δc_partition_radius,
-            "simple coherence absolute tolerancel" => simple_coherence_atol)
+            "simple coherence absolute tolerance" => simple_coherence_atol)
     end
 
     return db_dict
