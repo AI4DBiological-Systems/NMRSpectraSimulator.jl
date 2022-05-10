@@ -220,3 +220,13 @@ function evalitpproxycompound(u_rad, A::SHType{T}, E::καFIDModelType{T,SST})::
 
     return out_sys + out_singlets
 end
+
+function findsimplecoherences(c2::Vector{T};
+    atol = 1e-6)::Vector{Int} where T
+    
+    c2a = collect( abs.(c2[i]) for i = 1:length(c2))
+    sum_c2a = collect(sum(c2a[i]) for i = 1:length(c2a))
+    flags = isapprox.(sum_c2a, 1.0, atol = atol)
+
+    return collect(1:length(c2))[flags]
+end

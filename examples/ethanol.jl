@@ -1,14 +1,5 @@
-### Plot the resonance groups of the simulate compound.
-Content taken from `plot_partition.jl` and `partition_centroids.jl` in the `/example` folder.
-
-See [the simulation tutorial](simulation_tutorial.html) for the basics.
-Here, we use the `fs`, `SW`, `ν_0ppm`, and `λ_0ppm` values from actual NMR experiments from the NMRData repository. We assume these values are save in a BSON file format. To extract these values from an NMR experiment and save as a BSON file, see [this example script at NMRDataSetup.jl](https://github.com/AI4DBiological-Systems/NMRDataSetup.jl/blob/main/examples/load_experiment.jl).
-
-
-Load required packages and set up random seed. Load library and enter user-specified values.
-
-```julia; results="hidden"
-import NMRSpectraSimulator
+include("../src/NMRSpectraSimulator.jl")
+import .NMRSpectraSimulator
 
 using LinearAlgebra
 using FFTW
@@ -26,32 +17,34 @@ import Random
 Random.seed!(25)
 
 
-##### user inputs.
-
 # simulation compounds. # paths.
 plot_title = "resonance groupings"
 
 # name of molecules to simulate.
 # Limit to only one compound in this tutorial since we just want to visualize the different resonance groups for one compound.
-molecule_names = ["L-Histidine";]
+#molecule_names = ["L-Histidine";]
+
+
+molecule_names = ["Ethanol";]
 
 # get mapping from molecule names to their spin system info json files.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
 dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
 
 # where the bson file is located.
-root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
-project_path = joinpath(root_folder, "L-Histidine")
+root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/misc"
+project_path = joinpath(root_folder, "bmse000297_ethanol")
 load_path = joinpath(project_path, "experiment.bson")
 
 # where to save the resultant plot. Warning: This script will create the following path if it doesn't it exist.
 save_folder = joinpath(project_path, "plots")
+isdir(save_folder) || mkdir(save_folder)
 
 # spin-Hamiltonian-related.
 tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
 α_relative_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
 Δc_partition_radius = 0.17 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
-SH_config_path = ""
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 
 # surrogate-related.
 # default values. The alternative is to load from a config file.
@@ -61,16 +54,13 @@ SH_config_path = ""
 κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
 κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 λ0 = 3.4
-surrogate_config_path = ""
+surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_surrogate_configs.json"
 
 dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0) # level 2 model.
 
 ##### end user inputs.
-```
 
-Load the spectrometer and 0ppm resonance values from an existing BSON file of a 1D 1H experiment. See the [load_experiment.jl example script from NMRDataSetup.jl](https://github.com/AI4DBiological-Systems/NMRDataSetup.jl/blob/main/examples/load_experiment.jl) for an example on how to obtain such a BSON file given a 1D 1H NMR experiment data.
 
-```julia; results="hidden"
 ### load block.
 dic = BSON.load(load_path)
 fs = dic[:fs]
@@ -78,12 +68,12 @@ SW = dic[:SW]
 ν_0ppm = dic[:ν_0ppm]
 λ_0ppm = dic[:λ_0ppm]
 
+ν_0ppm += 1e6
+
 hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
-```
 
-Set up the simulation.
-```julia; results="hidden"
+
 # get a surrogate where K_{n,i} is encouraged to be no larger than `early_exit_part_size`.
 #println("Timing: setupmixtureproxies()")
 #@time mixture_params = NMRSpectraSimulator.setupmixtureproxies(molecule_names,
@@ -98,10 +88,40 @@ As = mixture_params
 
 # We only work with a single compound in this tutorial. Assign a new object for this compound to reduce clutter.
 A = As[1];
-```
+c2 = A.Δc_m_compound[1]
+c2r = collect( round.(c2[i], digits = 2) for i = 1:length(c2))
+c2a = collect( abs.(c2[i]) for i = 1:length(c2))
+sum_c2a = collect(sum(c2a[i]) for i = 1:length(c2a))
 
-Figure out the frequency range to build our surrogate model on. Let's make it the same range that we will plot on, which we use the range between the resonance components with the lowest and highest frequencies (with by an offset value added for border purposes).
-```julia; results="hidden"
+flags = isapprox.(sum_c2a, 1.0, atol = 1e-3)
+count(flags)
+
+c2a[flags]
+
+b2 = A.Δc_bar[1]
+b2r = collect( round.(b2[i], digits = 2) for i = 1:length(b2))
+
+#
+collect( sum(c) for c in A.Δc_m_compound[1] )
+
+N_p_actives = collect( count(isapprox.(c, 1.0, atol = 1e-1)) for c in A.Δc_m_compound[1] )
+N_n_actives = collect( count(isapprox.(c, -1.0, atol = 1e-1)) for c in A.Δc_m_compound[1] )
+
+count(N_p_actives .> 2)
+
+count(N_p_actives .> 0)
+count(N_n_actives .> 0)
+
+count(N_p_actives .== 1)
+count(N_n_actives .== 1)
+
+
+N_passive = collect( count(isapprox.(c, 0.0, atol = 2e-1)) for c in A.Δc_m_compound[1] )
+
+count(N_passive .== 4)
+
+[N_p_actives N_n_actives ]
+
 ## frequency locations. For plotting.
 ΩS_ppm = NMRSpectraSimulator.getPsnospininfo(mixture_params, hz2ppmfunc)
 ΩS_ppm_sorted = sort(NMRSpectraSimulator.combinevectors(ΩS_ppm))
@@ -127,10 +147,6 @@ Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
     Δr_default = Δr_default,
     Δκ_λ_default = Δκ_λ_default)
 B = Bs[1] # looking at the first (and only) molecule in this example script.
-```
-
-
-```julia; results="hidden"
 
 # create the functions for each resonance group.
 qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k = 1:length(B.qs[i]) ) for i = 1:length(B.qs) )
@@ -144,10 +160,8 @@ q_U = q.(U_rad)
 
 qs_U = collect( collect( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
 q_singlets_U = q_singlets.(U_rad)
-```
 
-sanity check. The individual resonance group evaluations should sum up to equal the evaluation from the surrogate of the entire compound.
-```julia
+
 # sanity check.
 q_check_U = q_singlets_U
 if !isempty(qs) # some compounds only have singlets.
@@ -155,10 +169,8 @@ if !isempty(qs) # some compounds only have singlets.
 end
 discrepancy = norm(q_check_U- q_U)
 println("sanity check. This should be numerically zero: ", discrepancy)
-```
 
-Put the plotting routine in a function. Has options for real, imaginary, and magnitude spectrum.
-```julia; results="hidden"
+
 """
 save resonance groupings of a compound.
 Choices for `f`` are: `real()`, `imag()`, or `abs()`. These corresponds to real part, imaginary part, and magnitude spectrum, respectively.
@@ -218,11 +230,8 @@ function plotgroups(title_string::String,
 
     return plot_obj, q_U, qs_U, q_singlets_U
 end
-```
 
 
-Plot the resonance groups.
-```julia; fig_cap="", echo=false
 
 # reduce the plotting positions for low signal regions. Otherwise the plot store size will be too large, and the time to load the plot will be long.
 display_reduction_factor = 100
@@ -240,6 +249,3 @@ title_string = "$(plot_title), real"
 plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
 Plots.savefig(plot_obj, plots_save_path)
 display(plot_obj)
-```
-
-A resonance group is a subset of a partition of a spin group. The parameters that affect the number of resonance groups is `α_relative_threshold` (affects the total number of resonances in a partition that we work with), and `Δc_partition_radius` (indirectly affects how many resonance components are in a subset of the partition).

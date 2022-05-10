@@ -1,4 +1,5 @@
-import NMRSpectraSimulator
+include("../src/NMRSpectraSimulator.jl")
+import .NMRSpectraSimulator
 
 using LinearAlgebra
 using FFTW
@@ -21,7 +22,10 @@ plot_title = "resonance groupings"
 
 # name of molecules to simulate.
 # Limit to only one compound in this tutorial since we just want to visualize the different resonance groups for one compound.
-molecule_names = ["L-Histidine";]
+#molecule_names = ["L-Histidine";]
+
+tag = "L-Isoleucine"
+molecule_names = [tag;]
 
 # get mapping from molecule names to their spin system info json files.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
@@ -29,7 +33,7 @@ dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/inp
 
 # where the bson file is located.
 root_folder = "/home/roy/MEGAsync/outputs/NMR/experiments/BMRB-500-0.5mM"
-project_path = joinpath(root_folder, "L-Histidine")
+project_path = joinpath(root_folder, tag)
 load_path = joinpath(project_path, "experiment.bson")
 
 # where to save the resultant plot. Warning: This script will create the following path if it doesn't it exist.
@@ -39,17 +43,17 @@ save_folder = joinpath(project_path, "plots")
 tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
 α_relative_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
 Δc_partition_radius = 0.17 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
-SH_config_path = ""
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 
 # surrogate-related.
 # default values. The alternative is to load from a config file.
 Δr_default = 1.0 # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
 Δκ_λ_default = 0.05 # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
-Δc_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
+Δcs_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
 κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
 κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 λ0 = 3.4
-surrogate_config_path = ""
+surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_surrogate_configs.json"
 
 dummy_SSFID = NMRSpectraSimulator.SpinSysParamsType1(0.0) # level 2 model.
 
@@ -100,7 +104,7 @@ U_rad = U .* (2*π)
 Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
-    Δc_max_scalar_default = Δc_max_scalar_default,
+    Δcs_max_scalar_default = Δcs_max_scalar_default,
     κ_λ_lb_default = κ_λ_lb_default,
     κ_λ_ub_default = κ_λ_ub_default,
     u_min = u_min,

@@ -19,14 +19,16 @@ compound_names = collect( key for (key,value) in dict_compound_to_filename )
 function createdefaultSHconfig(compound_names::Vector{String};
     tol_coherence::Float64 = 1e-2,
     α_relative_threshold::Float64 = 0.05,
-    Δc_partition_radius::Float64 = 0.3)
+    Δc_partition_radius::Float64 = 0.3,
+    simple_coherence_atol::Float64 = -1.2)
 
     db_dict = Dict()
     for name in compound_names
 
         db_dict[name] = Dict("coherence tolerance" => tol_coherence,
             "relative amplitude threshold" => α_relative_threshold,
-            "maximum Δc deviation" => Δc_partition_radius)
+            "maximum Δc deviation" => Δc_partition_radius,
+            "simple coherence absolute tolerancel" => simple_coherence_atol)
     end
 
     return db_dict
@@ -45,13 +47,13 @@ open(save_path, "w") do f
     JSON3.pretty(f, stringdata)
     println(f)
 end
-
+#@assert 1==2
 
 ##### config file for SH parameters.
 function createdefaultsurrogateconfig(compound_names::Vector{String};
     Δr = 1.0,
     Δκ_λ = 0.05,
-    Δc_max::Vector{Float64} = Vector{Float64}(undef, 0),
+    Δcs_max::Vector{Float64} = Vector{Float64}(undef, 0),
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5)
 
@@ -60,7 +62,7 @@ function createdefaultsurrogateconfig(compound_names::Vector{String};
 
         db_dict[name] = Dict("radians surrogate sampling step size" => Δr,
             "κ_λ surrogate sampling step size" => Δκ_λ,
-            "Δc_max" => Δc_max,
+            "Δcs_max" => Δcs_max,
             "κ_λ lower bound" => κ_λ_lb,
             "κ_λ upper bound" => κ_λ_ub)
     end

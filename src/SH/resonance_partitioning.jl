@@ -60,7 +60,8 @@ end
 function partitionresonances(coherence_state_pairs_sys, ms_sys,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}};
     α_relative_threshold = 0.05,
-    Δc_partition_radius = 1e-1) where T
+    Δc_partition_radius = 1e-1,
+    simple_coherence_atol::T = -1.2) where T
 
     N_groups = length(αs)
 
@@ -92,6 +93,18 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
 
         part_inds, Δc_centroids = partitionresonancesbyneighbors(Δc_m,
             αs_i_prune, α_tol; radius = Δc_partition_radius)
+
+        # check if we should discard the non-simple coherences.
+        if simple_coherence_atol > 0
+
+            inds = findsimplecoherences(Δc_m, atol = simple_coherence_atol)
+
+            αs_i_prune = αs_i_prune[inds]
+            Ωs_i_prune = Ωs_i_prune[inds]
+            Δc_m = Δc_m[inds]
+            Δc_centroids = Δc_centroids[inds]
+            part_inds = part_inds[inds]
+        end
 
         # partition_size = length(part_inds)
         # as[i] = Vector{Vector{T}}(undef, partition_size)
@@ -139,9 +152,9 @@ end
 function fitproxies(As::Vector{SHType{T}},
     dummy_SSFID::SST,
     λ0::T;
-    names::Vector{String} = [],
+    names::Vector{String} = Vector{String}(undef, 0),
     config_path::String = "",
-    Δc_max_scalar_default = 0.2,
+    Δcs_max_scalar_default = 0.2,
     κ_λ_lb_default = 0.5,
     κ_λ_ub_default = 2.5,
     u_min = Inf,
@@ -163,7 +176,8 @@ function fitproxies(As::Vector{SHType{T}},
 
         # fit surrogate, save into `core`.
         cores[n] = fitproxy(dummy_SSFID, A, λ0, config_dict;
-        Δc_max_scalar_default = Δc_max_scalar_default,
+        compound_name = names[n],
+        Δcs_max_scalar_default = Δcs_max_scalar_default,
         κ_λ_lb_default = κ_λ_lb_default,
         κ_λ_ub_default = κ_λ_ub_default,
         u_min = u_min,
@@ -180,7 +194,8 @@ function fitproxy(dummy_SSFID::SST,
     A::SHType{T},
     λ0::T,
     config_dict;
-    Δc_max_scalar_default = 0.2,
+    compound_name::String = "",
+    Δcs_max_scalar_default = 0.2,
     κ_λ_lb_default = 0.5,
     κ_λ_ub_default = 2.5,
     u_min = Inf,
@@ -209,23 +224,23 @@ function fitproxy(dummy_SSFID::SST,
     κ_λ_lb = κ_λ_lb_default
     κ_λ_ub = κ_λ_ub_default
     Δκ_λ = Δκ_λ_default
-    Δc_max = collect( Δc_max_scalar_default for i = 1:length(A.N_spins_sys))
+    Δcs_max = collect( Δcs_max_scalar_default for i = 1:length(A.N_spins_sys))
     Δr = Δr_default
 
-    d_max = ppm2hzfunc.(Δc_max) .- ppm2hzfunc(zero(T))
+    d_max = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
 
-    if !isempty(config_dict)
-        dict = config_dict[names[n]] # TODO graceful error-handle.
+    if !isempty(config_dict) && !isempty(compound_name)
+        dict = config_dict[compound_name] # TODO graceful error-handle.
 
-        κ_λ_lb = dict["κ_λ_lb"]
-        κ_λ_ub = dict["κ_λ_ub"]
-        Δκ_λ = dict["Δκ_λ"]
-        if length(dict["Δc_max"]) == length(A.N_spins_sys)
-            Δc_max = dict["Δc_max"]
+        κ_λ_lb = dict["κ_λ lower bound"]
+        κ_λ_ub = dict["κ_λ upper bound"]
+        Δκ_λ = dict["κ_λ surrogate sampling step size"]
+        if length(dict["Δcs_max"]) == length(A.N_spins_sys)
+            Δcs_max = dict["Δcs_max"]
         # else
-        #     println("Warning: problem an entry's Δc_max value in config file. Using default scalar value for Δc_max")
+        #     println("Warning: problem an entry's Δcs_max value in config file. Using default scalar value for Δcs_max")
         end
-        Δr = dict["Δr"]
+        Δr = dict["radians surrogate sampling step size"]
 
         d_max = collect( ppm2hzfunc(Δcs_max[i])-ppm2hzfunc(0.0) for i = 1:length(Δcs_max) )
     end
@@ -251,7 +266,7 @@ function fitproxy(dummy_SSFID::SST,
         Δκ_λ = Δκ_λ)
 
     core = FIDModelType(qs, SSFID_obj, κs_λ_singlets, κs_β_singlets, d_singlets,
-        Δc_max, λ0)
+        Δcs_max, λ0)
 
     return core
 end
@@ -263,7 +278,8 @@ function setupmixtureSH(target_names::Vector{String},
     config_path = "",
     tol_coherence = 1e-2,
     α_relative_threshold = 0.05,
-    Δc_partition_radius = 1e-1) where {T <: Real, SST}
+    Δc_partition_radius = 1e-1,
+    simple_coherence_atol::T = -1.2) where {T <: Real, SST}
 
     ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
@@ -279,7 +295,8 @@ function setupmixtureSH(target_names::Vector{String},
             config_path = config_path,
             tol_coherence = tol_coherence,
             α_relative_threshold = α_relative_threshold,
-            Δc_partition_radius = Δc_partition_radius)
+            Δc_partition_radius = Δc_partition_radius,
+            simple_coherence_atol = simple_coherence_atol)
 
         As[n] = SHType(αs, Ωs, Δc_m_compound, part_inds_compound,
             Δc_bar, N_spins_sys, αs_singlets, Ωs_singlets, fs, SW, ν_0ppm)
@@ -297,7 +314,8 @@ function setupcompoundSH(name, base_path, dict_compound_to_filename,
     config_path::String = "",
     tol_coherence = 1e-2,
     α_relative_threshold = 0.05,
-    Δc_partition_radius = 1e-1) where T <: Real
+    Δc_partition_radius = 1e-1,
+    simple_coherence_atol::T = -1.2) where T <: Real
 
     # TODO add error-handling if name is not found in the dictionary, or filename does not exist.
     load_path = joinpath(base_path, dict_compound_to_filename[name]["file name"])
@@ -355,7 +373,8 @@ function setupcompoundSH(name, base_path, dict_compound_to_filename,
     Δc_m_compound, Δc_bar = partitionresonances(coherence_state_pairs_sys,
     ms_sys, αs_spin_sys, Ωs_spin_sys;
     α_relative_threshold = α_relative_threshold,
-    Δc_partition_radius = Δc_partition_radius)
+    Δc_partition_radius = Δc_partition_radius,
+    simple_coherence_atol = simple_coherence_atol)
 
     # spectra eval func for spin systems.
     N_spins_sys = collect( length(cs_sys[i]) for i = 1:length(cs_sys))

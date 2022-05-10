@@ -46,7 +46,7 @@ struct FIDModelType{T,SST} # parameters for surrogate model.
     d_singlets::Vector{T}
 
     # misc.
-    Δc_max::Vector{T}
+    Δcs_max::Vector{T}
     λ0::T
 end
 
