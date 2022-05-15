@@ -91,9 +91,6 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
         c_m_s = collect( ms_sys[i][s] for (r,s) in c_states_prune )
         Δc_m = collect( c_m_r[j] - c_m_s[j] for j = 1:length(c_m_r))
 
-        part_inds, Δc_centroids = partitionresonancesbyneighbors(Δc_m,
-            αs_i_prune, α_tol; radius = Δc_partition_radius)
-
         # check if we should discard the non-simple coherences.
         if simple_coherence_atol > 0
 
@@ -102,9 +99,12 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
             αs_i_prune = αs_i_prune[inds]
             Ωs_i_prune = Ωs_i_prune[inds]
             Δc_m = Δc_m[inds]
-            Δc_centroids = Δc_centroids[inds]
-            part_inds = part_inds[inds]
         end
+
+        part_inds, Δc_centroids = partitionresonancesbyneighbors(Δc_m,
+            αs_i_prune, α_tol; radius = Δc_partition_radius)
+
+
 
         # partition_size = length(part_inds)
         # as[i] = Vector{Vector{T}}(undef, partition_size)
@@ -219,15 +219,14 @@ function fitproxy(dummy_SSFID::SST,
 
     SSFID_obj = setupSSFIDparams(dummy_SSFID, A.part_inds_compound, N_β_vars_sys)
 
-
     # prepare configuration parameters.
     κ_λ_lb = κ_λ_lb_default
     κ_λ_ub = κ_λ_ub_default
     Δκ_λ = Δκ_λ_default
-    Δcs_max = collect( Δcs_max_scalar_default for i = 1:length(A.N_spins_sys))
+    Δcs_max::Vector{T} = collect( Δcs_max_scalar_default for i = 1:length(A.N_spins_sys))
     Δr = Δr_default
 
-    d_max = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
+    d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
 
     if !isempty(config_dict) && !isempty(compound_name)
         dict = config_dict[compound_name] # TODO graceful error-handle.
@@ -330,6 +329,7 @@ function setupcompoundSH(name, base_path, dict_compound_to_filename,
         tol_coherence = dict["coherence tolerance"]
         α_relative_threshold = dict["relative amplitude threshold"]
         Δc_partition_radius = dict["maximum Δc deviation"]
+        simple_coherence_atol = dict["simple coherence absolute tolerance"]
     end
 
 
@@ -339,7 +339,7 @@ function setupcompoundSH(name, base_path, dict_compound_to_filename,
     # cs_compound = fetchSHparameters(H_IDs, H_css, J_IDs, J_vals)
     J_inds_sys, J_inds_sys_local, J_IDs_sys, J_vals_sys, H_inds_sys,
         cs_sys, H_inds_singlets, cs_singlets, H_inds, J_inds,
-        g = NMRSpectraSimulator.setupcsJ(H_IDs, H_css, J_IDs, J_vals)
+        g = setupcsJ(H_IDs, H_css, J_IDs, J_vals)
 
     N_spins_singlet = length.(H_inds_singlets)
 
@@ -362,6 +362,7 @@ function setupcompoundSH(name, base_path, dict_compound_to_filename,
     αs_singlets = Vector{T}(undef, 0)
     Ωs_singlets = Vector{T}(undef, 0)
     if typeof(k) == Int
+        # the case there are singlet groups in this compound.
         αs_spin_sys = αs_spin_sys[1:k-1]
         Ωs_spin_sys = Ωs_spin_sys[1:k-1]
 
