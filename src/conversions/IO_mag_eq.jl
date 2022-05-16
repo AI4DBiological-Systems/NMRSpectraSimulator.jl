@@ -6,7 +6,7 @@ i-th spin system, k-th magnetically equivalent nuclei, l-th local spin index.
 function getmageqcompound(g,
     H_inds_sys,
     dict_ind_to_H_ID,
-    dict_H_inds_to_css, 
+    dict_H_inds_to_css,
     dict_H_IDs_to_css,
     dict_J_ID_to_val,
     J_IDs;
@@ -15,7 +15,7 @@ function getmageqcompound(g,
     C_g = Graphs.maximal_cliques(g)
 
     N_spin_systems = length(H_inds_sys)
-    
+
     mag_eq_sys_inds_local = Vector{Vector{Vector{Int}}}(undef, N_spin_systems)
     mag_eq_sys_inds_global = Vector{Vector{Vector{Int}}}(undef, N_spin_systems)
     mag_eq_sys_IDs = Vector{Vector{Vector{Int}}}(undef, N_spin_systems)
@@ -34,7 +34,7 @@ function getmageqcompound(g,
 
         # mag_eq_inds = mag_eq_inds0
         # mag_eq_IDs = mag_eq_IDs0
-        
+
         mag_eq_sys_inds_local[i] = getmageqlocalinds(H_inds_sys[i], mag_eq_inds)
         mag_eq_sys_IDs[i] = mag_eq_IDs
         mag_eq_sys_inds_global[i] = mag_eq_inds
@@ -64,7 +64,7 @@ function getmageqlocalinds(H_inds::Vector{Int},
         conversion_dict = Dict(x .=> collect(1:length(x)))
 
         z = mag_eq_sys_inds[i]
-        labels_sys_local[i] = collect( conversion_dict[z[k]] for k = 1:length(z) )  
+        labels_sys_local[i] = collect( conversion_dict[z[k]] for k = 1:length(z) )
     end
 
     return labels_sys_local
@@ -131,7 +131,7 @@ function getmageqIDs(C::Vector{Vector{Int}},
 
     mag_eq_IDs::Vector{Vector{Int}} = combinevectors(C_IDs_mag_eq)
     mag_eq_inds::Vector{Vector{Int}} = combinevectors(C_inds_mag_eq)
-    
+
     return mag_eq_IDs, mag_eq_inds
 end
 
@@ -172,10 +172,10 @@ function getJIDstest(J_IDs::Vector{Tuple{Int,Int}},
     inds_both = matchJlabels(J_IDs, common_cs_IDs)
     inds = setdiff(inds_any, inds_both)
 
-    #inds_both = 
+    #inds_both =
     J_IDs_tmp = J_IDs[inds]
 
-    
+
     target_IDs = Vector{Int}(undef, 0)
     for l = 1:length(J_IDs_tmp)
         i, j = J_IDs_tmp[l]
@@ -216,7 +216,7 @@ function checkmageq(test_inds::Vector{Int},
         return false
     end
 
-    
+
     common_cs_IDs = cs_IDs[test_inds]
     p_IDs = getpairs(common_cs_IDs)
 
@@ -225,7 +225,7 @@ function checkmageq(test_inds::Vector{Int},
     pass_common_J_flag = isallsame(J_p; atol = atol)
 
     ## test common J with other IDs.
- 
+
     # find all connections to first pair.
     t_IDs = getJIDstest(J_IDs, common_cs_IDs, dict_H_IDs_to_css; atol = atol)
 
@@ -234,7 +234,7 @@ function checkmageq(test_inds::Vector{Int},
     for k = 1:length(t_IDs)
 
         J_t = collect( getJfromdict(t_IDs[k], base_ID, dict_J_ID_to_val) for base_ID in common_cs_IDs )
-        
+
         pass_test_J_flag = pass_test_J_flag & isallsame(J_t; atol = atol)
     end
 
@@ -280,10 +280,10 @@ function combinetransitiveeqgroups(eq_inds::Vector{Vector{Int}})
     V = 1:length(eq_inds_flat_unique)
     dict_eq_to_V = Dict(eq_inds_flat_unique .=> V)
     dict_V_to_eq = Dict(V .=> eq_inds_flat_unique)
-    
+
     eq_inds_V = collect( collect( dict_eq_to_V[eq_inds[i][k]] for k = 1:length(eq_inds[i])) for i = 1:length(eq_inds) )
 
-    # get the edges of fully connected 
+    # get the edges of fully connected
     E = Vector{Tuple{Int,Int}}(undef, 0)
     for k = 1:length(eq_inds)
         E_k = getconnectpath(eq_inds_V[k])
@@ -328,7 +328,7 @@ function getmageqinfo(H_IDs, H_css::Vector{T}, J_IDs, J_vals;
 
     #
     mag_eq_sys_inds_local, mag_eq_sys_IDs,
-    mag_eq_sys_inds_global = getmageqcompound(g, 
+    mag_eq_sys_inds_global = getmageqcompound(g,
     H_inds_sys, dict_ind_to_H_ID, dict_H_inds_to_css,
     dict_H_IDs_to_css, dict_J_ID_to_val, J_IDs; atol = unique_cs_atol)
 

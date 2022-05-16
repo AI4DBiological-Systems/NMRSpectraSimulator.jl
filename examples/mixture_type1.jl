@@ -35,7 +35,7 @@ tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian th
 SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
-molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"]
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
@@ -67,6 +67,7 @@ println("Timing: setupmixtureproxies()")
 @time mixture_params = NMRSpectraSimulator.setupmixtureSH(molecule_names,
     H_params_path, dict_compound_to_filename, fs, SW,
     ν_0ppm;
+    MEs = MEs,
     config_path = SH_config_path,
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold,

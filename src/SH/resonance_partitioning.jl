@@ -12,6 +12,7 @@ function partitionresonancesbyneighbors(x_in::Vector{Vector{T}},
     Minkowski_parameter = 3.5) where T <: Real
 
     @assert length(x_in) == length(amplitudes_in)
+    @assert !isempty(x_in)
 
     # take largest amplitude, set as new partition centre.
     amplitudes = copy(amplitudes_in)
@@ -58,9 +59,11 @@ end
 αs and Ωs must not contain singlet groups.
 """
 function partitionresonances(coherence_state_pairs_sys, ms_sys,
-    αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}};
+    αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
+    N_spins_sys::Vector{Int};
     α_relative_threshold = 0.05,
     Δc_partition_radius = 1e-1,
+    ME::Vector{Vector{Vector{Int}}} = Vector{Vector{Vector{Int}}}(undef, 0),
     simple_coherence_atol::T = -1.2) where T
 
     N_groups = length(αs)
@@ -73,12 +76,12 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
     as = Vector{Vector{T}}(undef, N_groups)
     Fs = Vector{Vector{T}}(undef, N_groups)
 
-    N_spin_sys = length(coherence_state_pairs_sys)
-    @assert N_groups == N_spin_sys
-    Δc_bar = Vector{Vector{Vector{T}}}(undef, N_spin_sys)
+    N_systems = length(coherence_state_pairs_sys)
+    @assert N_groups == N_systems == length(N_spins_sys)
+    Δc_bar = Vector{Vector{Vector{T}}}(undef, N_systems)
 
 
-    for i = 1:N_spin_sys
+    for i = 1:N_systems
 
         α_tol = α_relative_threshold*maximum(αs[i])
         inds_amp = findall(xx->(xx>α_tol), αs[i])
@@ -90,6 +93,16 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
         c_m_r = collect( ms_sys[i][r] for (r,s) in c_states_prune )
         c_m_s = collect( ms_sys[i][s] for (r,s) in c_states_prune )
         Δc_m = collect( c_m_r[j] - c_m_s[j] for j = 1:length(c_m_r))
+
+        # println("Δc_m = ", Δc_m)
+        # println("ME[i] = ", ME[i])
+        # println("N_spins_sys[i] = ", N_spins_sys[i])
+        if !isempty(ME)
+            if !isempty(ME[i])
+                Δc_m = reduceΔc(Δc_m, ME[i], N_spins_sys[i])
+            end
+        end
+
 
         # check if we should discard the non-simple coherences.
         if simple_coherence_atol > 0
@@ -125,7 +138,7 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
 
 
 
-    # for i = 1:N_spin_sys # over elements in a spin group.
+    # for i = 1:N_systems # over elements in a spin group.
 
     #     N_partition_elements = length(part_inds_compound[i])
     #     Δc_bar[i] = Vector{Vector{T}}(undef, N_partition_elements)
@@ -212,7 +225,8 @@ function fitproxy(dummy_SSFID::SST,
     κs_β_singlets = zeros(T, N_singlets)
     d_singlets = zeros(T, N_singlets)
 
-    N_β_vars_sys = A.N_spins_sys
+    #N_β_vars_sys = A.N_spins_sys # no equivalence used.
+    N_β_vars_sys::Vector{Int} = collect( length(A.Δc_bar[i][1]) for i = 1:length(A.Δc_bar) )
 
     # proxy placeholder.
     #qs = Vector{Vector{Function}}(undef, length(N_spins_sys))
@@ -274,6 +288,7 @@ function setupmixtureSH(target_names::Vector{String},
     H_params_path::String,
     dict_compound_to_filename,
     fs::T, SW::T, ν_0ppm::T;
+    MEs::Vector{Vector{Vector{Vector{Int}}}} = Vector{Vector{Vector{Vector{Int}}}}(undef, 0),
     config_path = "",
     tol_coherence = 1e-2,
     α_relative_threshold = 0.05,
@@ -287,11 +302,17 @@ function setupmixtureSH(target_names::Vector{String},
 
     for n = 1:N_compounds
 
+        ME = Vector{Vector{Vector{Int}}}(undef, 0)
+        if !isempty(MEs)
+            ME = MEs[n]
+        end
+
         αs, Ωs, part_inds_compound, Δc_m_compound, Δc_bar, N_spins_sys,
             αs_singlets, Ωs_singlets = setupcompoundSH(target_names[n],
             H_params_path, dict_compound_to_filename, ppm2hzfunc,
             fs, SW, ν_0ppm;
             config_path = config_path,
+            ME = ME,
             tol_coherence = tol_coherence,
             α_relative_threshold = α_relative_threshold,
             Δc_partition_radius = Δc_partition_radius,
@@ -310,6 +331,7 @@ end
 function setupcompoundSH(name, base_path, dict_compound_to_filename,
     ppm2hzfunc,
     fs::T, SW::T, ν_0ppm::T;
+    ME::Vector{Vector{Vector{Int}}} = Vector{Vector{Vector{Int}}}(undef, 0),
     config_path::String = "",
     tol_coherence = 1e-2,
     α_relative_threshold = 0.05,
@@ -370,15 +392,16 @@ function setupcompoundSH(name, base_path, dict_compound_to_filename,
         Ωs_singlets = collect( Ωs_inp[l][1] for l = k:length(Ωs_inp) )
     end
 
+    # spectra eval func for spin systems.
+    N_spins_sys = collect( length(cs_sys[i]) for i = 1:length(cs_sys))
+
     αs, Ωs, part_inds_compound,
     Δc_m_compound, Δc_bar = partitionresonances(coherence_state_pairs_sys,
-    ms_sys, αs_spin_sys, Ωs_spin_sys;
+    ms_sys, αs_spin_sys, Ωs_spin_sys, N_spins_sys;
+    ME = ME,
     α_relative_threshold = α_relative_threshold,
     Δc_partition_radius = Δc_partition_radius,
     simple_coherence_atol = simple_coherence_atol)
-
-    # spectra eval func for spin systems.
-    N_spins_sys = collect( length(cs_sys[i]) for i = 1:length(cs_sys))
 
     # f = uu->evalcLcompoundviapartitions(uu, d,
     # αs, Ωs, κs_λ, κs_β, λ0, Δc_m_compound, part_inds_compound)

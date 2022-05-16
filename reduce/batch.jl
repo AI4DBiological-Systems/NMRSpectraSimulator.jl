@@ -45,7 +45,7 @@ open(outfile, "w") do f
   end
 end
 
-#molecule_names = ["L-Serine"; "Ethanol"]
+#molecule_names = ["L-Serine"; "Ethanol"; "L-Isoleucine"]
 #molecule_names = ["Creatinine"; "Ethanol"]
 
 # # machine settings taken from the BMRB 20mM 700MHz 1D 1H NOSEY experiment for glucose.
@@ -96,6 +96,7 @@ println("Timing: setupmixtureproxies()")
     H_params_path, dict_compound_to_filename, fs, SW,
     ν_0ppm;
     config_path = SH_config_path,
+    MEs = MEs,
     tol_coherence = tol_coherence,
     α_relative_threshold = α_relative_threshold,
     Δc_partition_radius = Δc_partition_radius)
@@ -119,19 +120,25 @@ P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
 U = ppm2hzfunc.(P)
 U_rad = U .* (2*π)
 
+# #select_ind = findfirst(xx->xx=="Ethanol", molecule_names)
+# select_ind = findfirst(xx->xx=="L-Isoleucine", molecule_names)
+# A = As[select_ind]
+# ME = MEs[select_ind]
+#
+# import Destruct
+# tmp = collect( NMRSpectraSimulator.createorderingfromeqinds(ME[i], A.N_spins_sys[i]) for i = 1:length(A.N_spins_sys) )
+# κs_β_ordering, κs_β_DOF = Destruct.destruct(tmp)
+#
+# A.Δc_m_compound
+# A.part_inds_compound
+# c_bar = A.Δc_bar
+# c0 = A.Δc_m_compound
+#
+# # c = NMRSpectraSimulator.reduceΔc(A.Δc_m_compound, ME, A.N_spins_sys)
+# # c2 = NMRSpectraSimulator.reduceΔc(A.Δc_m_compound[1], ME[1], A.N_spins_sys[1])
+# # sum(c[1]-c2)
+
 #@assert 1==2
 
-println("Timing fitproxies()")
-@time Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
-    #names = molecule_names[compound_select:compound_select],
-    names = molecule_names,
-    config_path = surrogate_config_path,
-    Δcs_max_scalar_default = Δcs_max_scalar_default,
-    κ_λ_lb_default = κ_λ_lb_default,
-    κ_λ_ub_default = κ_λ_ub_default,
-    u_min = u_min,
-    u_max = u_max,
-    Δr_default = Δr_default,
-    Δκ_λ_default = Δκ_λ_default)
 
 include("plot.jl")

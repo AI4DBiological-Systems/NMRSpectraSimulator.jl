@@ -111,6 +111,22 @@ function plotgroups(title_string::String,
 end
 
 
+
+
+
+println("Timing fitproxies()")
+@time Bs = NMRSpectraSimulator.fitproxies(As, dummy_SSFID, λ0;
+    #names = molecule_names[compound_select:compound_select],
+    names = molecule_names,
+    config_path = surrogate_config_path,
+    Δcs_max_scalar_default = Δcs_max_scalar_default,
+    κ_λ_lb_default = κ_λ_lb_default,
+    κ_λ_ub_default = κ_λ_ub_default,
+    u_min = u_min,
+    u_max = u_max,
+    Δr_default = Δr_default,
+    Δκ_λ_default = Δκ_λ_default)
+
 for compound_select = 1:length(As)
 
     display_reduction_factor = 100
@@ -120,4 +136,12 @@ for compound_select = 1:length(As)
         display_reduction_factor, display_threshold_factor;
         canvas_size = (1000, 400),
         display_flag = false)
+end
+
+# display number of resonance groups per spin system that aren't singlets.
+for n = 1:length(As)
+    A = As[n]
+    N_β_vars_sys = collect( length(A.Δc_bar[i][1]) for i = 1:length(A.Δc_bar) )
+
+    println("$(n). $(molecule_names[n]) N_β_vars_sys: ", N_β_vars_sys)
 end

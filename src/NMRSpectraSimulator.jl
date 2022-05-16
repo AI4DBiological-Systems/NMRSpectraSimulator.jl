@@ -21,6 +21,7 @@ include("../src/SH/SH.jl")
 include("../src/SH/Hamiltonian.jl")
 include("../src/SH/operators.jl")
 include("../src/SH/resonance_partitioning.jl")
+include("../src/SH/reduce_nuclei.jl")
 
 #include("../src/IO/load_configs.jl")
 #include("../src/library/GISSMO_entries.jl")
