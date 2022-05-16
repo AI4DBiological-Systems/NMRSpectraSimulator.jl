@@ -45,7 +45,7 @@ open(outfile, "w") do f
   end
 end
 
-#molecule_names = ["L-Serine"; "Ethanol"; "L-Isoleucine"]
+#molecule_names = ["L-Serine"; "Ethanol"; "L-Isoleucine"; "L-Leucine"]
 #molecule_names = ["Creatinine"; "Ethanol"]
 
 # # machine settings taken from the BMRB 20mM 700MHz 1D 1H NOSEY experiment for glucose.

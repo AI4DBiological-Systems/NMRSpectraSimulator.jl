@@ -139,9 +139,9 @@ for compound_select = 1:length(As)
 end
 
 # display number of resonance groups per spin system that aren't singlets.
-for n = 1:length(As)
-    A = As[n]
-    N_β_vars_sys = collect( length(A.Δc_bar[i][1]) for i = 1:length(A.Δc_bar) )
+for n = 1:length(Bs)
+    B = Bs[n]
+    qs_lens = collect( length(B.qs[i]) for i = 1:length(B.qs) )
 
-    println("$(n). $(molecule_names[n]) N_β_vars_sys: ", N_β_vars_sys)
+    println("$(n). $(molecule_names[n]), qs_lens: ", qs_lens)
 end
