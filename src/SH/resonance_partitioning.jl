@@ -104,15 +104,15 @@ function partitionresonances(coherence_state_pairs_sys, ms_sys,
         end
 
 
-        # check if we should discard the non-simple coherences.
-        if simple_coherence_atol > 0
-
-            inds = findsimplecoherences(Δc_m, atol = simple_coherence_atol)
-
-            αs_i_prune = αs_i_prune[inds]
-            Ωs_i_prune = Ωs_i_prune[inds]
-            Δc_m = Δc_m[inds]
-        end
+        # # check if we should discard the non-simple coherences.
+        # if simple_coherence_atol > 0
+        #
+        #     inds = findsimplecoherences(Δc_m, atol = simple_coherence_atol)
+        #
+        #     αs_i_prune = αs_i_prune[inds]
+        #     Ωs_i_prune = Ωs_i_prune[inds]
+        #     Δc_m = Δc_m[inds]
+        # end
 
         part_inds, Δc_centroids = partitionresonancesbyneighbors(Δc_m,
             αs_i_prune, α_tol; radius = Δc_partition_radius)
