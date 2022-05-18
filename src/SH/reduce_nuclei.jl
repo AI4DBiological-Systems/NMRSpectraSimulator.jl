@@ -58,15 +58,16 @@ function condensenuclei(x::Vector{T}, ordering::Vector{Int}, N::Int)::Vector{T} 
     @assert norm(collect(1:N) - sort(unique(ordering))) < 1e-14
 
     y = zeros(T, N)
-    Ns = zeros(Int, N)
+    #Ns = zeros(Int, N)
     for i = 1:length(x)
 
         k = ordering[i]
         y[k] += x[i]
-        Ns[k] += 1
+        #Ns[k] += 1
     end
 
-    return y ./ Ns
+    #return y ./ Ns
+    return y
 end
 
 function condensenuclei(x::Vector{T}, ordering::Vector{Int})::Vector{T} where T
