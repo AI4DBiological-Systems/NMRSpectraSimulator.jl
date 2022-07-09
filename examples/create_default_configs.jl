@@ -20,7 +20,7 @@ function createdefaultSHconfig(compound_names::Vector{String};
     tol_coherence::Float64 = 1e-2,
     α_relative_threshold::Float64 = 0.05,
     Δc_partition_radius::Float64 = 0.3,
-    simple_coherence_atol::Float64 = -1.2)
+    simple_coherence_atol::Float64 = 1e-2)
 
     db_dict = Dict()
     for name in compound_names
